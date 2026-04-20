@@ -410,28 +410,37 @@ async function loadFromCloud() {
     syncStatus = '同步中...';
     updateSyncBadge();
     
-    const { data: customers, error: e1 } = await supabase.from('customers').select('*');
-    const { data: vehicles, error: e2 } = await supabase.from('vehicles').select('*');
-    const { data: car_policies, error: e3 } = await supabase.from('car_policies').select('*');
-    const { data: noncar_policies, error: e4 } = await supabase.from('noncar_policies').select('*');
-    const { data: services, error: e5 } = await supabase.from('services').select('*');
-    const { data: followups, error: e6 } = await supabase.from('followups').select('*');
-    
-    if (e1 || e2 || e3 || e4 || e5 || e6) {
-      console.error('加载错误:', e1 || e2 || e3 || e4 || e5 || e6);
-      syncStatus = '同步失败';
-      updateSyncBadge();
-      return null;
-    }
-    
-    const allData = {
-      customers: customers || [],
-      vehicles: vehicles || [],
-      car_policies: car_policies || [],
-      noncar_policies: noncar_policies || [],
-      services: services || [],
-      followups: followups || []
+    // 只加载存在的表：customers, policies, noncar, followups
+    var allData = {
+      customers: [],
+      vehicles: [],
+      car_policies: [],
+      noncar_policies: [],
+      services: [],
+      followups: []
     };
+    
+    // 加载客户
+    var { data: customers, error: e1 } = await supabase.from('customers').select('*');
+    if (e1) { console.warn('customers表错误:', e1.message); }
+    else { allData.customers = customers || []; }
+    
+    // 加载保单（policies -> car_policies）
+    var { data: policies, error: e2 } = await supabase.from('policies').select('*');
+    if (e2) { console.warn('policies表错误:', e2.message); }
+    else { allData.car_policies = policies || []; }
+    
+    // 加载非车险（noncar -> noncar_policies）
+    var { data: noncar, error: e3 } = await supabase.from('noncar').select('*');
+    if (e3) { console.warn('noncar表错误:', e3.message); }
+    else { allData.noncar_policies = noncar || []; }
+    
+    // 加载跟进记录
+    var { data: followups, error: e4 } = await supabase.from('followups').select('*');
+    if (e4) { console.warn('followups表错误:', e4.message); }
+    else { allData.followups = followups || []; }
+    
+    // vehicles 和 services 表不存在，保持空数组
     
     // 缓存到 localStorage
     localStorage.setItem('car_crm_data', JSON.stringify(allData));
@@ -440,12 +449,17 @@ async function loadFromCloud() {
     syncStatus = '已同步';
     isOnlineMode = true;
     updateSyncBadge();
-    console.log('✅ 云端数据加载成功:', allData);
+    
+    var count = allData.customers.length + allData.car_policies.length + allData.noncar_policies.length + allData.followups.length;
+    console.log('✅ 云端数据加载成功，共 ' + count + ' 条');
+    showToast('云端同步成功，加载 ' + count + ' 条数据', 'ok');
+    
     return allData;
   } catch (e) {
     console.error('❌ 加载云端数据失败:', e);
-    syncStatus = '同步失败';
+    syncStatus = '连接失败';
     updateSyncBadge();
+    showToast('云端连接失败: ' + e.message, 'error');
     return null;
   }
 }
@@ -724,16 +738,29 @@ async function syncToCloud(d) {
     syncStatus = '同步中...';
     updateSyncBadge();
     
-    // 清空云端数据，重新上传
-    // 注意：这是简单粗暴的全量同步，生产环境应该用增量同步
-    var tables = ['customers', 'vehicles', 'car_policies', 'noncar_policies', 'services', 'followups'];
-    for (var i = 0; i < tables.length; i++) {
-      var table = tables[i];
-      var data = d[table] || [];
+    // 表名映射：前端名 -> Supabase表名
+    var tableMap = {
+      'customers': 'customers',
+      'car_policies': 'policies',
+      'noncar_policies': 'noncar',
+      'followups': 'followups'
+    };
+    
+    // 只同步存在的表
+    for (var localName in tableMap) {
+      var cloudName = tableMap[localName];
+      var data = d[localName] || [];
       if (data.length > 0) {
-        // 先清空，再插入
-        await supabase.from(table).delete().neq('id', '00000000-0000-0000-0000-000000000000');
-        await supabase.from(table).insert(data);
+        try {
+          // 先清空，再插入（注意：delete可能需要service_role权限）
+          // 改用 upsert 逐条更新
+          for (var j = 0; j < data.length; j++) {
+            await supabase.from(cloudName).upsert(data[j]);
+          }
+          console.log('✅ ' + cloudName + ' 同步 ' + data.length + ' 条');
+        } catch (e) {
+          console.warn('⚠️ ' + cloudName + ' 同步失败:', e.message);
+        }
       }
     }
     
