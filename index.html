@@ -1655,7 +1655,7 @@ function openCarPolModal(id) {
   body += '<div class="form-row"><div class="form-group"><label>总保费（元）</label><input id="m_prem" class="form-control" type="number" readonly style="background:#f0f9ff;font-weight:bold;" value="'+(p?p.total_premium||"0":"0")+'"></div>';
   body += '<div class="form-group"><label>佣金（元）</label><input id="m_comm" class="form-control" type="number" placeholder="0" value="'+(p?p.commission_amount||"":"")+'"></div></div>';
   body += '<div class="form-group"><label>状态</label><select id="m_pstatus" class="form-control"><option value="active">生效中</option><option value="pending">待生效</option><option value="expired">已过期</option><option value="quoted">已报价</option><option value="renewed">已续保</option><option value="lost">已流失</option></select></div></div>';
-  body += '<div class="form-row"><div class="form-group"><label>起保日期</label><input id="m_pstart" class="form-control" type="date" value="'+(p?p.start_date:today)+'" onchange="var d=new Date(this.value);d.setFullYear(d.getFullYear()+1);d.setDate(d.getDate()-1);E('m_pend').value=d.toISOString().slice(0,10);"></div>';
+  body += '<div class="form-row"><div class="form-group"><label>起保日期</label><input id="m_pstart" class="form-control" type="date" value="'+(p?p.start_date:today)+'" onchange="var d=new Date(this.value);d.setFullYear(d.getFullYear()+1);d.setDate(d.getDate()-1);document.getElementById(&quot;m_pend&quot;).value=d.toISOString().slice(0,10);"></div>';
   body += '<div class="form-group"><label>到期日期</label><input id="m_pend" class="form-control" type="date" value="'+(p?p.end_date:ny)+'"></div></div>';
   var btns = [
     {text:"保存", cls:"btn btn-primary", fn: function(){
