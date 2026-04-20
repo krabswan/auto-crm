@@ -54,6 +54,12 @@ tr:hover { background:#f9fafb; }
 .stat-label { font-size:13px; opacity:0.9; margin-top:4px; }
 .toast { position:fixed; bottom:24px; right:24px; padding:12px 20px; background:#1f2937; color:#fff; border-radius:8px; font-size:14px; z-index:2000; opacity:0; transition:opacity 0.3s; }
 .toast.show { opacity:1; }
+tr.renewal-expired { background:#fef2f2 !important; }
+tr.renewal-expired:hover { background:#fee2e2 !important; }
+tr.renewal-urgent { background:#fffbeb !important; }
+tr.renewal-urgent:hover { background:#fef3c7 !important; }
+tr.renewal-soon { background:#eff6ff !important; }
+tr.renewal-soon:hover { background:#dbeafe !important; }
 </style>
 </head>
 <body>
@@ -71,6 +77,7 @@ tr:hover { background:#f9fafb; }
   <div class="nav-item" onclick="showPage('vehicles')">🚙 车辆管理</div>
   <div class="nav-item" onclick="showPage('policies')">📋 车险保单</div>
   <div class="nav-item" onclick="showPage('noncar')">📄 非车险保单</div>
+  <div class="nav-item" onclick="showPage('renewal')">🔔 续保提醒</div>
 </div>
 
 <div class="main">
@@ -83,6 +90,10 @@ tr:hover { background:#f9fafb; }
       <div class="stat-card purple"><div class="stat-num" id="stat-premium">0</div><div class="stat-label">总保费(元)</div></div>
     </div>
     <div class="card"><p style="color:#6b7280;">欢迎使用车险CRM系统，左侧导航操作。</p></div>
+    <div class="card" id="dashRenewalCard" style="display:none;">
+      <div class="card-header"><h2>🔔 即将到期保单（30天内）</h2></div>
+      <div id="dashRenewalList"></div>
+    </div>
   </div>
 
   <!-- 客户管理 -->
@@ -138,6 +149,24 @@ tr:hover { background:#f9fafb; }
         </div>
       </div>
       <table id="noncarTable"><thead><tr><th>客户名称</th><th>险种</th><th>保险公司</th><th>保费</th><th>代理人</th><th>出单日期</th><th>到期日期</th><th>操作</th></tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+
+  <!-- 续保提醒 -->
+  <div id="page-renewal" class="page">
+    <div class="card">
+      <div class="card-header">
+        <h2>🔔 续保提醒（到期前30天）</h2>
+      </div>
+      <div style="margin-bottom:14px;">
+        <span style="display:inline-block;width:12px;height:12px;background:#ef4444;border-radius:50%;margin-right:4px;vertical-align:middle;"></span><span style="font-size:13px;vertical-align:middle;margin-right:16px;">已过期</span>
+        <span style="display:inline-block;width:12px;height:12px;background:#f59e0b;border-radius:50%;margin-right:4px;vertical-align:middle;"></span><span style="font-size:13px;vertical-align:middle;margin-right:16px;">7天内到期</span>
+        <span style="display:inline-block;width:12px;height:12px;background:#0ea5e9;border-radius:50%;margin-right:4px;vertical-align:middle;"></span><span style="font-size:13px;vertical-align:middle;margin-right:16px;">30天内到期</span>
+      </div>
+      <h3 style="font-size:15px;margin-bottom:10px;">🚗 车险保单</h3>
+      <table id="renewalPolTable"><thead><tr><th>车牌号</th><th>保险公司</th><th>代理人</th><th>到期日期</th><th>剩余天数</th><th>状态</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <h3 style="font-size:15px;margin:20px 0 10px;">📄 非车险保单</h3>
+      <table id="renewalNoncarTable"><thead><tr><th>客户名称</th><th>险种</th><th>保险公司</th><th>代理人</th><th>到期日期</th><th>剩余天数</th><th>状态</th><th>操作</th></tr></thead><tbody></tbody></table>
     </div>
   </div>
 </div>
@@ -241,6 +270,7 @@ function showPage(id) {
   event.target.classList.add('active');
   if (id === 'dashboard') refreshStats();
   if (id === 'noncar') renderNoncar();
+  if (id === 'renewal') renderRenewal();
 }
 
 // 刷新所有
@@ -260,6 +290,7 @@ function refreshStats() {
   document.getElementById('stat-policies').textContent = d.policies.length;
   var total = d.policies.reduce(function(s, p) { return s + (parseFloat(p.biz) || 0) + (parseFloat(p.force) || 0) + (parseFloat(p.tax) || 0); }, 0);
   document.getElementById('stat-premium').textContent = total.toFixed(0);
+  renderDashRenewal();
 }
 
 // ========== 客户 ==========
@@ -571,6 +602,113 @@ function exportNoncar() {
   XLSX.utils.book_append_sheet(wb, ws, '非车险');
   XLSX.writeFile(wb, '非车险保单_' + new Date().toLocaleDateString() + '.xlsx');
   showToast('导出成功');
+}
+
+// ========== 续保提醒 ==========
+function getDaysLeft(endDate) {
+  if (!endDate) return null;
+  var today = new Date(); today.setHours(0,0,0,0);
+  var end = new Date(endDate); end.setHours(0,0,0,0);
+  return Math.ceil((end - today) / 86400000);
+}
+function getRenewalStatus(days) {
+  if (days === null) return { label: '无日期', cls: '' };
+  if (days < 0) return { label: '已过期' + Math.abs(days) + '天', cls: 'renewal-expired' };
+  if (days <= 7) return { label: '即将到期', cls: 'renewal-urgent' };
+  return { label: '待续保', cls: 'renewal-soon' };
+}
+function renderRenewal() {
+  var d = loadData();
+  // 车险续保
+  var polTbody = document.querySelector('#renewalPolTable tbody');
+  polTbody.innerHTML = '';
+  var polRenewals = [];
+  d.policies.forEach(function(p) {
+    var days = getDaysLeft(p.end);
+    if (days !== null && days <= 30) polRenewals.push({ p: p, days: days });
+  });
+  polRenewals.sort(function(a, b) { return a.days - b.days; });
+  if (polRenewals.length === 0) {
+    polTbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#9ca3af;">暂无即将到期的车险保单</td></tr>';
+  } else {
+    polRenewals.forEach(function(item) {
+      var veh = d.vehicles.find(function(v) { return v.id === item.p.vehicleId; }) || {};
+      var st = getRenewalStatus(item.days);
+      var tr = document.createElement('tr');
+      tr.className = st.cls;
+      tr.innerHTML = '<td>' + (veh.plate || '') + '</td><td>' + (item.p.company || '') + '</td><td>' + (item.p.agent || '') + '</td><td>' + (item.p.end || '') + '</td><td><strong>' + item.days + '</strong> 天</td><td>' + st.label + '</td>' +
+        '<td><button class="btn btn-sm btn-primary" onclick="openPolModal(\'' + item.p.id + '\')">编辑</button></td>';
+      polTbody.appendChild(tr);
+    });
+  }
+  // 非车险续保
+  var ncTbody = document.querySelector('#renewalNoncarTable tbody');
+  ncTbody.innerHTML = '';
+  var ncRenewals = [];
+  d.noncar.forEach(function(n) {
+    var days = getDaysLeft(n.end);
+    if (days !== null && days <= 30) ncRenewals.push({ n: n, days: days });
+  });
+  ncRenewals.sort(function(a, b) { return a.days - b.days; });
+  if (ncRenewals.length === 0) {
+    ncTbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#9ca3af;">暂无即将到期的非车险保单</td></tr>';
+  } else {
+    ncRenewals.forEach(function(item) {
+      var cust = d.customers.find(function(c) { return c.id === item.n.custId; }) || {};
+      var st = getRenewalStatus(item.days);
+      var tr = document.createElement('tr');
+      tr.className = st.cls;
+      tr.innerHTML = '<td>' + (cust.name || '') + '</td><td>' + (item.n.type || '') + '</td><td>' + (item.n.company || '') + '</td><td>' + (item.n.agent || '') + '</td><td>' + (item.n.end || '') + '</td><td><strong>' + item.days + '</strong> 天</td><td>' + st.label + '</td>' +
+        '<td><button class="btn btn-sm btn-primary" onclick="openNoncarModal(\'' + item.n.id + '\')">编辑</button></td>';
+      ncTbody.appendChild(tr);
+    });
+  }
+}
+function renderDashRenewal() {
+  var d = loadData();
+  var count = 0;
+  var items = [];
+  d.policies.forEach(function(p) {
+    var days = getDaysLeft(p.end);
+    if (days !== null && days <= 30) {
+      count++;
+      var veh = d.vehicles.find(function(v) { return v.id === p.vehicleId; }) || {};
+      var st = getRenewalStatus(days);
+      items.push({ name: (veh.plate || ''), type: '车险', company: p.company, days: days, st: st });
+    }
+  });
+  d.noncar.forEach(function(n) {
+    var days = getDaysLeft(n.end);
+    if (days !== null && days <= 30) {
+      count++;
+      var cust = d.customers.find(function(c) { return c.id === n.custId; }) || {};
+      var st = getRenewalStatus(days);
+      items.push({ name: (cust.name || ''), type: n.type || '非车险', company: n.company, days: days, st: st });
+    }
+  });
+  items.sort(function(a, b) { return a.days - b.days; });
+  var card = document.getElementById('dashRenewalCard');
+  var list = document.getElementById('dashRenewalList');
+  if (count === 0) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = 'block';
+  var html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">';
+  items.slice(0, 9).forEach(function(item) {
+    var bg = item.days < 0 ? '#fef2f2' : item.days <= 7 ? '#fffbeb' : '#eff6ff';
+    var bc = item.days < 0 ? '#ef4444' : item.days <= 7 ? '#f59e0b' : '#0ea5e9';
+    html += '<div style="background:' + bg + ';border-left:3px solid ' + bc + ';padding:10px 14px;border-radius:6px;">';
+    html += '<div style="font-weight:600;font-size:14px;">' + item.name + '</div>';
+    html += '<div style="font-size:12px;color:#6b7280;">' + item.type + ' · ' + item.company + '</div>';
+    html += '<div style="font-size:13px;margin-top:4px;color:' + bc + ';font-weight:600;">剩余 <strong>' + item.days + '</strong> 天 · ' + item.st.label + '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  if (items.length > 9) {
+    html += '<div style="text-align:center;margin-top:10px;"><button class="btn btn-sm btn-primary" onclick="showPage(\'renewal\')">查看全部 ' + count + ' 条提醒 →</button></div>';
+  }
+  list.innerHTML = html;
 }
 
 // ========== 工具函数 ==========
