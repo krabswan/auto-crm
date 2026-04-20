@@ -816,6 +816,14 @@ async function syncToCloud(d) {
 }
 
 function custById(id) { var d=initData(); return (d.customers||[]).find(function(x){return x.id===id;})||{}; }
+// 根据姓名查找已有客户（精确匹配，优先精确匹配）
+function findCustByName(name, d) {
+  var cs = d.customers||[];
+  for(var i=0;i<cs.length;i++){
+    if(cs[i].name === name) return cs[i];
+  }
+  return null;
+}
 function vehById(id) { var d=initData(); return (d.vehicles||[]).find(function(x){return x.id===id;})||{}; }
 
 // =============================================================
@@ -1584,12 +1592,18 @@ function openVehModal(id) {
       var d2 = initData(), vid = E("m_vid").value;
       var cid = E("m_cust").value;
       var custName = E("m_cust_search").value.trim();
-      // 如果没选客户但填了姓名，自动新建客户
+      // 如果没选客户但填了姓名，先查重，有则复用，无则新建
       if(!cid && custName) {
-        var newC = {id:"c"+Date.now(), name:custName, phone:"", created_at:td()};
-        d2.customers.push(newC);
-        cid = newC.id;
-        showToast("自动新建客户: "+custName, "ok");
+        var existing = findCustByName(custName, d2);
+        if(existing) {
+          cid = existing.id;
+          showToast("已关联已有客户: "+custName, "ok");
+        } else {
+          var newC = {id:"c"+Date.now(), name:custName, phone:"", created_at:td()};
+          d2.customers.push(newC);
+          cid = newC.id;
+          showToast("自动新建客户: "+custName, "ok");
+        }
       }
       if(!cid){ showToast("请输入车主姓名或选择已有客户","err"); return; }
       var veData = {customer_id:cid, plate:plate, vin:E("m_vin").value.trim(), brand:E("m_brand").value.trim(), vehicle_type:E("m_vtype").value, usage:E("m_vusage").value, reg_date:E("m_reg").value};
@@ -1648,20 +1662,24 @@ function openCarPolModal(id) {
       var co = E("m_co").value;
       if(!co){ showToast("请填写完整信息","err"); return; }
       var d2 = initData(), pid = E("m_pid").value;
-      // 客户：自动新建
+      // 客户：先查重，有则复用，无则新建
       var cid = E("m_pcust").value;
       var custName = E("m_cust_search").value.trim();
       if(!cid && custName) {
-        var newC = {id:"c"+Date.now(), name:custName, phone:"", created_at:td()};
-        d2.customers.push(newC);
-        cid = newC.id;
-        showToast("自动新建客户: "+custName, "ok");
+        var existing = findCustByName(custName, d2);
+        if(existing) {
+          cid = existing.id;
+          showToast("已关联已有客户: "+custName, "ok");
+        } else {
+          var newC = {id:"c"+Date.now(), name:custName, phone:"", created_at:td()};
+          d2.customers.push(newC);
+          cid = newC.id;
+          showToast("自动新建客户: "+custName, "ok");
+        }
       }
-      if(!cid){ showToast("请输入车主姓名或选择已有客户","err"); return; }
       // 车辆：自动新建
       var vid = E("m_pveh").value;
       if(!vid) {
-        // 从 DOM 中取车牌（如果有的话，不过车险表单没有单独的车牌输入...）
         // 车险必须关联已有车辆，跳过自动创建
       }
       var bizPrem = parseFloat(E("m_biz").value)||0;
@@ -1729,12 +1747,18 @@ function openNoncarModal(id) {
       var d2 = initData(), nid = E("m_nid").value;
       var cid = E("m_ncust").value;
       var custName = E("m_cust_search").value.trim();
-      // 自动新建客户
+      // 自动新建客户（先查重，有则复用，无则新建）
       if(!cid && custName) {
-        var newC = {id:"c"+Date.now(), name:custName, phone:"", created_at:td()};
-        d2.customers.push(newC);
-        cid = newC.id;
-        showToast("自动新建客户: "+custName, "ok");
+        var existing = findCustByName(custName, d2);
+        if(existing) {
+          cid = existing.id;
+          showToast("已关联已有客户: "+custName, "ok");
+        } else {
+          var newC = {id:"c"+Date.now(), name:custName, phone:"", created_at:td()};
+          d2.customers.push(newC);
+          cid = newC.id;
+          showToast("自动新建客户: "+custName, "ok");
+        }
       }
       if(!cid){ showToast("请输入客户姓名或选择已有客户","err"); return; }
       if(nid) {
