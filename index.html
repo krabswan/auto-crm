@@ -878,7 +878,19 @@ function doLogin() {
     localStorage.setItem("crm_logged_in", "1");
     localStorage.setItem("crm_user", u);
     E("loginUserName").textContent = u;
-    initApp();
+    // 登录后先从云端加载数据，再初始化APP
+    initSupabase().then(function() {
+      return loadFromCloud().then(function(cloudData) {
+        if (cloudData) {
+          var d = initData();
+          // 把云端数据覆盖到本地localStorage
+          localStorage.setItem("crm_data", JSON.stringify(cloudData));
+        }
+        initApp();
+      });
+    }).catch(function() {
+      initApp(); // 云端失败也继续
+    });
   } else {
     var err = E("loginError");
     if(err) { err.style.display = "block"; err.textContent = "账号或密码错误"; }
