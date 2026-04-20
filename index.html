@@ -162,6 +162,14 @@ textarea.form-control{resize:vertical;min-height:60px}
           <span id="syncBadge" style="display:inline-block;padding:2px 8px;border-radius:10px;background:#ef4444;color:#fff;font-size:11px;">离线</span>
         </button>
       </div>
+      <div style="display:flex;gap:6px;margin-top:8px;">
+        <button class="btn btn-sm" style="background:#10b981;font-size:11px;padding:4px 8px;flex:1;" onclick="manualUpload()" title="把本地数据强制上传到云端">
+          <i class="fa-solid fa-cloud-arrow-up"></i> 上传
+        </button>
+        <button class="btn btn-sm" style="background:#3b82f6;font-size:11px;padding:4px 8px;flex:1;" onclick="manualDownload()" title="把云端数据强制下载到本地">
+          <i class="fa-solid fa-cloud-arrow-down"></i> 下载
+        </button>
+      </div>
     </div>
   </div>
 
@@ -483,7 +491,7 @@ async function loadFromCloud() {
     // vehicles 和 services 表不存在，保持空数组
     
     // 缓存到 localStorage
-    localStorage.setItem('car_crm_data', JSON.stringify(allData));
+    localStorage.setItem('crm_data', JSON.stringify(allData));
     localStorage.setItem('car_crm_last_sync', new Date().toISOString());
     
     syncStatus = '已同步';
@@ -543,6 +551,96 @@ function updateSyncBadge() {
     badge.textContent = syncStatus;
     badge.style.background = syncStatus === '已同步' ? '#10b981' : 
                               syncStatus === '同步中...' ? '#f59e0b' : '#ef4444';
+  }
+}
+
+// 手动上传本地数据到云端
+async function manualUpload() {
+  if (!supabase) {
+    await initSupabase();
+  }
+  if (!supabase) {
+    showToast('云端连接失败', 'err');
+    return;
+  }
+  var badge = document.getElementById('syncBadge');
+  badge.textContent = '上传中...';
+  badge.style.background = '#f59e0b';
+  
+  var d = initData();
+  var tableMap = {
+    'customers': 'customers',
+    'car_policies': 'policies',
+    'noncar_policies': 'noncar',
+    'followups': 'followups'
+  };
+  var total = 0;
+  var done = 0;
+  
+  for (var localName in tableMap) {
+    var cloudName = tableMap[localName];
+    var data = d[localName] || [];
+    if (data.length === 0) { done++; continue; }
+    for (var j = 0; j < data.length; j++) {
+      total++;
+    }
+  }
+  
+  if (total === 0) {
+    badge.textContent = '无数据';
+    badge.style.background = '#6b7280';
+    showToast('本地无数据可上传', 'warning');
+    return;
+  }
+  
+  // 逐表清空+批量插入
+  for (var localName in tableMap) {
+    var cloudName = tableMap[localName];
+    var data = d[localName] || [];
+    try {
+      // 先清空云端旧数据
+      await supabase.from(cloudName).delete().neq('id', '__placeholder__never_match__');
+      if (data.length > 0) {
+        var { error } = await supabase.from(cloudName).insert(data);
+        if (error) throw error;
+      }
+      console.log('📤 ' + cloudName + ' 上传 ' + data.length + ' 条完成');
+    } catch(e) {
+      console.warn('⚠️ ' + cloudName + ' 上传失败:', e.message);
+    }
+    done++;
+  }
+  
+  badge.textContent = '已上传';
+  badge.style.background = '#10b981';
+  syncStatus = '已上传';
+  showToast('数据已上传到云端！共 ' + total + ' 条', 'ok');
+}
+
+// 手动从云端下载数据到本地
+async function manualDownload() {
+  if (!supabase) {
+    await initSupabase();
+  }
+  if (!supabase) {
+    showToast('云端连接失败', 'err');
+    return;
+  }
+  var badge = document.getElementById('syncBadge');
+  badge.textContent = '下载中...';
+  badge.style.background = '#f59e0b';
+  
+  var cloudData = await loadFromCloud();
+  if (cloudData) {
+    badge.textContent = '已下载';
+    badge.style.background = '#10b981';
+    syncStatus = '已下载';
+    showToast('云端数据已覆盖本地！', 'ok');
+    setTimeout(function(){ location.reload(); }, 800);
+  } else {
+    badge.textContent = '连接失败';
+    badge.style.background = '#ef4440';
+    showToast('云端下载失败，请检查网络', 'err');
   }
 }
 
@@ -882,11 +980,13 @@ function doLogin() {
     initSupabase().then(function() {
       return loadFromCloud().then(function(cloudData) {
         if (cloudData) {
-          var d = initData();
-          // 把云端数据覆盖到本地localStorage
+          // 把云端数据覆盖到本地localStorage，然后重刷页面让所有数据生效
           localStorage.setItem("crm_data", JSON.stringify(cloudData));
+          showToast('从云端加载 ' + (cloudData.customers ? cloudData.customers.length : 0) + ' 条数据，重刷页面...', 'ok');
+          setTimeout(function(){ location.reload(); }, 800);
+        } else {
+          initApp();
         }
-        initApp();
       });
     }).catch(function() {
       initApp(); // 云端失败也继续
