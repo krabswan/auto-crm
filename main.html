@@ -94,7 +94,7 @@ tr:hover { background:#f9fafb; }
           <button class="btn btn-primary" onclick="openCustModal(null)">➕ 新增客户</button>
         </div>
       </div>
-      <table id="custTable"><thead><tr><th>姓名</th><th>电话</th><th>身份证</th><th>地址</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <table id="custTable"><thead><tr><th>客户名称</th><th>电话</th><th>证件号码</th><th>地址</th><th>操作</th></tr></thead><tbody></tbody></table>
     </div>
   </div>
 
@@ -133,9 +133,9 @@ tr:hover { background:#f9fafb; }
     <div class="modal-header"><h3 id="custModalTitle">新增客户</h3><button class="modal-close" onclick="closeModal('custModal')">×</button></div>
     <div class="modal-body">
       <input type="hidden" id="custId">
-      <div class="form-group"><label>姓名</label><input id="custName"></div>
+      <div class="form-group"><label>客户名称</label><input id="custName"></div>
       <div class="form-group"><label>电话</label><input id="custPhone"></div>
-      <div class="form-group"><label>身份证</label><input id="custIdCard"></div>
+      <div class="form-group"><label>证件号码</label><input id="custIdCard"></div>
       <div class="form-group"><label>地址</label><input id="custAddr"></div>
     </div>
     <div class="modal-footer"><button class="btn" onclick="closeModal('custModal')">取消</button><button class="btn btn-primary" onclick="saveCust()">保存</button></div>
@@ -258,7 +258,7 @@ function saveCust() {
     idCard: document.getElementById('custIdCard').value.trim(),
     addr: document.getElementById('custAddr').value.trim()
   };
-  if (!c.name) { showToast('请输入姓名', 'err'); return; }
+  if (!c.name) { showToast('请输入客户名称', 'err'); return; }
   if (id) {
     var idx = d.customers.findIndex(function(x) { return x.id === id; });
     if (idx >= 0) d.customers[idx] = c;
@@ -284,7 +284,7 @@ function delCust(id) {
 }
 function exportCustomers() {
   var d = loadData();
-  var rows = [['姓名','电话','身份证','地址']];
+  var rows = [['客户名称','电话','证件号码','地址']];
   d.customers.forEach(function(c) { rows.push([c.name, c.phone, c.idCard, c.addr]); });
   var wb = XLSX.utils.book_new();
   var ws = XLSX.utils.aoa_to_sheet(rows);
