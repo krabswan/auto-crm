@@ -593,16 +593,26 @@ async function manualUpload() {
     return;
   }
   
-  // 逐表清空+批量插入
+  // 逐表Upsert（插入或更新，浏览器CORS安全模式）
+  var upsertCount = 0;
   for (var localName in tableMap) {
     var cloudName = tableMap[localName];
     var data = d[localName] || [];
+    if (data.length === 0) { done++; continue; }
     try {
-      // 先清空云端旧数据
-      await supabase.from(cloudName).delete().neq('id', '__placeholder__never_match__');
-      if (data.length > 0) {
-        var { error } = await supabase.from(cloudName).insert(data);
-        if (error) throw error;
+      var { error } = await supabase.from(cloudName).upsert(data, {
+        onConflict: 'id',
+        defaultToNull: false
+      });
+      if (error) {
+        console.warn('Upsert失败，尝试逐条:', cloudName, error.message);
+        for (var k = 0; k < data.length; k++) {
+          var { error: e2 } = await supabase.from(cloudName).upsert([data[k]], { onConflict: 'id' });
+          if (e2) console.warn('  条', k, '失败:', e2.message);
+          else upsertCount++;
+        }
+      } else {
+        upsertCount += data.length;
       }
       console.log('📤 ' + cloudName + ' 上传 ' + data.length + ' 条完成');
     } catch(e) {
@@ -614,7 +624,7 @@ async function manualUpload() {
   badge.textContent = '已上传';
   badge.style.background = '#10b981';
   syncStatus = '已上传';
-  showToast('数据已上传到云端！共 ' + total + ' 条', 'ok');
+  showToast('数据已上传到云端！共 ' + upsertCount + ' 条', 'ok');
 }
 
 // 手动从云端下载数据到本地
