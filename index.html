@@ -1,0 +1,2382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>蟹老板车险CRM V4.0 - 联网版</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>
+</svg>">
+<style>
+:root{--primary:#2563eb;--primary-dark:#1d4ed8;--success:#10b981;--warning:#f59e0b;--danger:#ef4444;--sidebar-w:240px;--topbar-h:60px;--radius:8px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:#f1f5f9;min-height:100vh;color:#1e293b;font-size:14px}
+button{cursor:pointer;border:none;border-radius:var(--radius);padding:8px 16px;font-size:14px;transition:all .2s}
+button:hover{opacity:.9}
+input,select,textarea{width:100%;padding:8px 12px;border:1px solid #e2e8f0;border-radius:var(--radius);font-size:14px;font-family:inherit;background:#fff}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-success{background:var(--success);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-outline{background:transparent;border:1px solid #e2e8f0;color:#64748b}
+.btn-sm{padding:4px 10px;font-size:12px}
+.login-page{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)}
+.login-card{background:#fff;border-radius:16px;padding:48px;width:420px;box-shadow:0 25px 50px rgba(0,0,0,.2)}
+.login-logo{text-align:center;font-size:28px;font-weight:700;color:var(--primary);margin-bottom:8px}
+.login-sub{text-align:center;color:#94a3b8;margin-bottom:32px;font-size:13px}
+.login-card .form-group{margin-bottom:20px}
+.login-card label{font-weight:500;color:#475569;display:block;margin-bottom:6px}
+.login-card .btn{width:100%;padding:12px;font-size:16px}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:var(--sidebar-w);background:#1e293b;color:#fff;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;overflow-y:auto}
+.sidebar-header{padding:20px 24px;border-bottom:1px solid rgba(255,255,255,.1);font-size:18px;font-weight:700;color:var(--primary)}
+.sidebar-nav{padding:12px 0;flex:1}
+.nav-item{display:flex;align-items:center;padding:12px 24px;color:#94a3b8;cursor:pointer;transition:all .2s;user-select:none}
+.nav-item:hover{background:rgba(255,255,255,.05);color:#fff}
+.nav-item.active{background:rgba(37,99,235,.3);color:#fff;border-right:3px solid var(--primary)}
+.nav-item i{width:20px;margin-right:10px;text-align:center}
+.nav-section{padding:8px 24px 4px;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin-top:12px}
+.sidebar-footer{padding:16px 24px;border-top:1px solid rgba(255,255,255,.1);font-size:12px;color:#64748b}
+.topbar{display:none;position:fixed;top:0;left:var(--sidebar-w);right:0;height:var(--topbar-h);background:#fff;border-bottom:1px solid #e2e8f0;z-index:90;align-items:center;padding:0 24px;justify-content:space-between}
+.topbar-title{font-weight:600;font-size:16px}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.page{display:none;padding:24px;margin-left:var(--sidebar-w);margin-top:var(--topbar-h)}
+.page.active{display:block}
+.page-title{font-size:20px;font-weight:600;margin-bottom:20px;color:#1e293b}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:#fff;border-radius:var(--radius);padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.stat-label{color:#64748b;font-size:12px;margin-bottom:6px}
+.stat-value{font-size:24px;font-weight:700;color:#1e293b}
+.stat-value.green{color:var(--success)}
+.stat-card .stat-value.danger{color:var(--danger)}
+.page-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.table-wrap{background:#fff;border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+table{width:100%;border-collapse:collapse}
+thead{background:#f8fafc}
+th,td{padding:10px 14px;text-align:left;font-size:13px;border-bottom:1px solid #f1f5f9}
+th{font-weight:600;color:#475569;white-space:nowrap}
+tbody tr:hover{background:#f8fafc}
+tbody tr:last-child td{border-bottom:none}
+a{color:var(--primary);text-decoration:none;cursor:pointer}
+a:hover{text-decoration:underline}
+.tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:500}
+.tag-green{background:#d1fae5;color:#065f46}
+.tag-blue{background:#dbeafe;color:#1e40af}
+.tag-red{background:#fee2e2;color:#991b1b}
+.tag-yellow{background:#fef3c7;color:#92400e}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-group{margin-bottom:12px}
+.form-group label{font-weight:500;color:#475569;display:block;margin-bottom:4px;font-size:13px}
+.form-group.full{grid-column:1/-1}
+textarea.form-control{resize:vertical;min-height:60px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center}
+.modal-box{background:#fff;border-radius:var(--radius);padding:24px;width:560px;max-width:90vw;max-height:90vh;overflow-y:auto;animation:modalIn .2s ease}
+@keyframes modalIn{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #f1f5f9}
+.modal-title{font-size:16px;font-weight:600}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:#94a3b8;padding:0;line-height:1}
+.modal-close:hover{color:#1e293b}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid #f1f5f9}
+.modal-footer button{min-width:80px}
+.toast{display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 24px;border-radius:var(--radius);z-index:9999;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,.15);transition:opacity .3s}
+.toast.ok{background:var(--success)}
+.toast.err{background:var(--danger)}
+.dash-top{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.dash-left{background:#fff;border-radius:var(--radius);padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.dash-left h3{font-size:14px;color:#64748b;margin-bottom:12px}
+.quick-action{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+.qa-btn{background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:14px 10px;text-align:center;cursor:pointer;transition:all .2s;font-size:12px}
+.qa-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
+.qa-btn i{display:block;font-size:20px;margin-bottom:6px}
+.chart-placeholder{height:200px;background:#f8fafc;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:13px}
+.search-bar{display:flex;gap:8px;margin-bottom:12px}
+.search-bar input{flex:1}
+.badge{display:inline-block;padding:1px 6px;border-radius:10px;font-size:11px;background:var(--primary);color:#fff;margin-left:4px}
+.text-green{color:var(--success)}
+.text-red{color:var(--danger)}
+.text-gray{color:#94a3b8}
+.text-center{text-align:center}
+.text-right{text-align:right}
+.finance-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+@media(max-width:768px){
+.sidebar{transform:translateX(-100%);transition:transform .3s}
+.sidebar.open{transform:translateX(0)}
+.page{margin-left:0;padding:16px}
+.topbar{display:flex}
+}
+</style>
+</head>
+<body>
+
+<!-- ====== 登录页 ====== -->
+<div id="loginPage" class="login-page">
+  <div class="login-card">
+    <div class="login-logo">
+      <svg width="40" height="40" viewBox="0 0 100 100" style="vertical-align:middle;margin-right:8px"><circle cx="50" cy="50" r="45" fill="#2563eb"/><text x="50" y="68" text-anchor="middle" font-size="50" fill="white">C</text></svg>
+      AutoCRM <span style="font-size:14px;color:#94a3b8">V4.0</span>
+    </div>
+    <p class="login-sub">蟹老板车险CRM系统 - 联网版</p>
+    <div class="form-group">
+      <label>用户名 / 手机号</label>
+      <input type="text" id="loginUser" placeholder="请输入用户名或手机号" value="krabs">
+    </div>
+    <div class="form-group">
+      <label>密码</label>
+      <input type="password" id="loginPass" placeholder="请输入密码" value="589842">
+    </div>
+    <div id="loginError" style="color:#ef4444;font-size:13px;margin-bottom:12px;display:none">用户名或密码错误</div>
+    <button class="btn btn-primary" onclick="doLogin()">登录</button>
+    <p style="text-align:center;color:#94a3b8;font-size:12px;margin-top:16px">演示账号: krabs / 589842</p>
+  </div>
+</div>
+
+<!-- ====== 主界面 ====== -->
+<div id="appLayout" style="display:none">
+  <!-- 侧边栏 -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <svg width="24" height="24" viewBox="0 0 100 100" style="vertical-align:middle;margin-right:6px"><circle cx="50" cy="50" r="45" fill="#2563eb"/><text x="50" y="68" text-anchor="middle" font-size="50" fill="white">C</text></svg>
+      AutoCRM
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section">日常业务</div>
+      <div class="nav-item active" data-page="dashboard"><i class="fa-solid fa-gauge-high"></i><span class="nav-text">仪表盘</span></div>
+      <div class="nav-item" data-page="customers"><i class="fa-solid fa-users"></i><span class="nav-text">客户管理</span><span class="badge" id="badge-customers">0</span></div>
+      <div class="nav-item" data-page="vehicles"><i class="fa-solid fa-car"></i><span class="nav-text">车辆管理</span></div>
+      <div class="nav-item" data-page="car-insurance"><i class="fa-solid fa-shield-halved"></i><span class="nav-text">车险管理</span><span class="badge" id="badge-car-renewal">0</span></div>
+      <div class="nav-item" data-page="noncar-insurance"><i class="fa-solid fa-umbrella"></i><span class="nav-text">非车险管理</span></div>
+      <div class="nav-section">客户服务</div>
+      <div class="nav-item" data-page="annual-review"><i class="fa-solid fa-calendar-check"></i><span class="nav-text">年检提醒</span><span class="badge tag-red" id="badge-annual">0</span></div>
+      <div class="nav-item" data-page="after-market"><i class="fa-solid fa-wrench"></i><span class="nav-text">售后管理</span></div>
+      <div class="nav-item" data-page="renewal-remind"><i class="fa-solid fa-bell"></i><span class="nav-text">续保提醒</span><span class="badge tag-red" id="badge-renewal">0</span></div>
+      <div class="nav-item" data-page="followups"><i class="fa-solid fa-phone"></i><span class="nav-text">跟进记录</span></div>
+      <div class="nav-section">经营分析</div>
+      <div class="nav-item" data-page="finance"><i class="fa-solid fa-chart-line"></i><span class="nav-text">财务统计</span></div>
+      <div class="nav-item" data-page="stats"><i class="fa-solid fa-chart-pie"></i><span class="nav-text">数据报表</span></div>
+      <div class="nav-section">系统</div>
+      <div class="nav-item" data-page="audit"><i class="fa-solid fa-database"></i><span class="nav-text">数据总览</span></div>
+      <div class="nav-item" id="btn-logout"><i class="fa-solid fa-right-from-bracket"></i><span>退出登录</span></div>
+    </div>
+    <div class="sidebar-footer">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span id="currentDate">--</span>
+        <button class="btn btn-sm" style="background:#374151;font-size:11px;padding:4px 8px;" onclick="toggleOnlineMode()">
+          <span id="syncBadge" style="display:inline-block;padding:2px 8px;border-radius:10px;background:#ef4444;color:#fff;font-size:11px;">离线</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 顶部栏 -->
+  <div class="topbar" id="topbar">
+    <div class="topbar-title" id="pageTitle">仪表盘</div>
+    <div class="topbar-right">
+      <span style="color:#94a3b8;font-size:13px">欢迎，<strong id="loginUserName">krabs</strong></span>
+      <button class="btn btn-outline btn-sm" onclick="doLogout()">退出</button>
+    </div>
+  </div>
+
+  <!-- ====== 仪表盘 ====== -->
+  <div class="page active" id="page-dashboard">
+    <div class="page-title">📊 仪表盘</div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">客户总数</div><div class="stat-value" id="stat-customers">0</div></div>
+      <div class="stat-card"><div class="stat-label">车辆总数</div><div class="stat-value" id="stat-vehicles">0</div></div>
+      <div class="stat-card"><div class="stat-label">车险单数</div><div class="stat-value" id="stat-renewals">0</div></div>
+      <div class="stat-card"><div class="stat-label">总保费</div><div class="stat-value" id="stat-car-premium">0</div><span style="font-size:12px;color:#64748b">元</span></div>
+      <div class="stat-card"><div class="stat-label">总佣金</div><div class="stat-value green" id="stat-commission">0</div><span style="font-size:12px;color:#64748b">元</span></div>
+      <div class="stat-card"><div class="stat-label">即将到期</div><div class="stat-value danger" id="stat-annual">0</div></div>
+    </div>
+    <div class="dash-top">
+      <div class="dash-left">
+        <h3>💡 快捷操作</h3>
+        <div class="quick-action">
+          <div class="qa-btn" id="qa-add-customer"><i>👤</i>新增客户</div>
+          <div class="qa-btn" id="qa-add-vehicle"><i>🚗</i>新增车辆</div>
+          <div class="qa-btn" id="qa-add-policy"><i>📋</i>新增保单</div>
+          <div class="qa-btn" id="qa-add-service"><i>🔧</i>服务记录</div>
+          <div class="qa-btn" id="qa-add-followup"><i>📞</i>跟进记录</div>
+          <div class="qa-btn" id="qa-export"><i>📤</i>导出数据</div>
+        </div>
+      </div>
+      <div class="dash-left">
+        <h3>📅 今日概览</h3>
+        <div style="font-size:13px;color:#64748b;line-height:2">
+          <div>今日日期：<strong id="today-date">-</strong></div>
+          <div>客户总数：<strong id="dash-customers">0</strong></div>
+          <div>车险单数：<strong id="dash-car-policies">0</strong></div>
+          <div>待续保提醒：<strong id="dash-renewal" style="color:#f59e0b">0</strong> 单</div>
+          <div>今日新增：<strong id="dash-new">0</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== 客户管理 ====== -->
+  <div class="page" id="page-customers">
+    <div class="page-title">👥 客户管理</div>
+    <div class="page-bar">
+      <button class="btn btn-primary btn-sm" id="btn-add-customer">+ 新增客户</button>
+      <button class="btn btn-outline btn-sm" id="btn-export-customer" onclick="doExportCustomers()">📤 导出</button>
+      <button class="btn btn-outline btn-sm" id="btn-backup-customer" onclick="fullBackup()">💾 备份</button>
+      <input type="file" id="importFileCustomer" accept=".json,.csv,.xlsx" style="display:none">
+      <button class="btn btn-outline btn-sm" id="btn-import-customer" onclick="E('importFileCustomer').click()">📥 导入Excel/CSV/JSON</button>
+      <input type="file" id="importCustTemplate" accept=".csv" style="display:none">
+      <button class="btn btn-outline btn-sm" id="btn-download-template" onclick="downloadCustomerTemplate()">📄 下载导入模板</button>
+    </div>
+    <div class="search-bar">
+      <input type="text" id="searchCustomer" placeholder="搜索客户姓名、电话、车牌...">
+      <button class="btn btn-outline btn-sm" id="btn-search-customer">搜索</button>
+    </div>
+    <div class="table-wrap">
+      <div id="custTable"></div>
+    </div>
+  </div>
+
+  <!-- ====== 车辆管理 ====== -->
+  <div class="page" id="page-vehicles">
+    <div class="page-title">🚗 车辆管理</div>
+    <div class="page-bar">
+      <button class="btn btn-primary btn-sm" id="btn-add-vehicle">+ 新增车辆</button>
+      <button class="btn btn-outline btn-sm" id="btn-import-vehicle" onclick="importJSON(doImportVehicles)">📥 导入</button> <button class="btn btn-outline btn-sm" id="btn-export-vehicle" onclick="doExportVehicles()">📤 导出</button>
+    </div>
+    <div class="table-wrap">
+      <div id="vehTable"></div>
+    </div>
+  </div>
+
+  <!-- ====== 车险管理 ====== -->
+  <div class="page" id="page-car-insurance">
+    <div class="page-title">🛡️ 车险管理</div>
+    <div class="page-bar">
+      <button class="btn btn-primary btn-sm" id="btn-add-car-policy">+ 新增车险</button>
+      <button class="btn btn-outline btn-sm" id="btn-import-policy" onclick="importJSON(doImportCarPol)">📥 导入</button> <button class="btn btn-outline btn-sm" id="btn-export-policy" onclick="doExportCarPol()">📤 导出</button>
+      <select id="filterStatus" style="width:auto;padding:6px 12px;border-radius:6px">
+        <option value="">全部状态</option>
+        <option value="active">生效中</option>
+        <option value="pending">待生效</option>
+        <option value="expired">已过期</option>
+        <option value="quoted">已报价</option>
+        <option value="renewed">已续保</option>
+        <option value="lost">已流失</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <div id="carPolTable"></div>
+    </div>
+  </div>
+
+  <!-- ====== 非车险 ====== -->
+  <div class="page" id="page-noncar-insurance">
+    <div class="page-title">☂️ 非车险管理</div>
+    <div class="page-bar">
+      <button class="btn btn-primary btn-sm" id="btn-add-noncar">+ 新增非车险</button>
+      <button class="btn btn-primary btn-sm" id="btn-import-noncar" onclick="importJSON(doImportNoncar)">📥 导入</button>
+      <button class="btn btn-outline btn-sm" id="btn-export-noncar" onclick="doExportNoncar()">📤 导出</button>
+    </div>
+    <div class="table-wrap">
+      <div id="noncarTable"></div>
+    </div>
+  </div>
+
+  <!-- ====== 年检提醒 ====== -->
+  <div class="page" id="page-annual-review">
+    <div class="page-title">📅 年检提醒</div>
+    <div class="stats-grid" style="margin-bottom:20px">
+      <div class="stat-card"><div class="stat-label">待年检</div><div class="stat-value danger" id="annual-pending">0</div></div>
+      <div class="stat-card"><div class="stat-label">正常</div><div class="stat-value green" id="annual-ok">0</div></div>
+    </div>
+    <div class="table-wrap">
+      <div id="annualTable"></div>
+    </div>
+  </div>
+
+  <!-- ====== 售后管理 ====== -->
+  <div class="page" id="page-after-market">
+    <div class="page-title">🔧 售后管理</div>
+    <div class="page-bar">
+      <button class="btn btn-primary btn-sm" id="btn-add-service">+ 新增服务记录</button>
+    </div>
+    <div class="table-wrap">
+      <div id="amTable"></div>
+    </div>
+  </div>
+
+  <!-- ====== 续保提醒 ====== -->
+  <div class="page" id="page-renewal-remind">
+    <div class="page-title">🔔 续保提醒 <span style="font-size:13px;color:#94a3b8;font-weight:400">（到期前30天提醒）</span></div>
+    <div class="stats-grid" style="margin-bottom:20px">
+      <div class="stat-card"><div class="stat-label">30天内到期</div><div class="stat-value" style="color:#f59e0b" id="renewal-30days">0</div><span style="font-size:12px;color:#64748b">单</span></div>
+      <div class="stat-card"><div class="stat-label">已过期</div><div class="stat-value danger" id="renewal-expired">0</div><span style="font-size:12px;color:#64748b">单</span></div>
+      <div class="stat-card"><div class="stat-label">待续保保费</div><div class="stat-value" id="renewal-premium">0</div><span style="font-size:12px;color:#64748b">元</span></div>
+    </div>
+    <div class="page-bar">
+      <button class="btn btn-outline btn-sm" id="btn-export-renewal">📤 导出续保清单</button>
+    </div>
+    <div class="table-wrap">
+      <div id="renewalTable"></div>
+    </div>
+  </div>
+
+  <!-- ====== 跟进记录 ====== -->
+  <div class="page" id="page-followups">
+    <div class="page-title">📞 跟进记录</div>
+    <div class="page-bar">
+      <button class="btn btn-primary btn-sm" id="btn-add-followup">+ 新增跟进</button>
+    </div>
+    <div class="table-wrap">
+      <div id="followupTable"></div>
+    </div>
+  </div>
+
+  <!-- ====== 财务统计 ====== -->
+  <div class="page" id="page-finance">
+    <div class="page-title">💰 财务统计</div>
+    <div class="finance-row">
+      <div class="stat-card"><div class="stat-label">总保费</div><div class="stat-value" id="fin-total-premium">0</div></div>
+      <div class="stat-card"><div class="stat-label">总佣金</div><div class="stat-value green" id="fin-total-commission">0</div></div>
+      <div class="stat-card"><div class="stat-label">有效保单保费</div><div class="stat-value" id="fin-valid-premium">0</div></div>
+    </div>
+    <div class="table-wrap">
+      <div id="financeTable"></div>
+    </div>
+  </div>
+
+  <!-- ====== 数据报表 ====== -->
+  <div class="page" id="page-stats">
+    <div class="page-title">📊 数据报表</div>
+    <div class="stats-grid" id="statsGrid"></div>
+    <div class="table-wrap" style="margin-top:16px">
+      <div id="statsTable"></div>
+    </div>
+  </div>
+
+  <!-- ====== 数据总览 ====== -->
+  <div class="page" id="page-audit">
+    <div class="page-title">🗄️ 数据总览</div>
+    <div class="stats-grid" id="auditGrid"></div>
+    <div class="table-wrap" style="margin-top:16px">
+      <div id="auditTable"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== 通用弹窗 ====== -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box" id="modalBox">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle"></div>
+      <button class="modal-close" id="modalCloseBtn">&times;</button>
+    </div>
+    <div id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<!-- ====== Toast ====== -->
+<div class="toast" id="toast"></div>
+
+<!-- ====== Font Awesome ====== -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<!-- ====== Supabase SDK ====== -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- ====== 主JS ====== -->
+<script>
+// =============================================================
+// 🔌 Supabase 联网配置（V4.0）
+// =============================================================
+var SUPABASE_URL = 'https://yjnkbippailouqoqivtv.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqbmtiaXBwYWlsb3Vxb3FpdnR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjczNjcsImV4cCI6MjA5MDg0MzM2N30.QXYd5vK6bjD8Z7UmoA7JMb0AokHpZj9SggGPUd-DqDc';
+var supabase = null;
+var isOnlineMode = false; // 默认离线模式
+var syncStatus = '离线'; // 同步状态
+
+// 初始化 Supabase 客户端
+async function initSupabase() {
+  try {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    console.log('✅ Supabase 初始化成功');
+    return true;
+  } catch (e) {
+    console.error('❌ Supabase 初始化失败:', e);
+    return false;
+  }
+}
+
+// 从 Supabase 加载所有数据
+async function loadFromCloud() {
+  if (!supabase) return null;
+  try {
+    syncStatus = '同步中...';
+    updateSyncBadge();
+    
+    const { data: customers, error: e1 } = await supabase.from('customers').select('*');
+    const { data: vehicles, error: e2 } = await supabase.from('vehicles').select('*');
+    const { data: car_policies, error: e3 } = await supabase.from('car_policies').select('*');
+    const { data: noncar_policies, error: e4 } = await supabase.from('noncar_policies').select('*');
+    const { data: services, error: e5 } = await supabase.from('services').select('*');
+    const { data: followups, error: e6 } = await supabase.from('followups').select('*');
+    
+    if (e1 || e2 || e3 || e4 || e5 || e6) {
+      console.error('加载错误:', e1 || e2 || e3 || e4 || e5 || e6);
+      syncStatus = '同步失败';
+      updateSyncBadge();
+      return null;
+    }
+    
+    const allData = {
+      customers: customers || [],
+      vehicles: vehicles || [],
+      car_policies: car_policies || [],
+      noncar_policies: noncar_policies || [],
+      services: services || [],
+      followups: followups || []
+    };
+    
+    // 缓存到 localStorage
+    localStorage.setItem('car_crm_data', JSON.stringify(allData));
+    localStorage.setItem('car_crm_last_sync', new Date().toISOString());
+    
+    syncStatus = '已同步';
+    isOnlineMode = true;
+    updateSyncBadge();
+    console.log('✅ 云端数据加载成功:', allData);
+    return allData;
+  } catch (e) {
+    console.error('❌ 加载云端数据失败:', e);
+    syncStatus = '同步失败';
+    updateSyncBadge();
+    return null;
+  }
+}
+
+// 保存单条记录到 Supabase
+async function saveToCloud(table, data) {
+  if (!supabase || !isOnlineMode) return null;
+  try {
+    const { data: result, error } = await supabase.from(table).upsert(data).select();
+    if (error) {
+      console.error('保存失败:', error);
+      return null;
+    }
+    return result;
+  } catch (e) {
+    console.error('❌ 保存到云端失败:', e);
+    return null;
+  }
+}
+
+// 删除单条记录从 Supabase
+async function deleteFromCloud(table, id) {
+  if (!supabase || !isOnlineMode) return false;
+  try {
+    const { error } = await supabase.from(table).delete().eq('id', id);
+    if (error) {
+      console.error('删除失败:', error);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error('❌ 从云端删除失败:', e);
+    return false;
+  }
+}
+
+// 更新同步状态徽章
+function updateSyncBadge() {
+  var badge = document.getElementById('syncBadge');
+  if (badge) {
+    badge.textContent = syncStatus;
+    badge.style.background = syncStatus === '已同步' ? '#10b981' : 
+                              syncStatus === '同步中...' ? '#f59e0b' : '#ef4444';
+  }
+}
+
+// 切换在线/离线模式
+async function toggleOnlineMode() {
+  if (isOnlineMode) {
+    isOnlineMode = false;
+    syncStatus = '离线';
+    updateSyncBadge();
+    showToast('已切换到离线模式', 'warning');
+  } else {
+    showToast('正在连接云端...', 'info');
+    var ok = await initSupabase();
+    if (ok) {
+      var data = await loadFromCloud();
+      if (data) {
+        isOnlineMode = true;
+        syncStatus = '已同步';
+        updateSyncBadge();
+        showToast('已切换到在线模式，数据已同步', 'ok');
+        // 刷新界面
+        renderAll();
+      } else {
+        showToast('云端数据加载失败，保持离线模式', 'error');
+      }
+    } else {
+      showToast('连接云端失败，保持离线模式', 'error');
+    }
+  }
+}
+
+// =============================================================
+// 全局数据 & 常量
+// =============================================================
+var DEFAULTS = {"customers":[{"id":"1","name":"张三","phone":"13800138001","id_card":"320101198001011234","address":"常州天宁区","created_at":"2025-01-01"},{"id":"2","name":"李四","phone":"13900139002","id_card":"320102198002022345","address":"常州钟楼区","created_at":"2025-01-15"},{"id":"3","name":"王五","phone":"13700137003","id_card":"320103198003033456","address":"常州新北区","created_at":"2025-02-01"},{"id":"4","name":"赵六","phone":"13600136004","id_card":"320104198004044567","address":"常州武进区","created_at":"2025-02-15"},{"id":"5","name":"钱七","phone":"13500135005","id_card":"320105198005055678","address":"常州金坛区","created_at":"2025-03-01"}],"vehicles":[{"id":"1","customer_id":"1","plate":"苏D88888","vin":"LSVABC1234FAKEVIN01","brand":"大众帕萨特","model":"2020款","reg_date":"2020-03-15","created_at":"2025-01-01"},{"id":"2","customer_id":"2","plate":"苏D66666","vin":"LSVXYZ5678FAKEVIN02","brand":"宝马3系","model":"2021款","reg_date":"2021-06-20","created_at":"2025-01-15"},{"id":"3","customer_id":"3","plate":"苏D99999","vin":"LSVDEF9012FAKEVIN03","brand":"奥迪A4L","model":"2022款","reg_date":"2022-01-10","created_at":"2025-02-01"},{"id":"4","customer_id":"4","plate":"苏D11111","vin":"LSVGHI3456FAKEVIN04","brand":"奔驰C级","model":"2021款","reg_date":"2021-09-05","created_at":"2025-02-15"},{"id":"5","customer_id":"5","plate":"苏D22222","vin":"LSVJKL7890FAKEVIN05","brand":"丰田凯美瑞","model":"2023款","reg_date":"2023-04-18","created_at":"2025-03-01"}],"car_policies":[{"id":"1","customer_id":"1","vehicle_id":"1","company":"人保","total_premium":"4500","commission_amount":"800","start_date":"2025-03-15","end_date":"2026-03-14","status":"active","created_at":"2025-03-01"},{"id":"2","customer_id":"2","vehicle_id":"2","company":"平安","total_premium":"5200","commission_amount":"900","start_date":"2025-06-20","end_date":"2026-06-19","status":"active","created_at":"2025-06-15"},{"id":"3","customer_id":"3","vehicle_id":"3","company":"太平洋","total_premium":"4800","commission_amount":"850","start_date":"2025-01-10","end_date":"2026-01-09","status":"active","created_at":"2025-01-05"},{"id":"4","customer_id":"4","vehicle_id":"4","company":"人保","total_premium":"5500","commission_amount":"1000","start_date":"2025-09-05","end_date":"2026-09-04","status":"active","created_at":"2025-09-01"},{"id":"5","customer_id":"5","vehicle_id":"5","company":"平安","total_premium":"3800","commission_amount":"700","start_date":"2025-04-18","end_date":"2026-04-17","status":"active","created_at":"2025-04-15"}],"noncar_policies":[{"id":"1","customer_id":"1","type":"驾乘险","company":"人保","premium":"500","commission_amount":"100","start_date":"2025-03-15","end_date":"2026-03-14","created_at":"2025-03-01"},{"id":"2","customer_id":"2","type":"三者险","company":"平安","premium":"300","commission_amount":"60","start_date":"2025-06-20","end_date":"2026-06-19","created_at":"2025-06-15"},{"id":"3","customer_id":"3","type":"交强险","company":"太平洋","premium":"800","commission_amount":"160","start_date":"2025-01-10","end_date":"2026-01-09","created_at":"2025-01-05"}],"services":[{"id":"1","customer_id":"1","vehicle_id":"1","service_type":"maintain","service_date":"2025-03-10","actual_fee":"500","remark":"常规保养","status":"completed","created_at":"2025-03-10"},{"id":"2","customer_id":"2","vehicle_id":"2","service_type":"repair","service_date":"2025-07-01","actual_fee":"2000","remark":"剐蹭维修","status":"completed","created_at":"2025-07-01"},{"id":"3","customer_id":"3","vehicle_id":"3","service_type":"annual_review","service_date":"2026-01-10","actual_fee":"200","remark":"年检","status":"completed","created_at":"2026-01-10"}],"followups":[{"id":"1","customer_id":"1","followup_date":"2025-12-01","content":"提醒续保","next_followup":"2026-02-15","status":"pending","created_at":"2025-12-01"},{"id":"2","customer_id":"2","followup_date":"2025-11-15","content":"价格沟通","next_followup":"2026-03-01","status":"pending","created_at":"2025-11-15"}]};
+
+// =============================================================
+// 工具函数
+// =============================================================
+function E(id) { return document.getElementById(id); }
+function esc(s) { if (!s && s !== 0) return ""; return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function td() { return new Date().toISOString().split("T")[0]; }
+function nyd() { var d = new Date(Date.now() + 365*86400000); return d.toISOString().split("T")[0]; }
+function fmt(n) { return Math.round(Number(n)||0).toLocaleString(); }
+function num(n) { return Number(n)||0; }
+
+// 折页功能：显示前N条
+var PAGE_SIZE = 10;
+var currentPages = {}; // 记录每个模块的当前页码
+var selectedRows = {}; // 记录每个模块选中的行ID
+
+function renderPagination(tableId, totalRows, pageKey, renderFn, getRowsFn) {
+  var total = totalRows.length;
+  var currentPage = currentPages[pageKey] || 1;
+  var totalPages = Math.ceil(total / PAGE_SIZE);
+  var startIdx = (currentPage - 1) * PAGE_SIZE;
+  var endIdx = startIdx + PAGE_SIZE;
+  var displayRows = totalRows.slice(startIdx, endIdx);
+
+  var html = renderFn(displayRows, pageKey);
+
+  // 分页控制
+  if(total > PAGE_SIZE) {
+    html += '<div class="pagination-bar" style="padding:12px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid #f1f5f9;flex-wrap:wrap;gap:8px;">';
+    html += '<div class="page-info text-gray" style="font-size:13px;">共 <b>'+total+'</b> 条，第 '+(startIdx+1)+'-'+Math.min(endIdx,total)+' 条</div>';
+    html += '<div class="page-controls" style="display:flex;align-items:center;gap:4px;">';
+    // 首页
+    html += '<button class="btn btn-outline btn-sm" onclick="goToPage(\''+pageKey+'\',1)" '+(currentPage===1?'disabled':'')+'>首页</button>';
+    // 上一页
+    html += '<button class="btn btn-outline btn-sm" onclick="goToPage(\''+pageKey+'\','+(currentPage-1)+')" '+(currentPage===1?'disabled':'')+'>上一页</button>';
+    // 页码
+    var startPage = Math.max(1, currentPage - 2);
+    var endPage = Math.min(totalPages, currentPage + 2);
+    if(startPage > 1) html += '<span class="text-gray">...</span>';
+    for(var i = startPage; i <= endPage; i++) {
+      if(i === currentPage) {
+        html += '<button class="btn btn-primary btn-sm">'+i+'</button>';
+      } else {
+        html += '<button class="btn btn-outline btn-sm" onclick="goToPage(\''+pageKey+'\','+i+')">'+i+'</button>';
+      }
+    }
+    if(endPage < totalPages) html += '<span class="text-gray">...</span>';
+    // 下一页
+    html += '<button class="btn btn-outline btn-sm" onclick="goToPage(\''+pageKey+'\','+(currentPage+1)+')" '+(currentPage===totalPages?'disabled':'')+'>下一页</button>';
+    // 末页
+    html += '<button class="btn btn-outline btn-sm" onclick="goToPage(\''+pageKey+'\','+totalPages+')" '+(currentPage===totalPages?'disabled':'')+'>末页</button>';
+    html += '</div></div>';
+  }
+
+  var el = E(tableId);
+  if(el) el.innerHTML = html;
+}
+
+function goToPage(pageKey, pageNum) {
+  currentPages[pageKey] = pageNum;
+  // 重新渲染
+  if(pageKey === 'customers') renderCustomers();
+  else if(pageKey === 'vehicles') renderVehicles();
+  else if(pageKey === 'carInsurance') renderCarInsurance();
+  else if(pageKey === 'noncarInsurance') renderNoncarInsurance();
+  else if(pageKey === 'annualReview') renderAnnualReview();
+  else if(pageKey === 'afterMarket') renderAfterMarket();
+  else if(pageKey === 'renewalRemind') renderRenewalRemind();
+}
+
+function toggleSelectAll(pageKey, checkbox) {
+  var d = initData();
+  var rows = [];
+  if(pageKey === 'customers') rows = d.customers || [];
+  else if(pageKey === 'vehicles') rows = d.vehicles || [];
+  else if(pageKey === 'carInsurance') rows = d.car_policies || [];
+  else if(pageKey === 'noncarInsurance') rows = d.noncar_policies || [];
+
+  // 如果传入的是event，获取checkbox元素
+  if(typeof checkbox === 'undefined' || !checkbox) {
+    if(window.event && window.event.target) {
+      checkbox = window.event.target;
+    } else {
+      return;
+    }
+  }
+
+  var currentPage = currentPages[pageKey] || 1;
+  var startIdx = (currentPage - 1) * PAGE_SIZE;
+  var endIdx = startIdx + PAGE_SIZE;
+
+  // 用当前页实际渲染的数据，而不是从rows里取
+  // 找到当前页所有checkbox，直接操作它们
+  var cbs = document.querySelectorAll('input[id^="cb_' + pageKey + '_"]');
+  for(var i = 0; i < cbs.length; i++) {
+    cbs[i].checked = checkbox.checked;
+  }
+
+  // 更新selectedRows
+  if(checkbox.checked) {
+    var selected = [];
+    for(var i = 0; i < cbs.length; i++) {
+      var id = cbs[i].id.replace('cb_' + pageKey + '_', '');
+      selected.push(id);
+    }
+    selectedRows[pageKey] = selected;
+  } else {
+    selectedRows[pageKey] = [];
+  }
+  updateBatchDeleteBtn(pageKey);
+}
+
+function toggleSelectRow(pageKey, id, checkbox) {
+  if(!selectedRows[pageKey]) selectedRows[pageKey] = [];
+  if(checkbox.checked) {
+    if(selectedRows[pageKey].indexOf(id) === -1) selectedRows[pageKey].push(id);
+  } else {
+    selectedRows[pageKey] = selectedRows[pageKey].filter(function(x) { return x !== id; });
+  }
+  updateBatchDeleteBtn(pageKey);
+}
+
+function updateBatchDeleteBtn(pageKey) {
+  var btn = E('batchDel_'+pageKey);
+  var count = (selectedRows[pageKey] || []).length;
+  if(btn) {
+    btn.textContent = '删除选中('+count+')';
+    btn.disabled = count === 0;
+    btn.style.opacity = count === 0 ? 0.5 : 1;
+  }
+}
+
+function batchDelete(pageKey) {
+  var ids = selectedRows[pageKey] || [];
+  if(ids.length === 0) { showToast('请先选择要删除的数据','err'); return; }
+  if(!confirm('确认删除选中的 '+ids.length+' 条数据？')) return;
+
+  var d = initData();
+  if(pageKey === 'customers') d.customers = (d.customers||[]).filter(function(x){ return ids.indexOf(x.id)===-1; });
+  else if(pageKey === 'vehicles') d.vehicles = (d.vehicles||[]).filter(function(x){ return ids.indexOf(x.id)===-1; });
+  else if(pageKey === 'carInsurance') d.car_policies = (d.car_policies||[]).filter(function(x){ return ids.indexOf(x.id)===-1; });
+  else if(pageKey === 'noncarInsurance') d.noncar_policies = (d.noncar_policies||[]).filter(function(x){ return ids.indexOf(x.id)===-1; });
+
+  saveData(d);
+  selectedRows[pageKey] = [];
+
+  // 重新渲染
+  if(pageKey === 'customers') renderCustomers();
+  else if(pageKey === 'vehicles') renderVehicles();
+  else if(pageKey === 'carInsurance') renderCarInsurance();
+  else if(pageKey === 'noncarInsurance') renderNoncarInsurance();
+
+  syncStats();
+  showToast('已删除 '+ids.length+' 条数据','ok');
+}
+
+function toggleFold(pageKey) {
+  // 保留兼容，但改为跳转到第一页
+  currentPages[pageKey] = 1;
+  // 重新渲染当前页面
+  if(pageKey === 'customers') renderCustomers();
+  else if(pageKey === 'vehicles') renderVehicles();
+  else if(pageKey === 'carInsurance') renderCarInsurance();
+  else if(pageKey === 'noncarInsurance') renderNoncarInsurance();
+  else if(pageKey === 'annualReview') renderAnnualReview();
+  else if(pageKey === 'afterMarket') renderAfterMarket();
+  else if(pageKey === 'renewalRemind') renderRenewalRemind();
+  else if(pageKey === 'followups') renderFollowups();
+  else if(pageKey === 'finance') renderFinance();
+}
+
+// =============================================================
+// 数据层
+// =============================================================
+function initData() {
+  try {
+    var raw = localStorage.getItem("crm_data");
+    if (!raw) { saveData(DEFAULTS); return JSON.parse(JSON.stringify(DEFAULTS)); }
+    var d = JSON.parse(raw);
+    ["customers","vehicles","car_policies","noncar_policies","services","followups"].forEach(function(k){ if(!d[k]) d[k]=[]; });
+    return d;
+  } catch(e) { saveData(DEFAULTS); return JSON.parse(JSON.stringify(DEFAULTS)); }
+}
+
+function saveData(d) {
+  localStorage.setItem("crm_data", JSON.stringify(d));
+  // 在线模式下，异步同步到云端（不阻塞界面）
+  if (isOnlineMode && supabase) {
+    syncToCloud(d);
+  }
+  syncStats();
+}
+
+// 异步同步数据到云端
+async function syncToCloud(d) {
+  if (!supabase) return;
+  try {
+    syncStatus = '同步中...';
+    updateSyncBadge();
+    
+    // 清空云端数据，重新上传
+    // 注意：这是简单粗暴的全量同步，生产环境应该用增量同步
+    var tables = ['customers', 'vehicles', 'car_policies', 'noncar_policies', 'services', 'followups'];
+    for (var i = 0; i < tables.length; i++) {
+      var table = tables[i];
+      var data = d[table] || [];
+      if (data.length > 0) {
+        // 先清空，再插入
+        await supabase.from(table).delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from(table).insert(data);
+      }
+    }
+    
+    localStorage.setItem('car_crm_last_sync', new Date().toISOString());
+    syncStatus = '已同步';
+    updateSyncBadge();
+    console.log('✅ 数据已同步到云端');
+  } catch (e) {
+    console.error('❌ 同步到云端失败:', e);
+    syncStatus = '同步失败';
+    updateSyncBadge();
+  }
+}
+
+function custById(id) { var d=initData(); return (d.customers||[]).find(function(x){return x.id===id;})||{}; }
+function vehById(id) { var d=initData(); return (d.vehicles||[]).find(function(x){return x.id===id;})||{}; }
+
+// =============================================================
+// 同步统计
+// =============================================================
+function syncStats() {
+  var d = initData(), today = td();
+  var exp = (d.car_policies||[]).filter(function(x){ return x.end_date && x.end_date <= today; }).length;
+  var tp = (d.car_policies||[]).reduce(function(a,x){ return a + num(x.total_premium); }, 0);
+  var tc = (d.car_policies||[]).reduce(function(a,x){ return a + num(x.commission_amount); }, 0);
+  var vp = (d.car_policies||[]).filter(function(x){ return x.end_date >= today; }).reduce(function(a,x){ return a + num(x.total_premium); }, 0);
+  var els = ["stat-customers","stat-vehicles","stat-renewals","stat-car-premium","stat-commission","stat-annual",
+             "fin-total-premium","fin-total-commission","fin-valid-premium",
+             "dash-customers","dash-car-policies","dash-renewal","dash-new",
+             "annual-pending","annual-ok","badge-customers","badge-annual"];
+  els.forEach(function(id){ var e=E(id); if(e) e.textContent="0"; });
+  setText("stat-customers", d.customers.length);
+  setText("stat-vehicles", d.vehicles.length);
+  setText("stat-renewals", d.car_policies.length);
+  setText("stat-car-premium", fmt(tp));
+  setText("stat-commission", fmt(tc));
+  setText("stat-annual", exp);
+  setText("fin-total-premium", fmt(tp));
+  setText("fin-total-commission", fmt(tc));
+  setText("fin-valid-premium", fmt(vp));
+  setText("dash-customers", d.customers.length);
+  setText("dash-car-policies", d.car_policies.length);
+  setText("dash-renewal", exp);
+  setText("annual-pending", exp);
+  setText("annual-ok", d.vehicles.length - exp);
+  setText("badge-customers", d.customers.length);
+  setText("badge-annual", exp);
+  setText("currentDate", today);
+  setText("today-date", today);
+  var bnr = (d.noncar_policies||[]).length;
+  var bnrEl = E("badge-car-renewal");
+  if(bnrEl) bnrEl.textContent = bnr;
+}
+
+function setText(id, val) { var e=E(id); if(e) e.textContent=val; }
+
+// =============================================================
+// 登录
+// =============================================================
+function doLogin() {
+  var u = E("loginUser").value.trim();
+  var p = E("loginPass").value;
+  if (u === "krabs" && p === "589842") {
+    E("loginPage").style.display = "none";
+    E("appLayout").style.display = "block";
+    E("topbar").style.display = "flex";
+    localStorage.setItem("crm_logged_in", "1");
+    initApp();
+  } else {
+    var err = E("loginError");
+    if(err) { err.style.display = "block"; err.textContent = "用户名或密码错误"; }
+  }
+}
+
+function doLogout() {
+  localStorage.removeItem("crm_logged_in");
+  location.reload();
+}
+
+function initApp() {
+  syncStats();
+  showPage('customers'); // 默认显示客户管理页面
+  initApp = function(){};
+}
+
+// =============================================================
+// 弹窗
+// =============================================================
+function showModal(title, body, btns) {
+  var mo = E("modalOverlay"), mt = E("modalTitle"), mb = E("modalBody"), mf = E("modalFooter");
+  if(!mo) return;
+  if(mt) mt.textContent = title || "";
+  if(mb) mb.innerHTML = body || "";
+  if(mf) { mf.innerHTML = ""; if(btns && btns.length) { btns.forEach(function(b) {
+    var btn = document.createElement("button");
+    btn.className = b.cls || "btn";
+    btn.textContent = b.text || "";
+    btn.onclick = b.fn || closeModal;
+    mf.appendChild(btn);
+  }); } }
+  mo.style.display = "flex";
+}
+
+function closeModal() { var m=E("modalOverlay"); if(m) m.style.display="none"; }
+
+function showToast(msg, type) {
+  var t = E("toast");
+  if(!t) return;
+  t.className = "toast " + (type||"");
+  t.textContent = msg;
+  t.style.display = "block";
+  clearTimeout(t._tid);
+  t._tid = setTimeout(function(){ t.style.display="none"; }, 3000);
+}
+
+// =============================================================
+// 页面导航
+// =============================================================
+var currentPage = "dashboard";
+function showPage(page) {
+  var pages = document.querySelectorAll(".page");
+  pages.forEach(function(p){ p.classList.remove("active"); p.style.display = "none"; });
+  var navs = document.querySelectorAll(".nav-item");
+  navs.forEach(function(n){ n.classList.remove("active"); });
+  var pg = E("page-" + page);
+  if(pg) { pg.style.display = "block"; pg.classList.add("active"); }
+  var nav = document.querySelector(".nav-item[data-page=\"" + page + "\"]");
+  if(nav) nav.classList.add("active");
+  var pt = E("pageTitle");
+  if(pt) { var nt = document.querySelector(".nav-item[data-page=\"" + page + "\"] .nav-text"); pt.textContent = nt ? nt.textContent : page; }
+  currentPage = page;
+  syncStats();
+  if(page==="dashboard") loadDashboard();
+  else if(page==="customers") renderCustomers();
+  else if(page==="vehicles") renderVehicles();
+  else if(page==="car-insurance") renderCarInsurance();
+  else if(page==="noncar-insurance") renderNoncarInsurance();
+  else if(page==="annual-review") renderAnnualReview();
+  else if(page==="after-market") renderAfterMarket();
+  else if(page==="renewal-remind") renderRenewalRemind();
+  else if(page==="followups") renderFollowups();
+  else if(page==="finance") renderFinance();
+  else if(page==="stats") renderStats();
+  else if(page==="audit") renderAudit();
+}
+
+function loadDashboard() { syncStats(); }
+
+// =============================================================
+// 渲染：客户
+// =============================================================
+function renderCustomers(filter) {
+  var d = initData();
+  var rows = d.customers.slice().reverse();
+  var kw = filter || "";
+  if(kw) {
+    var lk = kw.toLowerCase();
+    rows = rows.filter(function(c){
+      return (c.name||"").toLowerCase().indexOf(lk)>=0 ||
+             (c.phone||"").indexOf(lk)>=0 ||
+             (d.vehicles||[]).some(function(v){ return v.customer_id===c.id && (v.plate||"").toLowerCase().indexOf(lk)>=0; });
+    });
+  }
+
+  var pageKey = 'customers';
+  var currentPage = currentPages[pageKey] || 1;
+  var totalPages = Math.ceil(rows.length / PAGE_SIZE);
+  var startIdx = (currentPage - 1) * PAGE_SIZE;
+  var displayRows = rows.slice(startIdx, startIdx + PAGE_SIZE);
+
+  var html = '<div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;">';
+  html += '<button id="batchDel_'+pageKey+'" class="btn btn-danger btn-sm" onclick="batchDelete(\''+pageKey+'\')" disabled style="opacity:0.5;">删除选中(0)</button>';
+  html += '<span class="text-gray" style="font-size:12px;">提示：勾选复选框后可批量删除</span>';
+  html += '</div>';
+
+  html += '<table><thead><tr><th><input type="checkbox" onchange="toggleSelectAll(\''+pageKey+'\',this)"></th><th>姓名</th><th>电话</th><th>车牌</th><th>车险</th><th>到期</th><th>操作</th></tr></thead><tbody>';
+  if(!displayRows.length) { html += '<tr><td colspan="7" class="text-center text-gray" style="padding:24px">暂无客户</td></tr>'; }
+  displayRows.forEach(function(c){
+    var vs = (d.vehicles||[]).filter(function(v){ return v.customer_id===c.id; });
+    var ps = (d.car_policies||[]).filter(function(p){ return p.customer_id===c.id; });
+    var end = ps.length ? '<span style="color:#ef4444">'+esc(ps[0].end_date||"")+"</span>" : '<span class="text-gray">无</span>';
+    var isSelected = (selectedRows[pageKey] || []).indexOf(c.id) !== -1;
+    html += "<tr><td><input type=\"checkbox\" id=\"cb_"+pageKey+"_"+c.id+"\" "+(isSelected?"checked":"")+" onchange=\"toggleSelectRow('"+pageKey+"','"+c.id+"',this)\"></td><td>"+esc(c.name)+"</td><td>"+esc(c.phone)+"</td><td>"+vs.map(function(v){return esc(v.plate);}).join(", ")+"</td><td>"+ps.length+"单</td><td>"+end+"</td>";
+    html += "<td><a onclick=\"viewCustomer(\'"+c.id+"\')\">详情</a> <a onclick=\"openCustModal(\'"+c.id+"\')\">编辑</a> <a onclick=\"deleteCustomer(\'"+c.id+"\')\">删除</a></td></tr>";
+  });
+  html += "</tbody></table>";
+
+  // 分页
+  if(rows.length > PAGE_SIZE) {
+    html += '<div class="pagination-bar" style="padding:12px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid #f1f5f9;flex-wrap:wrap;gap:8px;">';
+    html += '<div class="page-info text-gray" style="font-size:13px;">共 <b>'+rows.length+'</b> 条，第 '+(startIdx+1)+'-'+Math.min(startIdx+PAGE_SIZE,rows.length)+' 条</div>';
+    html += '<div class="page-controls" style="display:flex;align-items:center;gap:4px;">';
+    html += '<button class="btn btn-outline btn-sm" onclick="goToPage(\''+pageKey+'\',1)" '+(currentPage===1?'disabled':'')+'>首页</button>';
+    html += '<button class="btn btn-outline btn-sm" onclick="goToPage(\''+pageKey+'\','+(currentPage-1)+')" '+(currentPage===1?'disabled':'')+'>上一页</button>';
+    var startPage = Math.max(1, currentPage - 2);
+    var endPage = Math.min(totalPages, currentPage + 2);
+    if(startPage > 1) html += '<span class="text-gray">...</span>';
+    for(var i = startPage; i <= endPage; i++) {
+      if(i === currentPage) {
+        html += '<button class="btn btn-primary btn-sm">'+i+'</button>';
+      } else {
+        html += '<button class="btn btn-outline btn-sm" onclick="goToPage(\''+pageKey+'\','+i+')">'+i+'</button>';
+      }
+    }
+    if(endPage < totalPages) html += '<span class="text-gray">...</span>';
+    html += '<button class="btn btn-outline btn-sm" onclick="goToPage(\''+pageKey+'\','+(currentPage+1)+')" '+(currentPage===totalPages?'disabled':'')+'>下一页</button>';
+    html += '<button class="btn btn-outline btn-sm" onclick="goToPage(\''+pageKey+'\','+totalPages+')" '+(currentPage===totalPages?'disabled':'')+'>末页</button>';
+    html += '</div></div>';
+  }
+
+  var ct = E("custTable"); if(ct) ct.innerHTML = html;
+  updateBatchDeleteBtn(pageKey);
+}
+
+// =============================================================
+// 渲染：车辆
+// =============================================================
+function renderVehicles() {
+  var d = initData();
+  var rows = d.vehicles.slice().reverse();
+
+  var pageKey = 'vehicles';
+  var currentPage = currentPages[pageKey] || 1;
+  var totalPages = Math.ceil(rows.length / PAGE_SIZE);
+  var startIdx = (currentPage - 1) * PAGE_SIZE;
+  var displayRows = rows.slice(startIdx, startIdx + PAGE_SIZE);
+
+  var html = '<div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;">';
+  html += '<button id="batchDel_'+pageKey+'" class="btn btn-danger btn-sm" onclick="batchDelete(\''+pageKey+'\')" disabled style="opacity:0.5;">删除选中(0)</button>';
+  html += '<span class="text-gray" style="font-size:12px;">提示：勾选复选框后可批量删除</span>';
+  html += '</div>';
+
+  html += '<table><thead><tr><th><input type="checkbox" onchange="toggleSelectAll(\''+pageKey+'\',this)"></th><th>车牌</th><th>品牌型号</th><th>车架号</th><th>车主</th><th>操作</th></tr></thead><tbody>';
+  if(!displayRows.length) { html += '<tr><td colspan="6" class="text-center text-gray" style="padding:24px">暂无车辆</td></tr>'; }
+  displayRows.forEach(function(v){
+    var c = custById(v.customer_id);
+    var isSelected = (selectedRows[pageKey] || []).indexOf(v.id) !== -1;
+    html += "<tr><td><input type=\"checkbox\" id=\"cb_"+pageKey+"_"+v.id+"\" "+(isSelected?"checked":"")+" onchange=\"toggleSelectRow('"+pageKey+"','"+v.id+"',this)\"></td><td><strong>"+esc(v.plate)+"</strong></td><td>"+esc(v.brand||"")+" "+esc(v.model||"")+"</td><td><code style=\"font-size:12px\">"+esc(v.vin||"")+"</code></td><td>"+esc(c.name||"-")+"</td>";
+    html += "<td><a onclick=\"openVehModal(\'"+v.id+"\')\">编辑</a> <a onclick=\"deleteVehicle(\'"+v.id+"\')\">删除</a></td></tr>";
+  });
+  html += "</tbody></table>";
+
+  // 分页
+  if(rows.length > PAGE_SIZE) {
+    html += '<div class="pagination-bar" style="padding:12px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid #f1f5f9;flex-wrap:wrap;gap:8px;">';
+    html += '<div class="page-info text-gray" style="font-size:13px;">共 <b>'+rows.length+'</b> 条，第 '+(startIdx+1)+'-'+Math.min(startIdx+PAGE_SIZE,rows.length)+' 条</div>';
+    html += '<div class="page-controls" style="display:flex;align-items:center;gap:4px;">';
+    html += '<button class="btn btn-outline btn-sm" onclick="goToPage(\''+pageKey+'\',1)" '+(currentPage===1?'disabled':'')+'>首页</button>';
+    html += '<button class="btn btn-outline btn-sm" onclick="goToPage(\''+pageKey+'\','+(currentPage-1)+')" '+(currentPage===1?'disabled':'')+'>上一页</button>';
+    var startPage = Math.max(1, currentPage - 2);
+    var endPage = Math.min(totalPages, currentPage + 2);
+    if(startPage > 1) html += '<span class="text-gray">...</span>';
+    for(var i = startPage; i <= endPage; i++) {
+      if(i === currentPage) {
+        html += '<button class="btn btn-primary btn-sm">'+i+'</button>';
+      } else {
+        html += '<button class="btn btn-outline btn-sm" onclick="goToPage(\''+pageKey+'\','+i+')">'+i+'</button>';
+      }
+    }
+    if(endPage < totalPages) html += '<span class="text-gray">...</span>';
+    html += '<button class="btn btn-outline btn-sm" onclick="goToPage(\''+pageKey+'\','+(currentPage+1)+')" '+(currentPage===totalPages?'disabled':'')+'>下一页</button>';
+    html += '<button class="btn btn-outline btn-sm" onclick="goToPage(\''+pageKey+'\','+totalPages+')" '+(currentPage===totalPages?'disabled':'')+'>末页</button>';
+    html += '</div></div>';
+  }
+
+  var vt = E("vehTable"); if(vt) vt.innerHTML = html;
+  updateBatchDeleteBtn(pageKey);
+}
+
+// =============================================================
+// 渲染：车险
+// =============================================================
+function renderCarInsurance() {
+  var d = initData();
+  var statusFilter = E("filterStatus") ? E("filterStatus").value : "";
+  var rows = d.car_policies.slice().reverse();
+  if(statusFilter) rows = rows.filter(function(p){ return p.status === statusFilter; });
+
+  var pageKey = 'carInsurance';
+  var currentPage = currentPages[pageKey] || 1;
+  var totalPages = Math.ceil(rows.length / PAGE_SIZE);
+  var startIdx = (currentPage - 1) * PAGE_SIZE;
+  var displayRows = rows.slice(startIdx, startIdx + PAGE_SIZE);
+
+  var html = '<div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;">';
+  html += '<button id="batchDel_'+pageKey+'" class="btn btn-danger btn-sm" onclick="batchDelete(\''+pageKey+'\')" disabled style="opacity:0.5;">删除选中(0)</button>';
+  html += '<span class="text-gray" style="font-size:12px;">提示：勾选复选框后可批量删除</span>';
+  html += '</div>';
+
+  html += '<table><thead><tr><th><input type="checkbox" onchange="toggleSelectAll(\''+pageKey+'\',this)"></th><th>车主</th><th>车牌</th><th>公司</th><th>商业险</th><th>交强险</th><th>车船税</th><th>总保费</th><th>佣金</th><th>起期</th><th>到期</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+  if(!displayRows.length) { html += '<tr><td colspan="13" class="text-center text-gray" style="padding:24px">暂无车险</td></tr>'; }
+  displayRows.forEach(function(p){
+    var c = custById(p.customer_id);
+    var v = vehById(p.vehicle_id);
+    var stMap = {"active":"tag-green","pending":"tag-blue","expired":"tag-red","quoted":"tag-yellow","renewed":"tag-green","lost":"tag-red"};
+    var stText = {"active":"生效中","pending":"待生效","expired":"已过期","quoted":"已报价","renewed":"已续保","lost":"已流失"};
+    var today = td();
+    var overdue = p.end_date && p.end_date < today && p.status !== "renewed" && p.status !== "lost";
+    var stClass = overdue ? "tag-red" : (stMap[p.status]||"tag-blue");
+    var stName = overdue ? "已过期" : (stText[p.status]||p.status);
+    var isSelected = (selectedRows[pageKey] || []).indexOf(p.id) !== -1;
+    html += "<tr><td><input type=\"checkbox\" id=\"cb_"+pageKey+"_"+p.id+"\" "+(isSelected?"checked":"")+" onchange=\"toggleSelectRow('"+pageKey+"','"+p.id+"',this)\"></td><td>"+esc(c.name||"-")+"</td><td>"+esc(v.plate||"-")+"</td><td>"+esc(p.company||"")+"</td>";
+    html += "<td class=\"text-right\">"+(p.biz_premium||0)+"</td><td class=\"text-right\">"+(p.compulsory_premium||0)+"</td><td class=\"text-right\">"+(p.tax_amount||0)+"</td>";
+    html += "<td class=\"text-right\" style=\"font-weight:bold;\">"+(p.total_premium||0)+"</td><td class=\"text-right text-green\">+"+(p.commission_amount||0)+"</td>";
+    html += "<td>"+esc(p.start_date||"")+"</td><td>"+esc(p.end_date||"")+"</td>";
+    html += "<td><span class=\"tag "+stClass+"\">"+stName+"</span></td>";
+    html += "<td><a onclick=\"openCarPolModal(\'"+p.id+"\')\">编辑</a> <a onclick=\"deleteCarPolicy(\'"+p.id+"\')\">删除</a></td></tr>";
+  });
+  html += "</tbody></table>";
+
+  // 分页
+  if(rows.length > PAGE_SIZE) {
+    html += '<div class="pagination-bar" style="padding:12px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid #f1f5f9;flex-wrap:wrap;gap:8px;">';
+    html += '<div class="page-info text-gray" style="font-size:13px;">共 <b>'+rows.length+'</b> 条，第 '+(startIdx+1)+'-'+Math.min(startIdx+PAGE_SIZE,rows.length)+' 条</div>';
+    html += '<div class="page-controls" style="display:flex;align-items:center;gap:4px;">';
+    html += '<button class="btn btn-outline btn-sm" onclick="goToPage(\''+pageKey+'\',1)" '+(currentPage===1?'disabled':'')+'>首页</button>';
+    html += '<button class="btn btn-outline btn-sm" onclick="goToPage(\''+pageKey+'\','+(currentPage-1)+')" '+(currentPage===1?'disabled':'')+'>上一页</button>';
+    var startPage = Math.max(1, currentPage - 2);
+    var endPage = Math.min(totalPages, currentPage + 2);
+    if(startPage > 1) html += '<span class="text-gray">...</span>';
+    for(var i = startPage; i <= endPage; i++) {
+      if(i === currentPage) {
+        html += '<button class="btn btn-primary btn-sm">'+i+'</button>';
+      } else {
+        html += '<button class="btn btn-outline btn-sm" onclick="goToPage(\''+pageKey+'\','+i+')">'+i+'</button>';
+      }
+    }
+    if(endPage < totalPages) html += '<span class="text-gray">...</span>';
+    html += '<button class="btn btn-outline btn-sm" onclick="goToPage(\''+pageKey+'\','+(currentPage+1)+')" '+(currentPage===totalPages?'disabled':'')+'>下一页</button>';
+    html += '<button class="btn btn-outline btn-sm" onclick="goToPage(\''+pageKey+'\','+totalPages+')" '+(currentPage===totalPages?'disabled':'')+'>末页</button>';
+    html += '</div></div>';
+  }
+
+  var ct = E("carPolTable"); if(ct) ct.innerHTML = html;
+  updateBatchDeleteBtn(pageKey);
+}
+
+// =============================================================
+// 渲染：非车险
+// =============================================================
+function renderNoncarInsurance() {
+  var d = initData();
+  var rows = (d.noncar_policies||[]).slice().reverse();
+
+  var pageKey = 'noncarInsurance';
+  var currentPage = currentPages[pageKey] || 1;
+  var totalPages = Math.ceil(rows.length / PAGE_SIZE);
+  var startIdx = (currentPage - 1) * PAGE_SIZE;
+  var displayRows = rows.slice(startIdx, startIdx + PAGE_SIZE);
+
+  var html = '<div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;">';
+  html += '<button id="batchDel_'+pageKey+'" class="btn btn-danger btn-sm" onclick="batchDelete(\''+pageKey+'\')" disabled style="opacity:0.5;">删除选中(0)</button>';
+  html += '<span class="text-gray" style="font-size:12px;">提示：勾选复选框后可批量删除</span>';
+  html += '</div>';
+
+  html += '<table><thead><tr><th><input type="checkbox" onchange="toggleSelectAll(\''+pageKey+'\',this)"></th><th>客户</th><th>险种</th><th>公司</th><th>保费</th><th>到期</th><th>操作</th></tr></thead><tbody>';
+  if(!displayRows.length) { html += '<tr><td colspan="7" class="text-center text-gray" style="padding:24px">暂无非车险</td></tr>'; }
+  displayRows.forEach(function(p){
+    var c = custById(p.customer_id);
+    var isSelected = (selectedRows[pageKey] || []).indexOf(p.id) !== -1;
+    html += "<tr><td><input type=\"checkbox\" id=\"cb_"+pageKey+"_"+p.id+"\" "+(isSelected?"checked":"")+" onchange=\"toggleSelectRow('"+pageKey+"','"+p.id+"',this)\"></td><td>"+esc(c.name||"-")+"</td><td>"+esc(p.type||"-")+"</td><td>"+esc(p.company||"-")+"</td><td>"+(p.premium||0)+"</td><td>"+esc(p.end_date||"-")+"</td>";
+    html += "<td><a onclick=\"openNoncarModal(\'"+p.id+"\')\">编辑</a> <a onclick=\"deleteNoncar(\'"+p.id+"\')\">删除</a></td></tr>";
+  });
+  html += "</tbody></table>";
+
+  // 分页
+  if(rows.length > PAGE_SIZE) {
+    html += '<div class="pagination-bar" style="padding:12px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid #f1f5f9;flex-wrap:wrap;gap:8px;">';
+    html += '<div class="page-info text-gray" style="font-size:13px;">共 <b>'+rows.length+'</b> 条，第 '+(startIdx+1)+'-'+Math.min(startIdx+PAGE_SIZE,rows.length)+' 条</div>';
+    html += '<div class="page-controls" style="display:flex;align-items:center;gap:4px;">';
+    html += '<button class="btn btn-outline btn-sm" onclick="goToPage(\''+pageKey+'\',1)" '+(currentPage===1?'disabled':'')+'>首页</button>';
+    html += '<button class="btn btn-outline btn-sm" onclick="goToPage(\''+pageKey+'\','+(currentPage-1)+')" '+(currentPage===1?'disabled':'')+'>上一页</button>';
+    var startPage = Math.max(1, currentPage - 2);
+    var endPage = Math.min(totalPages, currentPage + 2);
+    if(startPage > 1) html += '<span class="text-gray">...</span>';
+    for(var i = startPage; i <= endPage; i++) {
+      if(i === currentPage) {
+        html += '<button class="btn btn-primary btn-sm">'+i+'</button>';
+      } else {
+        html += '<button class="btn btn-outline btn-sm" onclick="goToPage(\''+pageKey+'\','+i+')">'+i+'</button>';
+      }
+    }
+    if(endPage < totalPages) html += '<span class="text-gray">...</span>';
+    html += '<button class="btn btn-outline btn-sm" onclick="goToPage(\''+pageKey+'\','+(currentPage+1)+')" '+(currentPage===totalPages?'disabled':'')+'>下一页</button>';
+    html += '<button class="btn btn-outline btn-sm" onclick="goToPage(\''+pageKey+'\','+totalPages+')" '+(currentPage===totalPages?'disabled':'')+'>末页</button>';
+    html += '</div></div>';
+  }
+
+  var nt = E("noncarTable"); if(nt) nt.innerHTML = html;
+  updateBatchDeleteBtn(pageKey);
+}
+
+// =============================================================
+// 渲染：年检（注册10年后开始提醒）
+// =============================================================
+function renderAnnualReview() {
+  var d = initData(), today = td();
+  var todayMs = new Date(today).getTime();
+  var rows = (d.vehicles||[]).filter(function(v){ return v.reg_date; }).slice().reverse();
+  var total = rows.length;
+  var showAll = expandedPages['annualReview'];
+  var displayRows = showAll ? rows : rows.slice(0, PAGE_SIZE);
+  
+  var pending = 0, ok = 0, notyet = 0;
+  var html = '<table><thead><tr><th>车牌</th><th>品牌型号</th><th>注册日期</th><th>车龄</th><th>下次年检</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+  if(!displayRows.length) { html += '<tr><td colspan="7" class="text-center text-gray" style="padding:24px">暂无车辆</td></tr>'; }
+  displayRows.forEach(function(v){
+    var rd = new Date(v.reg_date);
+    var regMs = rd.getTime();
+    var carAge = Math.floor((todayMs - regMs) / (365.25 * 86400000));
+    // 10年后开始年检提醒
+    var yearsSinceFirstInspection = Math.max(0, carAge - 10);
+    var nextInspectionYear = 10 + yearsSinceFirstInspection + 1;
+    var nd = new Date(rd);
+    if(carAge < 10) {
+      // 10年内不用年检
+      nd.setFullYear(nd.getFullYear() + 10);
+      var ndStr = nd.toISOString().split("T")[0];
+      var cls = "tag-blue";
+      var label = "免检期(" + (10 - carAge) + "年后首检)";
+      notyet++;
+      html += "<tr><td><strong>"+esc(v.plate)+"</strong></td><td>"+esc(v.brand||"")+" "+esc(v.model||"")+"</td><td>"+esc(v.reg_date||"")+"</td>";
+      html += "<td>"+carAge+"年</td>";
+      html += "<td style=\"color:#2563eb\">"+esc(ndStr)+" (首检)</td>";
+      html += "<td><span class=\"tag "+cls+"\">"+label+"</span></td>";
+      html += "<td><a onclick=\"deleteVehicle('"+v.id+"')\">删除</a></td></tr>";
+    } else {
+      // 10年后每年一检
+      nd.setFullYear(nd.getFullYear() + nextInspectionYear);
+      // 计算下次年检应该是哪一年
+      var lastInspectionYear = 10 + Math.floor((carAge - 10));
+      var nextYear = lastInspectionYear + 1;
+      nd = new Date(rd);
+      nd.setFullYear(nd.getFullYear() + nextYear);
+      var ndStr = nd.toISOString().split("T")[0];
+      var overdue = ndStr < today;
+      var stcls, stlabel;
+      if(overdue) { pending++; stcls = "tag-red"; stlabel = "年检过期"; }
+      else { ok++; stcls = "tag-green"; stlabel = "待年检"; }
+      html += "<tr><td><strong>"+esc(v.plate)+"</strong></td><td>"+esc(v.brand||"")+" "+esc(v.model||"")+"</td><td>"+esc(v.reg_date||"")+"</td>";
+      html += "<td>"+carAge+"年</td>";
+      html += "<td style=\"color:"+(overdue?"#ef4444":"#10b981")+"\">"+esc(ndStr)+(overdue?" (已逾期)":"")+"</td>";
+      html += "<td><span class=\"tag "+stcls+"\">"+stlabel+"</span></td>";
+      html += "<td><a onclick=\"deleteVehicle('"+v.id+"')\">删除</a></td></tr>";
+    }
+  });
+  html += "</tbody></table>";
+  
+  // 折页按钮
+  if(total > PAGE_SIZE) {
+    html += '<div style="padding:12px;text-align:center;border-top:1px solid #f1f5f9">';
+    if(showAll) {
+      html += '<button class="btn btn-outline btn-sm" onclick="toggleFold(\'annualReview\')">收起</button>';
+    } else {
+      html += '<span class="text-gray" style="margin-right:8px">显示前'+PAGE_SIZE+'条，共'+total+'条</span>';
+      html += '<button class="btn btn-primary btn-sm" onclick="toggleFold(\'annualReview\')">展开全部</button>';
+    }
+    html += '</div>';
+  }
+  
+  var at = E("annualTable"); if(at) at.innerHTML = html;
+  setText("annual-pending", pending);
+  setText("annual-ok", ok + notyet);
+  // 更新徽章
+  var badge = E("badge-annual");
+  if(badge) badge.textContent = pending;
+}
+
+// =============================================================
+// 渲染：售后
+// =============================================================
+function renderAfterMarket() {
+  var d = initData();
+  var rows = (d.services||[]).slice().reverse();
+  var total = rows.length;
+  var showAll = expandedPages['afterMarket'];
+  var displayRows = showAll ? rows : rows.slice(0, PAGE_SIZE);
+  
+  var tm = {"annual_review":"年审","maintain":"保养","repair":"维修","wash":"洗车","other":"其他"};
+  var html = '<table><thead><tr><th>客户</th><th>车辆</th><th>类型</th><th>日期</th><th>费用</th><th>备注</th><th>操作</th></tr></thead><tbody>';
+  if(!displayRows.length) { html += '<tr><td colspan="7" class="text-center text-gray" style="padding:24px">暂无服务记录</td></tr>'; }
+  displayRows.forEach(function(s){
+    var c = custById(s.customer_id);
+    var v = vehById(s.vehicle_id);
+    html += "<tr><td>"+esc(c.name||"-")+"</td><td>"+esc(v.plate||"-")+"</td><td>"+esc(tm[s.service_type]||s.service_type||"-")+"</td>";
+    html += "<td>"+esc(s.service_date||"")+"</td><td>"+(s.actual_fee||0)+"</td><td>"+esc(s.remark||"")+"</td>";
+    html += "<td><a onclick=\"deleteService(\'"+s.id+"\')\">删除</a></td></tr>";
+  });
+  html += "</tbody></table>";
+  
+  // 折页按钮
+  if(total > PAGE_SIZE) {
+    html += '<div style="padding:12px;text-align:center;border-top:1px solid #f1f5f9">';
+    if(showAll) {
+      html += '<button class="btn btn-outline btn-sm" onclick="toggleFold(\'afterMarket\')">收起</button>';
+    } else {
+      html += '<span class="text-gray" style="margin-right:8px">显示前'+PAGE_SIZE+'条，共'+total+'条</span>';
+      html += '<button class="btn btn-primary btn-sm" onclick="toggleFold(\'afterMarket\')">展开全部</button>';
+    }
+    html += '</div>';
+  }
+  
+  var mt = E("amTable"); if(mt) mt.innerHTML = html;
+}
+
+// =============================================================
+// 渲染：续保提醒（到期前30天）
+// =============================================================
+function renderRenewalRemind() {
+  var d = initData(), today = td();
+  var todayMs = new Date(today).getTime();
+  var day30 = 30 * 86400000;
+  var rows = (d.car_policies||[]).filter(function(p){
+    if(!p.end_date || p.status==="renewed" || p.status==="lost") return false;
+    var endMs = new Date(p.end_date).getTime();
+    return endMs <= todayMs + day30;
+  }).sort(function(a,b){ return (a.end_date||"").localeCompare(b.end_date||""); });
+  var expired = rows.filter(function(p){ return p.end_date < today; }).length;
+  var within30 = rows.length - expired;
+  var premSum = rows.reduce(function(a,x){ return a + num(x.total_premium); }, 0);
+  setText("renewal-30days", within30);
+  setText("renewal-expired", expired);
+  setText("renewal-premium", fmt(premSum));
+  setText("badge-renewal", within30);
+  
+  var total = rows.length;
+  var showAll = expandedPages['renewalRemind'];
+  var displayRows = showAll ? rows : rows.slice(0, PAGE_SIZE);
+  
+  var html = '<table><thead><tr><th>车主</th><th>电话</th><th>车牌</th><th>公司</th><th>保费</th><th>到期日</th><th>剩余天数</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+  if(!displayRows.length) { html += '<tr><td colspan="9" class="text-center text-gray" style="padding:24px">🎉 近30天无到期保单</td></tr>'; }
+  displayRows.forEach(function(p){
+    var c = custById(p.customer_id), v = vehById(p.vehicle_id);
+    var endMs = new Date(p.end_date).getTime();
+    var diff = Math.ceil((endMs - todayMs) / 86400000);
+    var daysText, daysColor, tagClass;
+    if(diff < 0) { daysText = "过期"+Math.abs(diff)+"天"; daysColor = "#ef4444"; tagClass = "tag-red"; }
+    else if(diff === 0) { daysText = "今天到期"; daysColor = "#ef4444"; tagClass = "tag-red"; }
+    else if(diff <= 7) { daysText = "剩"+diff+"天"; daysColor = "#ef4444"; tagClass = "tag-red"; }
+    else if(diff <= 15) { daysText = "剩"+diff+"天"; daysColor = "#f59e0b"; tagClass = "tag-yellow"; }
+    else { daysText = "剩"+diff+"天"; daysColor = "#2563eb"; tagClass = "tag-blue"; }
+    var label = diff < 0 ? "已过期" : (diff <= 7 ? "紧急" : "待续保");
+    html += "<tr><td>"+esc(c.name||"-")+"</td><td>"+esc(c.phone||"-")+"</td><td>"+esc(v.plate||"-")+"</td>";
+    html += "<td>"+esc(p.company||"")+"</td><td class=\"text-right\">"+(p.total_premium||0)+"</td>";
+    html += "<td>"+esc(p.end_date)+"</td><td style=\"color:"+daysColor+";font-weight:600\">"+daysText+"</td>";
+    html += "<td><span class=\"tag "+tagClass+"\">"+label+"</span></td>";
+    html += "<td><a onclick=\"openCarPolModal(\'"+p.id+"\')\">编辑</a> <a onclick=\"markRenewed(\'"+p.id+"\')\">已续保</a> <a onclick=\"markLost(\'"+p.id+"\')\">已流失</a></td></tr>";
+  });
+  html += "</tbody></table>";
+  
+  // 折页按钮
+  if(total > PAGE_SIZE) {
+    html += '<div style="padding:12px;text-align:center;border-top:1px solid #f1f5f9">';
+    if(showAll) {
+      html += '<button class="btn btn-outline btn-sm" onclick="toggleFold(\'renewalRemind\')">收起</button>';
+    } else {
+      html += '<span class="text-gray" style="margin-right:8px">显示前'+PAGE_SIZE+'条，共'+total+'条</span>';
+      html += '<button class="btn btn-primary btn-sm" onclick="toggleFold(\'renewalRemind\')">展开全部</button>';
+    }
+    html += '</div>';
+  }
+  
+  var rt = E("renewalTable"); if(rt) rt.innerHTML = html;
+}
+
+function markRenewed(id) {
+  if(!confirm("确认标记为已续保？")) return;
+  var d = initData();
+  var p = (d.car_policies||[]).find(function(x){return x.id===id;});
+  if(p) p.status = "renewed";
+  saveData(d); renderRenewalRemind(); syncStats();
+  showToast("已标记为续保","ok");
+}
+
+function markLost(id) {
+  if(!confirm("确认标记为已流失？")) return;
+  var d = initData();
+  var p = (d.car_policies||[]).find(function(x){return x.id===id;});
+  if(p) p.status = "lost";
+  saveData(d); renderRenewalRemind(); syncStats();
+  showToast("已标记为流失","ok");
+}
+
+// =============================================================
+// 渲染：跟进
+// =============================================================
+function renderFollowups() {
+  var d = initData();
+  var rows = (d.followups||[]).slice().reverse();
+  var total = rows.length;
+  var showAll = expandedPages['followups'];
+  var displayRows = showAll ? rows : rows.slice(0, PAGE_SIZE);
+  
+  var html = '<table><thead><tr><th>客户</th><th>跟进日期</th><th>内容</th><th>下次跟进</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+  if(!displayRows.length) { html += '<tr><td colspan="6" class="text-center text-gray" style="padding:24px">暂无跟进记录</td></tr>'; }
+  displayRows.forEach(function(f){
+    var c = custById(f.customer_id);
+    var cls = f.status==="completed" ? "tag-green" : "tag-blue";
+    var label = f.status==="completed" ? "已完成" : "待跟进";
+    html += "<tr><td>"+esc(c.name||"-")+"</td><td>"+esc(f.followup_date||"")+"</td><td>"+esc(f.content||"")+"</td>";
+    html += "<td>"+esc(f.next_followup||"-")+"</td><td><span class=\"tag "+cls+"\">"+label+"</span></td>";
+    html += "<td><a onclick=\"deleteFollowup(\'"+f.id+"\')\">删除</a></td></tr>";
+  });
+  html += "</tbody></table>";
+  
+  // 折页按钮
+  if(total > PAGE_SIZE) {
+    html += '<div style="padding:12px;text-align:center;border-top:1px solid #f1f5f9">';
+    if(showAll) {
+      html += '<button class="btn btn-outline btn-sm" onclick="toggleFold(\'followups\')">收起</button>';
+    } else {
+      html += '<span class="text-gray" style="margin-right:8px">显示前'+PAGE_SIZE+'条，共'+total+'条</span>';
+      html += '<button class="btn btn-primary btn-sm" onclick="toggleFold(\'followups\')">展开全部</button>';
+    }
+    html += '</div>';
+  }
+  
+  var ft = E("followupTable"); if(ft) ft.innerHTML = html;
+}
+
+// =============================================================
+// 渲染：财务
+// =============================================================
+function renderFinance() {
+  var d = initData(), today = td();
+  var tp=0, tc=0, vp=0;
+  (d.car_policies||[]).forEach(function(p){ var pp2=num(p.total_premium), cc2=num(p.commission_amount); tp+=pp2; tc+=cc2; if(p.end_date>=today) vp+=pp2; });
+  setText("fin-total-premium", fmt(tp));
+  setText("fin-total-commission", fmt(tc));
+  setText("fin-valid-premium", fmt(vp));
+  var rows = d.car_policies.slice().reverse();
+  var total = rows.length;
+  var showAll = expandedPages['finance'];
+  var displayRows = showAll ? rows : rows.slice(0, PAGE_SIZE);
+  
+  var html = '<table><thead><tr><th>客户</th><th>车牌</th><th>公司</th><th>保费</th><th>佣金</th><th>佣金率</th><th>起期</th><th>到期</th><th>状态</th></tr></thead><tbody>';
+  if(!displayRows.length) { html += '<tr><td colspan="9" class="text-center text-gray" style="padding:24px">暂无数据</td></tr>'; }
+  displayRows.forEach(function(p){
+    var c = custById(p.customer_id);
+    var v = vehById(p.vehicle_id);
+    var rate = p.total_premium > 0 ? (num(p.commission_amount)/num(p.total_premium)*100).toFixed(1)+"%" : "-";
+    var stText = {"active":"生效中","pending":"待生效","expired":"已过期","quoted":"已报价","renewed":"已续保","lost":"已流失"};
+    html += "<tr><td>"+esc(c.name||"-")+"</td><td>"+esc(v.plate||"-")+"</td><td>"+esc(p.company||"")+"</td>";
+    html += "<td class=\"text-right\">"+(p.total_premium||0)+"</td><td class=\"text-right text-green\">+"+(p.commission_amount||0)+"</td>";
+    html += "<td>"+rate+"</td><td>"+esc(p.start_date||"")+"</td><td>"+esc(p.end_date||"")+"</td>";
+    html += "<td><span class=\"tag "+(p.status==="active"?"tag-green":"tag-blue")+"\">"+(stText[p.status]||p.status||"")+"</span></td></tr>";
+  });
+  html += "</tbody></table>";
+  
+  // 折页按钮
+  if(total > PAGE_SIZE) {
+    html += '<div style="padding:12px;text-align:center;border-top:1px solid #f1f5f9">';
+    if(showAll) {
+      html += '<button class="btn btn-outline btn-sm" onclick="toggleFold(\'finance\')">收起</button>';
+    } else {
+      html += '<span class="text-gray" style="margin-right:8px">显示前'+PAGE_SIZE+'条，共'+total+'条</span>';
+      html += '<button class="btn btn-primary btn-sm" onclick="toggleFold(\'finance\')">展开全部</button>';
+    }
+    html += '</div>';
+  }
+  
+  var ft = E("financeTable"); if(ft) ft.innerHTML = html;
+}
+
+// =============================================================
+// 渲染：数据报表
+// =============================================================
+function renderStats() {
+  var d = initData();
+  var tp = (d.car_policies||[]).reduce(function(a,x){ return a+num(x.total_premium); },0);
+  var tc = (d.car_policies||[]).reduce(function(a,x){ return a+num(x.commission_amount); },0);
+  var avgc = d.car_policies.length ? (tc/d.car_policies.length).toFixed(0) : 0;
+  var avgp = d.car_policies.length ? (tp/d.car_policies.length).toFixed(0) : 0;
+  var today = td();
+  var exp30 = (d.car_policies||[]).filter(function(p){
+    var d2 = new Date(p.end_date); d2.setDate(d2.getDate()-30);
+    return p.end_date >= today && d2 <= new Date(today);
+  }).length;
+  var html = '<div class="stats-grid"><div class="stat-card"><div class="stat-label">总保费</div><div class="stat-value">'+fmt(tp)+'元</div></div>';
+  html += '<div class="stat-card"><div class="stat-label">总佣金</div><div class="stat-value green">'+fmt(tc)+'元</div></div>';
+  html += '<div class="stat-card"><div class="stat-label">平均客单价</div><div class="stat-value">'+fmt(avgp)+'元</div></div>';
+  html += '<div class="stat-card"><div class="stat-label">平均佣金</div><div class="stat-value green">'+fmt(avgc)+'元</div></div>';
+  html += '<div class="stat-card"><div class="stat-label">30天内到期</div><div class="stat-value" style="color:#f59e0b">'+exp30+'单</div></div>';
+  html += '<div class="stat-card"><div class="stat-label">客户数</div><div class="stat-value">'+d.customers.length+'</div></div></div>';
+  var sg = E("statsGrid"); if(sg) sg.innerHTML = html;
+}
+
+// =============================================================
+// 渲染：数据总览
+// =============================================================
+function renderAudit() {
+  var d = initData();
+  var html = '<div class="stats-grid">';
+  html += '<div class="stat-card"><div class="stat-label">客户</div><div class="stat-value">'+d.customers.length+'</div></div>';
+  html += '<div class="stat-card"><div class="stat-label">车辆</div><div class="stat-value">'+d.vehicles.length+'</div></div>';
+  html += '<div class="stat-card"><div class="stat-label">车险</div><div class="stat-value">'+d.car_policies.length+'</div></div>';
+  html += '<div class="stat-card"><div class="stat-label">非车险管理</div><div class="stat-value">'+(d.noncar_policies||[]).length+'</div></div>';
+  html += '<div class="stat-card"><div class="stat-label">服务</div><div class="stat-value">'+(d.services||[]).length+'</div></div>';
+  html += '<div class="stat-card"><div class="stat-label">跟进</div><div class="stat-value">'+(d.followups||[]).length+'</div></div>';
+  html += '</div>';
+  var ag = E("auditGrid"); if(ag) ag.innerHTML = html;
+  var at = E("auditTable"); if(at) at.innerHTML = '<div class="text-center text-gray" style="padding:20px">数据已全部加载到本地浏览器中</div>';
+}
+
+// =============================================================
+// 弹窗：客户
+// =============================================================
+function openCustModal(id) {
+  var d = initData();
+  var c = id ? (d.customers||[]).find(function(x){return x.id===id;}) : null;
+  var body = '<input type="hidden" id="m_cid" value="'+(c?c.id:"")+'">';
+  body += '<div class="form-row"><div class="form-group"><label>姓名</label><input id="m_name" class="form-control" value="'+esc(c?c.name:"")+'" placeholder="客户姓名"></div>';
+  body += '<div class="form-group"><label>电话</label><input id="m_phone" class="form-control" value="'+esc(c?c.phone:"")+'" placeholder="手机号"></div></div>';
+  body += '<div class="form-row"><div class="form-group"><label>证件号</label><input id="m_idcard" class="form-control" value="'+esc(c?c.id_card:"")+'" placeholder="身份证号"></div>';
+  body += '<div class="form-group"><label>地址</label><input id="m_addr" class="form-control" value="'+esc(c?c.address:"")+'" placeholder="家庭/公司地址"></div></div>';
+  var btns = [
+    {text:"保存", cls:"btn btn-primary", fn: function(){
+      var name = E("m_name").value.trim(), phone = E("m_phone").value.trim();
+      if(!name){ showToast("请输入姓名","err"); return; }
+      var d2 = initData(), cid = E("m_cid").value;
+      if(cid) {
+        var cu = (d2.customers||[]).find(function(x){return x.id===cid;});
+        if(cu){ cu.name=name; cu.phone=phone; cu.id_card=E("m_idcard").value.trim(); cu.address=E("m_addr").value.trim(); }
+      } else {
+        (d2.customers=d2.customers||[]).push({id:"c"+Date.now(),name:name,phone:phone,id_card:E("m_idcard").value.trim(),address:E("m_addr").value.trim(),created_at:td()});
+      }
+      saveData(d2); closeModal(); renderCustomers(); syncStats();
+      showToast(cid?"客户已更新":"客户已添加","ok");
+    }},
+    {text:"取消", fn: closeModal}
+  ];
+  showModal((c?"编辑":"新增")+"客户", body, btns);
+}
+
+function viewCustomer(id) {
+  var d = initData(), c = (d.customers||[]).find(function(x){return x.id===id;});
+  if(!c){ showToast("客户不存在","err"); return; }
+  var vs = (d.vehicles||[]).filter(function(v){return v.customer_id===id;});
+  var ps = (d.car_policies||[]).filter(function(p){return p.customer_id===id;});
+  var body = '<div class="form-row"><div class="form-group"><label>姓名</label><div style="padding:8px;border:1px solid #e2e8f0;border-radius:6px">'+esc(c.name)+'</div></div>';
+  body += '<div class="form-group"><label>电话</label><div style="padding:8px;border:1px solid #e2e8f0;border-radius:6px">'+esc(c.phone||"-")+'</div></div></div>';
+  body += '<div class="form-row"><div class="form-group"><label>证件</label><div style="padding:8px;border:1px solid #e2e8f0;border-radius:6px">'+esc(c.id_card||"-")+'</div></div>';
+  body += '<div class="form-group"><label>地址</label><div style="padding:8px;border:1px solid #e2e8f0;border-radius:6px">'+esc(c.address||"-")+'</div></div></div>';
+  body += '<div class="form-group"><label>创建</label><div style="padding:8px;border:1px solid #e2e8f0;border-radius:6px">'+esc(c.created_at||"-")+'</div></div>';
+  if(vs.length){ body += '<h4 style="margin-top:16px;color:#475569">车辆 ('+vs.length+')</h4>'; vs.forEach(function(v){ body += '<div style="padding:8px;background:#f8fafc;margin:4px 0;border-radius:6px;font-size:13px">'+esc(v.plate)+' | '+esc(v.brand||"")+' '+esc(v.model||"")+' | VIN:'+esc(v.vin||"")+'</div>'; }); }
+  if(ps.length){ body += '<h4 style="margin-top:16px;color:#475569">车险 ('+ps.length+')</h4>'; ps.forEach(function(p){ body += '<div style="padding:8px;background:#f0f9ff;margin:4px 0;border-radius:6px;font-size:13px">'+esc(p.company)+' '+esc(p.total_premium)+'元 到期:'+esc(p.end_date)+' <span class="tag '+(p.status==="active"?"tag-green":"tag-red")+'">'+esc(p.status||"")+'</span></div>'; }); }
+  showModal("客户详情", body, [{text:"关闭", fn:closeModal}]);
+}
+
+function deleteCustomer(id) {
+  if(!confirm("确认删除该客户？\n删除后其车辆、保单、服务记录也将一并删除！")) return;
+  var d = initData();
+  d.customers = (d.customers||[]).filter(function(x){return x.id!==id;});
+  d.vehicles = (d.vehicles||[]).filter(function(x){return x.customer_id!==id;});
+  d.car_policies = (d.car_policies||[]).filter(function(x){return x.customer_id!==id;});
+  d.services = (d.services||[]).filter(function(x){return x.customer_id!==id;});
+  d.followups = (d.followups||[]).filter(function(x){return x.customer_id!==id;});
+  saveData(d); renderCustomers(); syncStats();
+  showToast("客户已删除","ok");
+}
+
+// =============================================================
+// 弹窗：车辆
+// =============================================================
+function openVehModal(id) {
+  var d = initData(), v = id ? (d.vehicles||[]).find(function(x){return x.id===id;}) : null;
+  var body = '<input type="hidden" id="m_vid" value="'+(v?v.id:"")+'">';
+  body += '<div class="form-row"><div class="form-group"><label>车主 *</label><input id="m_cust_search" class="form-control" placeholder="输入姓名/电话搜索客户..." value="'+(v?custById(v.customer_id).name||'':'')+'" oninput="filterCustOpts(this)" onfocus="showCustDropdown(this)" autocomplete="off"><div id="cust_dropdown" class="cust-dropdown" style="display:none;position:absolute;background:#fff;border:1px solid #e2e8f0;border-radius:6px;max-height:200px;overflow-y:auto;z-index:1000;width:calc(100% - 24px);box-shadow:0 4px 6px rgba(0,0,0,0.1);"></div><input type="hidden" id="m_cust" value="'+(v?v.customer_id:'')+'"></div>';
+  body += '<div class="form-group"><label>车牌 *</label><input id="m_plate" class="form-control" value="'+esc(v?v.plate:"").toUpperCase()+'" placeholder="苏D00000"></div></div>';
+  body += '<div class="form-row"><div class="form-group"><label>车架号</label><input id="m_vin" class="form-control" value="'+esc(v?v.vin:"")+'" placeholder="VIN码（17位）"></div>';
+  body += '<div class="form-group"><label>品牌型号</label><input id="m_brand" class="form-control" value="'+esc(v?v.brand:"")+'" placeholder="如：大众帕萨特 2020款"></div></div>';
+  body += '<div class="form-row"><div class="form-group"><label>车辆种类</label><select id="m_vtype" class="form-control"><option value="">-- 选择种类 --</option><optgroup label="乘用车"><option value="小型轿车"'+(v&&v.vehicle_type==='小型轿车'?' selected':'')+'>小型轿车</option><option value="中型轿车"'+(v&&v.vehicle_type==='中型轿车'?' selected':'')+'>中型轿车</option><option value="大型轿车"'+(v&&v.vehicle_type==='大型轿车'?' selected':'')+'>大型轿车</option><option value="小型SUV"'+(v&&v.vehicle_type==='小型SUV'?' selected':'')+'>小型SUV</option><option value="中型SUV"'+(v&&v.vehicle_type==='中型SUV'?' selected':'')+'>中型SUV</option><option value="大型SUV"'+(v&&v.vehicle_type==='大型SUV'?' selected':'')+'>大型SUV</option><option value="MPV"'+(v&&v.vehicle_type==='MPV'?' selected':'')+'>MPV</option><option value="跑车"'+(v&&v.vehicle_type==='跑车'?' selected':'')+'>跑车</option><option value="微型轿车"'+(v&&v.vehicle_type==='微型轿车'?' selected':'')+'>微型轿车</option><option value="交叉型乘用车"'+(v&&v.vehicle_type==='交叉型乘用车'?' selected':'')+'>交叉型乘用车</option></optgroup><optgroup label="新能源车"><option value="纯电动轿车"'+(v&&v.vehicle_type==='纯电动轿车'?' selected':'')+'>纯电动轿车</option><option value="插电混动轿车"'+(v&&v.vehicle_type==='插电混动轿车'?' selected':'')+'>插电混动轿车</option><option value="增程式轿车"'+(v&&v.vehicle_type==='增程式轿车'?' selected':'')+'>增程式轿车</option><option value="纯电动SUV"'+(v&&v.vehicle_type==='纯电动SUV'?' selected':'')+'>纯电动SUV</option><option value="插电混动SUV"'+(v&&v.vehicle_type==='插电混动SUV'?' selected':'')+'>插电混动SUV</option><option value="纯电动MPV"'+(v&&v.vehicle_type==='纯电动MPV'?' selected':'')+'>纯电动MPV</option><option value="混合动力轿车"'+(v&&v.vehicle_type==='混合动力轿车'?' selected':'')+'>混合动力轿车（非插电）</option></optgroup><optgroup label="货车"><option value="普通货车"'+(v&&v.vehicle_type==='普通货车'?' selected':'')+'>普通货车</option><option value="厢式货车"'+(v&&v.vehicle_type==='厢式货车'?' selected':'')+'>厢式货车</option><option value="自卸货车"'+(v&&v.vehicle_type==='自卸货车'?' selected':'')+'>自卸货车</option><option value="仓栅式货车"'+(v&&v.vehicle_type==='仓栅式货车'?' selected':'')+'>仓栅式货车</option><option value="罐式货车"'+(v&&v.vehicle_type==='罐式货车'?' selected':'')+'>罐式货车</option><option value="平板货车"'+(v&&v.vehicle_type==='平板货车'?' selected':'')+'>平板货车</option><option value="集装箱车"'+(v&&v.vehicle_type==='集装箱车'?' selected':'')+'>集装箱车</option><option value="冷藏车"'+(v&&v.vehicle_type==='冷藏车'?' selected':'')+'>冷藏车</option><option value="保温车"'+(v&&v.vehicle_type==='保温车'?' selected':'')+'>保温车</option><option value="牵引车"'+(v&&v.vehicle_type==='牵引车'?' selected':'')+'>牵引车</option><option value="半挂牵引车"'+(v&&v.vehicle_type==='半挂牵引车'?' selected':'')+'>半挂牵引车</option><option value="全挂牵引车"'+(v&&v.vehicle_type==='全挂牵引车'?' selected':'')+'>全挂牵引车</option><option value="低速货车"'+(v&&v.vehicle_type==='低速货车'?' selected':'')+'>低速货车</option><option value="微型货车"'+(v&&v.vehicle_type==='微型货车'?' selected':'')+'>微型货车</option><option value="轻型货车"'+(v&&v.vehicle_type==='轻型货车'?' selected':'')+'>轻型货车</option><option value="中型货车"'+(v&&v.vehicle_type==='中型货车'?' selected':'')+'>中型货车</option><option value="重型货车"'+(v&&v.vehicle_type==='重型货车'?' selected':'')+'>重型货车</option></optgroup><optgroup label="客车"><option value="微型客车"'+(v&&v.vehicle_type==='微型客车'?' selected':'')+'>微型客车</option><option value="小型客车"'+(v&&v.vehicle_type==='小型客车'?' selected':'')+'>小型客车</option><option value="中型客车"'+(v&&v.vehicle_type==='中型客车'?' selected':'')+'>中型客车</option><option value="大型客车"'+(v&&v.vehicle_type==='大型客车'?' selected':'')+'>大型客车</option><option value="特大型客车"'+(v&&v.vehicle_type==='特大型客车'?' selected':'')+'>特大型客车</option><option value="面包车"'+(v&&v.vehicle_type==='面包车'?' selected':'')+'>面包车</option></optgroup><optgroup label="挂车"><option value="半挂车"'+(v&&v.vehicle_type==='半挂车'?' selected':'')+'>半挂车</option><option value="全挂车"'+(v&&v.vehicle_type==='全挂车'?' selected':'')+'>全挂车</option><option value="中置轴挂车"'+(v&&v.vehicle_type==='中置轴挂车'?' selected':'')+'>中置轴挂车</option><option value="厢式半挂车"'+(v&&v.vehicle_type==='厢式半挂车'?' selected':'')+'>厢式半挂车</option><option value="罐式半挂车"'+(v&&v.vehicle_type==='罐式半挂车'?' selected':'')+'>罐式半挂车</option><option value="平板半挂车"'+(v&&v.vehicle_type==='平板半挂车'?' selected':'')+'>平板半挂车</option><option value="集装箱半挂车"'+(v&&v.vehicle_type==='集装箱半挂车'?' selected':'')+'>集装箱半挂车</option><option value="仓栅式半挂车"'+(v&&v.vehicle_type==='仓栅式半挂车'?' selected':'')+'>仓栅式半挂车</option><option value="低平板半挂车"'+(v&&v.vehicle_type==='低平板半挂车'?' selected':'')+'>低平板半挂车</option><option value="自卸半挂车"'+(v&&v.vehicle_type==='自卸半挂车'?' selected':'')+'>自卸半挂车</option></optgroup><optgroup label="专项作业车"><option value="专项作业车"'+(v&&v.vehicle_type==='专项作业车'?' selected':'')+'>专项作业车</option><option value="消防车"'+(v&&v.vehicle_type==='消防车'?' selected':'')+'>消防车</option><option value="救护车"'+(v&&v.vehicle_type==='救护车'?' selected':'')+'>救护车</option><option value="工程救险车"'+(v&&v.vehicle_type==='工程救险车'?' selected':'')+'>工程救险车</option></optgroup><optgroup label="其他"><option value="皮卡"'+(v&&v.vehicle_type==='皮卡'?' selected':'')+'>皮卡</option><option value="摩托车"'+(v&&v.vehicle_type==='摩托车'?' selected':'')+'>摩托车</option><option value="三轮汽车"'+(v&&v.vehicle_type==='三轮汽车'?' selected':'')+'>三轮汽车</option><option value="拖拉机"'+(v&&v.vehicle_type==='拖拉机'?' selected':'')+'>拖拉机</option><option value="其他"'+(v&&v.vehicle_type==='其他'?' selected':'')+'>其他</option></optgroup></select></div>';
+  body += '<div class="form-group"><label>使用性质</label><select id="m_vusage" class="form-control"><option value="">-- 选择性质 --</option><optgroup label="非营运"><option value="非营运-家庭自用"'+(v&&v.usage==='非营运-家庭自用'?' selected':'')+'>非营运-家庭自用</option><option value="非营运-企业自用"'+(v&&v.usage==='非营运-企业自用'?' selected':'')+'>非营运-企业自用</option><option value="非营运-机关自用"'+(v&&v.usage==='非营运-机关自用'?' selected':'')+'>非营运-机关自用</option><option value="非营运-其他"'+(v&&v.usage==='非营运-其他'?' selected':'')+'>非营运-其他</option></optgroup><optgroup label="营运"><option value="营运-出租客运"'+(v&&v.usage==='营运-出租客运'?' selected':'')+'>营运-出租客运</option><option value="营运-公交客运"'+(v&&v.usage==='营运-公交客运'?' selected':'')+'>营运-公交客运</option><option value="营运-公路客运"'+(v&&v.usage==='营运-公路客运'?' selected':'')+'>营运-公路客运</option><option value="营运-旅游客运"'+(v&&v.usage==='营运-旅游客运'?' selected':'')+'>营运-旅游客运</option><option value="营运-租赁"'+(v&&v.usage==='营运-租赁'?' selected':'')+'>营运-租赁</option><option value="营运-货运"'+(v&&v.usage==='营运-货运'?' selected':'')+'>营运-货运</option><option value="营运-危化品运输"'+(v&&v.usage==='营运-危化品运输'?' selected':'')+'>营运-危化品运输</option><option value="营运-教练车"'+(v&&v.usage==='营运-教练车'?' selected':'')+'>营运-教练车</option></optgroup><optgroup label="特种用途"><option value="特种-警用"'+(v&&v.usage==='特种-警用'?' selected':'')+'>特种-警用</option><option value="特种-消防"'+(v&&v.usage==='特种-消防'?' selected':'')+'>特种-消防</option><option value="特种-救护"'+(v&&v.usage==='特种-救护'?' selected':'')+'>特种-救护</option><option value="特种-工程救险"'+(v&&v.usage==='特种-工程救险'?' selected':'')+'>特种-工程救险</option><option value="特种-防汛"'+(v&&v.usage==='特种-防汛'?' selected':'')+'>特种-防汛</option><option value="特种-环卫"'+(v&&v.usage==='特种-环卫'?' selected':'')+'>特种-环卫</option><option value="特种-邮政"'+(v&&v.usage==='特种-邮政'?' selected':'')+'>特种-邮政</option></optgroup><optgroup label="其他"><option value="校车"'+(v&&v.usage==='校车'?' selected':'')+'>校车</option><option value="工程用车"'+(v&&v.usage==='工程用车'?' selected':'')+'>工程用车</option><option value="其他"'+(v&&v.usage==='其他'?' selected':'')+'>其他</option></optgroup></select></div></div>';
+  body += '<div class="form-group"><label>注册日期</label><input id="m_reg" class="form-control" type="date" value="'+esc(v?v.reg_date:"")+'"></div>';
+  var btns = [
+    {text:"保存", cls:"btn btn-primary", fn: function(){
+      var cid = E("m_cust").value, plate = E("m_plate").value.trim().toUpperCase();
+      if(!cid||!plate){ showToast("请选择车主并输入车牌","err"); return; }
+      var d2 = initData(), vid = E("m_vid").value;
+      if(vid) {
+        var ve = (d2.vehicles||[]).find(function(x){return x.id===vid;});
+        if(ve){ ve.customer_id=cid; ve.plate=plate; ve.vin=E("m_vin").value.trim(); ve.brand=E("m_brand").value.trim(); ve.vehicle_type=E("m_vtype").value; ve.usage=E("m_vusage").value; ve.reg_date=E("m_reg").value; }
+      } else {
+        (d2.vehicles=d2.vehicles||[]).push({id:"v"+Date.now(),customer_id:cid,plate:plate,vin:E("m_vin").value.trim(),brand:E("m_brand").value.trim(),vehicle_type:E("m_vtype").value,usage:E("m_vusage").value,reg_date:E("m_reg").value,created_at:td()});
+      }
+      saveData(d2); closeModal(); renderVehicles(); syncStats();
+      showToast(vid?"车辆已更新":"车辆已添加","ok");
+    }},
+    {text:"取消", fn:closeModal}
+  ];
+  showModal((v?"编辑":"新增")+"车辆", body, btns);
+  setTimeout(function(){ renderCustDropdown(); }, 50);
+}
+
+function deleteVehicle(id) {
+  if(!confirm("确认删除该车辆？")) return;
+  var d = initData();
+  d.vehicles = (d.vehicles||[]).filter(function(x){return x.id!==id;});
+  saveData(d); renderVehicles(); syncStats();
+  showToast("车辆已删除","ok");
+}
+
+function calcTotalPrem() {
+  var biz = parseFloat(E("m_biz").value)||0;
+  var comp = parseFloat(E("m_compulsory").value)||0;
+  var tax = parseFloat(E("m_tax").value)||0;
+  E("m_prem").value = (biz + comp + tax).toFixed(2);
+}
+
+// =============================================================
+// 弹窗：车险
+// =============================================================
+function openCarPolModal(id) {
+  var d = initData(), today = td(), ny = nyd();
+  var p = id ? (d.car_policies||[]).find(function(x){return x.id===id;}) : null;
+  var coOpts = '<option>人保财险</option><option>平安财险</option><option>太平洋财险</option><option>太平财险</option><option>中国人保</option><option>中国太平洋</option><option>中国大地</option><option>中国联合</option><option>中华联合</option><option>华泰财险</option><option>天安财险</option><option>众安保险</option><option>紫金财险</option><option>亚太财险</option><option>阳光财险</option><option>国家保险</option><option>永安财险</option><option>泰山财险</option><option>南方财险</option><option>兴银财险</option><option>东方财险</option><option>浙商财险</option><option>港中安</option><option>中农财险</option><option>建信保险</option><option>明日安轮</option><option>北京车管所</option><option>海康财险</option><option>大地财险</option><option>稀土财险</option><option>华安财险</option>';
+  var body = '<input type="hidden" id="m_pid" value="'+(p?p.id:"")+'">';
+  body += '<div class="form-row"><div class="form-group"><label>车主 *</label><input id="m_cust_search" class="form-control" placeholder="输入姓名/电话搜索客户..." value="'+(p?custById(p.customer_id).name||'':'')+'" oninput="filterCustOpts(this)" onfocus="showCustDropdown(this)" autocomplete="off"><div id="cust_dropdown" class="cust-dropdown" style="display:none;position:absolute;background:#fff;border:1px solid #e2e8f0;border-radius:6px;max-height:200px;overflow-y:auto;z-index:1000;width:calc(100% - 24px);box-shadow:0 4px 6px rgba(0,0,0,0.1);"></div><input type="hidden" id="m_pcust" value="'+(p?p.customer_id:'')+'"></div>';
+  body += '<div class="form-group"><label>车牌 *</label><select id="m_pveh" class="form-control"><option value="">-- 先选车主 --</option></select></div></div>';
+  body += '<div class="form-row"><div class="form-group"><label>公司</label><input id="m_co" class="form-control" list="co-list" placeholder="输入或选择公司"><datalist id="co-list">'+coOpts+'</datalist></div>';
+  body += '<div class="form-group"><label>商业险（元）</label><input id="m_biz" class="form-control" type="number" placeholder="0" value="'+(p?p.biz_premium||"":"")+'" oninput="calcTotalPrem()"></div></div>';
+  body += '<div class="form-row"><div class="form-group"><label>交强险（元）</label><input id="m_compulsory" class="form-control" type="number" placeholder="0" value="'+(p?p.compulsory_premium||"":"")+'" oninput="calcTotalPrem()"></div>';
+  body += '<div class="form-group"><label>车船税（元）</label><input id="m_tax" class="form-control" type="number" placeholder="0" value="'+(p?p.tax_amount||"":"")+'" oninput="calcTotalPrem()"></div></div>';
+  body += '<div class="form-row"><div class="form-group"><label>总保费（元）</label><input id="m_prem" class="form-control" type="number" readonly style="background:#f0f9ff;font-weight:bold;" value="'+(p?p.total_premium||"0":"0")+'"></div>';
+  body += '<div class="form-group"><label>佣金（元）</label><input id="m_comm" class="form-control" type="number" placeholder="0" value="'+(p?p.commission_amount||"":"")+'"></div></div>';
+  body += '<div class="form-group"><label>状态</label><select id="m_pstatus" class="form-control"><option value="active">生效中</option><option value="pending">待生效</option><option value="expired">已过期</option><option value="quoted">已报价</option><option value="renewed">已续保</option><option value="lost">已流失</option></select></div></div>';
+  body += '<div class="form-row"><div class="form-group"><label>起保日期</label><input id="m_pstart" class="form-control" type="date" value="'+(p?p.start_date:today)+'"></div>';
+  body += '<div class="form-group"><label>到期日期</label><input id="m_pend" class="form-control" type="date" value="'+(p?p.end_date:ny)+'"></div></div>';
+  var btns = [
+    {text:"保存", cls:"btn btn-primary", fn: function(){
+      var cid = E("m_pcust").value, vid = E("m_pveh").value, co = E("m_co").value;
+      if(!cid||!vid||!co){ showToast("请填写完整信息","err"); return; }
+      var d2 = initData(), pid = E("m_pid").value;
+      var bizPrem = parseFloat(E("m_biz").value)||0;
+      var compPrem = parseFloat(E("m_compulsory").value)||0;
+      var taxAmt = parseFloat(E("m_tax").value)||0;
+      var totalPrem = bizPrem + compPrem + taxAmt;
+      if(pid) {
+        var pol = (d2.car_policies||[]).find(function(x){return x.id===pid;});
+        if(pol){ pol.customer_id=cid; pol.vehicle_id=vid; pol.company=co; pol.biz_premium=bizPrem; pol.compulsory_premium=compPrem; pol.tax_amount=taxAmt; pol.total_premium=totalPrem; pol.commission_amount=E("m_comm").value; pol.start_date=E("m_pstart").value; pol.end_date=E("m_pend").value; pol.status=E("m_pstatus").value; }
+      } else {
+        (d2.car_policies=d2.car_policies||[]).push({id:"p"+Date.now(),customer_id:cid,vehicle_id:vid,company:co,biz_premium:bizPrem,compulsory_premium:compPrem,tax_amount:taxAmt,total_premium:totalPrem,commission_amount:E("m_comm").value,start_date:E("m_pstart").value,end_date:E("m_pend").value,status:E("m_pstatus").value,created_at:td()});
+      }
+      saveData(d2); closeModal(); renderCarInsurance(); syncStats();
+      showToast(pid?"保单已更新":"保单已添加","ok");
+    }},
+    {text:"取消", fn:closeModal}
+  ];
+  showModal((p?"编辑":"新增")+"车险", body, btns);
+  window._pvD = d;
+  // 初始化下拉列表
+  setTimeout(function(){ renderCustDropdown(); }, 50);
+  if(p) {
+    setTimeout(function(){
+      updPolVeh(p.vehicle_id);
+      var coEl = E("m_co"); if(coEl && p.company) coEl.value = p.company;
+      var stEl = E("m_pstatus"); if(stEl && p.status) stEl.value = p.status;
+    }, 100);
+  }
+}
+
+function updPolVeh(selectedVid) {
+  var cid = E("m_pcust").value;
+  var d = window._pvD || initData();
+  var vs = (d.vehicles||[]).filter(function(v){return v.customer_id===cid;});
+  var sel = E("m_pveh");
+  if(sel) {
+    sel.innerHTML = '<option value="">-- 选择车辆 --</option>' + vs.map(function(v){ return '<option value="'+v.id+'">'+esc(v.plate)+' '+esc(v.brand||"")+'</option>'; }).join("");
+    if(selectedVid && sel) sel.value = selectedVid;
+  }
+}
+
+function deleteCarPolicy(id) {
+  if(!confirm("确认删除该保单？")) return;
+  var d = initData();
+  d.car_policies = (d.car_policies||[]).filter(function(x){return x.id!==id;});
+  saveData(d); renderCarInsurance(); syncStats();
+  showToast("保单已删除","ok");
+}
+
+// =============================================================
+// 弹窗：非车险
+// =============================================================
+function openNoncarModal(id) {
+  var d = initData(), today = td(), ny = nyd();
+  var p = id ? (d.noncar_policies||[]).find(function(x){return x.id===id;}) : null;
+  var body = '<input type="hidden" id="m_nid" value="'+(p?p.id:"")+'">';
+  body += '<div class="form-row"><div class="form-group"><label>客户</label><input id="m_cust_search" class="form-control" placeholder="输入姓名/电话搜索客户..." value="'+(p?custById(p.customer_id).name||'':'')+'" oninput="filterCustOpts(this)" onfocus="showCustDropdown(this)" autocomplete="off"><div id="cust_dropdown" class="cust-dropdown" style="display:none;position:absolute;background:#fff;border:1px solid #e2e8f0;border-radius:6px;max-height:200px;overflow-y:auto;z-index:1000;width:calc(100% - 24px);box-shadow:0 4px 6px rgba(0,0,0,0.1);"></div><input type="hidden" id="m_ncust" value="'+(p?p.customer_id:'')+'"></div>';
+  body += '<div class="form-group"><label>险种</label><select id="m_ntype" class="form-control"><option value="">-- 选择险种 --</option><option>驾乘险</option><option>学平险</option><option>安康险</option><option>意外险</option><option>家财险</option><option>电瓶车险</option><option>雇主责任险</option><option>其他</option></select></div></div>';
+  body += '<div class="form-row"><div class="form-group"><label>公司</label><input id="m_nco" class="form-control" list="co-list" value="'+esc(p?p.company:"")+'" placeholder="输入或选择公司"></div>';
+  body += '<div class="form-group"><label>保费</label><input id="m_nprem" class="form-control" type="number" value="'+(p?p.premium:"")+'" placeholder="0"></div></div>';
+  body += '<div class="form-row"><div class="form-group"><label>起期</label><input id="m_nstart" class="form-control" type="date" value="'+(p?p.start_date:today)+'"></div>';
+  body += '<div class="form-group"><label>到期</label><input id="m_nend" class="form-control" type="date" value="'+(p?p.end_date:ny)+'"></div></div>';
+  var btns = [
+    {text:"保存", cls:"btn btn-primary", fn: function(){
+      var cid = E("m_ncust").value;
+      if(!cid){ showToast("请选择客户","err"); return; }
+      var d2 = initData(), nid = E("m_nid").value;
+      if(nid) {
+        var pol = (d2.noncar_policies||[]).find(function(x){return x.id===nid;});
+        if(pol){ pol.customer_id=cid; pol.type=E("m_ntype").value; pol.company=E("m_nco").value; pol.premium=E("m_nprem").value; pol.start_date=E("m_nstart").value; pol.end_date=E("m_nend").value; }
+      } else {
+        (d2.noncar_policies=d2.noncar_policies||[]).push({id:"n"+Date.now(),customer_id:cid,type:E("m_ntype").value,company:E("m_nco").value,premium:E("m_nprem").value,start_date:E("m_nstart").value,end_date:E("m_nend").value,created_at:td()});
+      }
+      saveData(d2); closeModal(); renderNoncarInsurance(); syncStats();
+      showToast(nid?"非车险已更新":"非车险已添加","ok");
+    }},
+    {text:"取消", fn:closeModal}
+  ];
+  showModal((p?"编辑":"新增")+"非车险", body, btns);
+  // 初始化下拉列表
+  setTimeout(function(){ renderCustDropdown(); }, 50);
+}
+
+function deleteNoncar(id) {
+  if(!confirm("确认删除？")) return;
+  var d = initData();
+  d.noncar_policies = (d.noncar_policies||[]).filter(function(x){return x.id!==id;});
+  saveData(d); renderNoncarInsurance(); syncStats();
+  showToast("已删除","ok");
+}
+
+// =============================================================
+// 弹窗：服务
+// =============================================================
+function openServiceModal() {
+  var d = initData(), today = td();
+  var cOpts = (d.customers||[]).map(function(c){ return '<option value="'+c.id+'">'+esc(c.name)+'</option>'; }).join("");
+  var body = '<div class="form-row"><div class="form-group"><label>客户 *</label><select id="m_scust" class="form-control" onchange="updSvcVeh()"><option value="">-- 选择客户 --</option>'+cOpts+'</select></div>';
+  body += '<div class="form-group"><label>车辆 *</label><select id="m_sveh" class="form-control"><option value="">-- 先选客户 --</option></select></div></div>';
+  body += '<div class="form-row"><div class="form-group"><label>服务类型</label><select id="m_stype" class="form-control"><option value="">-- 选择类型 --</option><option value="annual_review">年审</option><option value="maintain">保养</option><option value="repair">维修</option><option value="wash">洗车</option><option value="other">其他</option></select></div>';
+  body += '<div class="form-group"><label>服务日期</label><input id="m_sdate" class="form-control" type="date" value="'+today+'"></div></div>';
+  body += '<div class="form-group"><label>费用（元）</label><input id="m_sfee" class="form-control" type="number" value="0" placeholder="0"></div>';
+  body += '<div class="form-group full"><label>备注</label><textarea id="m_sremark" class="form-control" rows="2" placeholder="备注信息"></textarea></div>';
+  var btns = [
+    {text:"保存", cls:"btn btn-primary", fn: function(){
+      var cid = E("m_scust").value, vid = E("m_sveh").value;
+      if(!cid||!vid){ showToast("请选择客户和车辆","err"); return; }
+      var d2 = initData();
+      (d2.services=d2.services||[]).push({id:"s"+Date.now(),customer_id:cid,vehicle_id:vid,service_type:E("m_stype").value,service_date:E("m_sdate").value,actual_fee:num(E("m_sfee").value),remark:E("m_sremark").value,status:"completed",created_at:td()});
+      saveData(d2); closeModal(); renderAfterMarket(); syncStats();
+      showToast("服务记录已添加","ok");
+    }},
+    {text:"取消", fn:closeModal}
+  ];
+  showModal("新增服务记录", body, btns);
+  window._svcD = d;
+}
+
+function updSvcVeh() {
+  var cid = E("m_scust").value;
+  var d = window._svcD || initData();
+  var vs = (d.vehicles||[]).filter(function(v){return v.customer_id===cid;});
+  var sel = E("m_sveh");
+  if(sel) sel.innerHTML = '<option value="">-- 选择车辆 --</option>' + vs.map(function(v){ return '<option value="'+v.id+'">'+esc(v.plate)+'</option>'; }).join("");
+}
+
+// =============================================================
+// 弹窗：跟进
+// =============================================================
+function openFollowupModal() {
+  var d = initData(), today = td();
+  var cOpts = (d.customers||[]).map(function(c){ return '<option value="'+c.id+'">'+esc(c.name)+'</option>'; }).join("");
+  var body = '<div class="form-row"><div class="form-group"><label>客户 *</label><select id="m_fcust" class="form-control"><option value="">-- 选择客户 --</option>'+cOpts+'</select></div>';
+  body += '<div class="form-group"><label>跟进日期</label><input id="m_fdate" class="form-control" type="date" value="'+today+'"></div></div>';
+  body += '<div class="form-group"><label>跟进内容</label><textarea id="m_fcontent" class="form-control" rows="3" placeholder="本次跟进内容、沟通情况"></textarea></div>';
+  body += '<div class="form-group"><label>下次跟进日期（选填）</label><input id="m_fndate" class="form-control" type="date"></div>';
+  body += '<div class="form-group"><label>状态</label><select id="m_fstatus" class="form-control"><option value="pending">待跟进</option><option value="completed">已完成</option></select></div>';
+  var btns = [
+    {text:"保存", cls:"btn btn-primary", fn: function(){
+      var cid = E("m_fcust").value;
+      if(!cid){ showToast("请选择客户","err"); return; }
+      var d2 = initData();
+      (d2.followups=d2.followups||[]).push({id:"f"+Date.now(),customer_id:cid,followup_date:E("m_fdate").value,content:E("m_fcontent").value,next_followup:E("m_fndate").value,status:E("m_fstatus").value,created_at:td()});
+      saveData(d2); closeModal(); renderFollowups(); syncStats();
+      showToast("跟进记录已添加","ok");
+    }},
+    {text:"取消", fn:closeModal}
+  ];
+  showModal("新增跟进记录", body, btns);
+}
+
+function deleteFollowup(id) {
+  if(!confirm("确认删除？")) return;
+  var d = initData();
+  d.followups = (d.followups||[]).filter(function(x){return x.id!==id;});
+  saveData(d); renderFollowups();
+  showToast("已删除","ok");
+}
+
+function deleteService(id) {
+  if(!confirm("确认删除此服务记录？")) return;
+  var d = initData();
+  d.services = (d.services||[]).filter(function(x){return x.id!==id;});
+  saveData(d); renderAfterMarket(); syncStats();
+  showToast("已删除","ok");
+}
+
+// =============================================================
+// 导出
+// =============================================================
+function exportAll() {
+  var d = initData();
+  var csv = "\u59d3\u540d,\u7535\u8bdd,\u8f66\u724c,\u8f66\u67b6\u53f7,\u54c1\u724c,\u516c\u53f8,\u4fdd\u8d39,\u4f59\u9886,\u5230\u671f\u65e5,\u8d77\u65e5,\u72b6\u6001";
+  (d.car_policies||[]).forEach(function(p){
+    var c = custById(p.customer_id), v = vehById(p.vehicle_id);
+    csv += "\n"+(c.name||"")+","+(c.phone||"")+","+(v.plate||"")+","+(v.vin||"")+","+(v.brand||"")+","+(p.company||"")+","+(p.total_premium||0)+","+(p.commission_amount||0)+","+(p.end_date||"")+","+(p.start_date||"")+","+(p.status||"");
+  });
+  downloadCsv(csv, "\u8f66\u9669\u5168\u90e8\u5bfc\u51fa_"+td()+".csv");
+}
+
+function exportCustomers() {
+  var d = initData();
+  var csv = "\u59d3\u540d,\u7535\u8bdd,\u8bc1\u4ef6\u53f7,\u5730\u5740";
+  (d.customers||[]).forEach(function(c){ csv += "\n"+(c.name||"")+","+(c.phone||"")+","+(c.id_card||"")+","+(c.address||""); });
+  downloadCsv(csv, "\u5ba2\u6237\u540d\u5355_"+td()+".csv");
+}
+
+function exportPolicies() {
+  var d = initData();
+  var csv = "\u8f66\u4e3b,\u7535\u8bdd,\u8f66\u724c,\u516c\u53f8,\u4fdd\u8d39,\u4f59\u9886,\u8d77\u671f,\u5230\u671f,\u72b6\u6001";
+  (d.car_policies||[]).forEach(function(p){
+    var c = custById(p.customer_id), v = vehById(p.vehicle_id);
+    csv += "\n"+(c.name||"")+","+(c.phone||"")+","+(v.plate||"")+","+(p.company||"")+","+(p.total_premium||0)+","+(p.commission_amount||0)+","+(p.start_date||"")+","+(p.end_date||"")+","+(p.status||"");
+  });
+  downloadCsv(csv, "\u4fdd\u5355\u5217\u8868_"+td()+".csv");
+}
+
+function downloadCsv(text, filename) {
+  var blob = new Blob(["\ufeff"+text], {type:"text/csv;charset=utf-8"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  showToast("\u5bfc\u51fa\u6210\u529f", "ok");
+}
+
+function manualBackup() {
+  var d = initData();
+  var blob = new Blob([JSON.stringify(d,null,2)], {type:"application/json"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "crm_backup_"+td()+".json";
+  a.click();
+  showToast("\u5907\u4efd\u5df2\u4e0b\u8f7d", "ok");
+}
+
+function importFile(evt) {
+  var file = evt.target.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var content = e.target.result;
+      var fileName = file.name.toLowerCase();
+      
+      // JSON格式导入
+      if(fileName.endsWith('.json')) {
+        var d = JSON.parse(content);
+        if(!d.customers){ showToast("文件格式不正确","err"); return; }
+        saveData(d);
+        showToast("导入成功！"+d.customers.length+"个客户", "ok");
+        showPage("customers");
+      }
+      // CSV格式导入
+      else if(fileName.endsWith('.csv')) {
+        var lines = content.split('\n').filter(function(l){ return l.trim(); });
+        if(lines.length < 2) { showToast("CSV文件为空或格式错误","err"); return; }
+        
+        // 解析表头
+        var headers = lines[0].split(',').map(function(h){ return h.trim().replace(/^"|"$/g, ''); });
+        var nameIdx = headers.findIndex(function(h){ return h==='name' || h==='姓名' || h==='客户姓名'; });
+        var phoneIdx = headers.findIndex(function(h){ return h==='phone' || h==='电话' || h==='手机号'; });
+        var idcardIdx = headers.findIndex(function(h){ return h==='id_card' || h==='idcard' || h==='身份证' || h==='证件号'; });
+        var addrIdx = headers.findIndex(function(h){ return h==='address' || h==='地址'; });
+        var remarkIdx = headers.findIndex(function(h){ return h==='remark' || h==='备注'; });
+        
+        if(nameIdx < 0) { showToast("CSV缺少姓名列(name/姓名)","err"); return; }
+        
+        var d = initData();
+        var count = 0;
+        for(var i = 1; i < lines.length; i++) {
+          var cols = lines[i].split(',').map(function(c){ return c.trim().replace(/^"|"$/g, ''); });
+          var name = cols[nameIdx];
+          if(!name) continue;
+          
+          var cust = {
+            id: "c" + Date.now() + "_" + i,
+            name: name,
+            phone: phoneIdx >= 0 ? cols[phoneIdx] : "",
+            id_card: idcardIdx >= 0 ? cols[idcardIdx] : "",
+            address: addrIdx >= 0 ? cols[addrIdx] : "",
+            remark: remarkIdx >= 0 ? cols[remarkIdx] : "",
+            created_at: td()
+          };
+          d.customers.push(cust);
+          count++;
+        }
+        saveData(d);
+        showToast("导入成功！新增"+count+"个客户", "ok");
+        renderCustomers();
+        syncStats();
+      }
+      else {
+        showToast("请选择 .json 或 .csv 文件","err");
+      }
+    } catch(err) { showToast("文件读取失败: "+err.message, "err"); }
+  };
+  reader.readAsText(file, 'UTF-8');
+  evt.target.value = "";
+}
+
+// =============================================================
+// 事件绑定
+// =============================================================
+document.addEventListener("DOMContentLoaded", function() {
+  // 登录状态
+  if(localStorage.getItem("crm_logged_in") === "1") {
+    E("loginPage").style.display = "none";
+    E("appLayout").style.display = "block";
+    E("topbar").style.display = "flex";
+    initApp();
+  }
+
+  // 导航
+  document.querySelectorAll(".nav-item[data-page]").forEach(function(item) {
+    item.addEventListener("click", function() {
+      var page = this.getAttribute("data-page");
+      if(page) showPage(page);
+    });
+  });
+
+  // 退出
+  var logoutBtn = E("btn-logout");
+  if(logoutBtn) logoutBtn.addEventListener("click", doLogout);
+
+  // 弹窗关闭
+  var mo = E("modalOverlay");
+  if(mo) mo.addEventListener("click", function(e){ if(e.target===mo) closeModal(); });
+  var mc = E("modalCloseBtn");
+  if(mc) mc.addEventListener("click", closeModal);
+
+  // 快捷操作
+  var qaac = E("qa-add-customer");
+  if(qaac) qaac.addEventListener("click", function(){ openCustModal(null); });
+  var qaav = E("qa-add-vehicle");
+  if(qaav) qaav.addEventListener("click", function(){ openVehModal(null); });
+  var qaap = E("qa-add-policy");
+  if(qaap) qaap.addEventListener("click", function(){ openCarPolModal(null); });
+  var qaas = E("qa-add-service");
+  if(qaas) qaas.addEventListener("click", openServiceModal);
+  var qaaf = E("qa-add-followup");
+  if(qaaf) qaaf.addEventListener("click", openFollowupModal);
+  var qaex = E("qa-export");
+  if(qaex) qaex.addEventListener("click", exportAll);
+
+  // 客户页面按钮
+  var bac = E("btn-add-customer");
+  if(bac) bac.addEventListener("click", function(){ openCustModal(null); });
+  var bec = E("btn-export-customer");
+  if(bec) bec.addEventListener("click", exportCustomers);
+  var bic = E("btn-backup-customer");
+  if(bic) bic.addEventListener("click", manualBackup);
+  var bimpc = E("btn-import-customer");
+  if(bimpc) bimpc.addEventListener("click", function(){ E("importFileCustomer").click(); });
+  var ifc = E("importFileCustomer");
+  if(ifc) ifc.addEventListener("change", importFile);
+  var bscc = E("btn-search-customer");
+  if(bscc) bscc.addEventListener("click", function(){ renderCustomers(E("searchCustomer").value); });
+  var secc = E("searchCustomer");
+  if(secc) secc.addEventListener("keypress", function(e){ if(e.key==="Enter") renderCustomers(secc.value); });
+
+  // 车辆按钮
+  var bav = E("btn-add-vehicle");
+  if(bav) bav.addEventListener("click", function(){ openVehModal(null); });
+  var bev = E("btn-export-vehicle");
+  if(bev) bev.addEventListener("click", function(){
+    var d = initData();
+    var csv = "\u8f66\u724c,\u54c1\u724c,\u8f66\u67b6\u53f7,\u8f66\u4e3b,\u7535\u8bdd";
+    (d.vehicles||[]).forEach(function(v){
+      var c = custById(v.customer_id);
+      csv += "\n"+(v.plate||"")+","+(v.brand||"")+","+(v.vin||"")+","+(c.name||"")+","+(c.phone||"");
+    });
+    downloadCsv(csv, "\u8f66\u8f86\u5217\u8868_"+td()+".csv");
+  });
+
+  // 车险按钮
+  var bap = E("btn-add-car-policy");
+  if(bap) bap.addEventListener("click", function(){ openCarPolModal(null); });
+  var bep = E("btn-export-policy");
+  if(bep) bep.addEventListener("click", exportPolicies);
+  var bfs = E("filterStatus");
+  if(bfs) bfs.addEventListener("change", renderCarInsurance);
+
+  // 非车险
+  var ban = E("btn-add-noncar");
+  if(ban) ban.addEventListener("click", function(){ openNoncarModal(null); });
+
+  // 售后
+  var bas = E("btn-add-service");
+  if(bas) bas.addEventListener("click", openServiceModal);
+
+  // 跟进
+  var baf = E("btn-add-followup");
+  if(baf) baf.addEventListener("click", openFollowupModal);
+
+  // 续保提醒导出
+  var ber = E("btn-export-renewal");
+  if(ber) ber.addEventListener("click", function(){
+    var d = initData(), today = td();
+    var todayMs = new Date(today).getTime(), day30 = 30*86400000;
+    var rows = (d.car_policies||[]).filter(function(p){
+      if(!p.end_date||p.status==="renewed"||p.status==="lost") return false;
+      return new Date(p.end_date).getTime() <= todayMs + day30;
+    }).sort(function(a,b){ return (a.end_date||"").localeCompare(b.end_date||""); });
+    var csv = "\u8f66\u4e3b,\u7535\u8bdd,\u8f66\u724c,\u516c\u53f8,\u4fdd\u8d39,\u5230\u671f\u65e5,\u72b6\u6001";
+    rows.forEach(function(p){
+      var c=custById(p.customer_id),v=vehById(p.vehicle_id);
+      var diff=Math.ceil((new Date(p.end_date).getTime()-todayMs)/86400000);
+      csv += "\n"+(c.name||"")+","+(c.phone||"")+","+(v.plate||"")+","+(p.company||"")+","+(p.total_premium||0)+","+(p.end_date||"")+","+(diff<0?"\u5df2\u8fc7\u671f":"\u5269"+diff+"\u5929");
+    });
+    downloadCsv(csv, "\u7eed\u4fdd\u63d0\u9192_"+td()+".csv");
+  });
+
+  // 密码回车登录
+  var lp = E("loginPass");
+  if(lp) lp.addEventListener("keypress", function(e){ if(e.key==="Enter") doLogin(); });
+});
+
+
+// =============================================================
+// 导入导出功能
+// =============================================================
+function exportJSON(data, filename) {
+  var blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function importJSON(callback) {
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = function(e) {
+    var file = e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        var data = JSON.parse(ev.target.result);
+        callback(data);
+      } catch(err) {
+        showToast('JSON格式错误: '+err.message, 'err');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function exportCSV(rows, headers, filename) {
+  var csv = headers.map(function(h){return h[0];}).join(',');
+  rows.forEach(function(r){
+    csv += '\n' + headers.map(function(h){ 
+      var v = r[h[1]]||'';
+      return '"'+String(v).replace(/"/g,'""')+'"';
+    }).join(',');
+  });
+  var blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+// 导出客户
+function doExportCustomers() {
+  var d = initData();
+  var rows = d.customers || [];
+  var headers = [['姓名','name'],['电话','phone'],['身份证','idcard'],['地址','address'],['备注','remark']];
+  exportCSV(rows, headers, '客户数据_'+td()+'.csv');
+  showToast('导出'+rows.length+'条客户', 'ok');
+}
+
+// 导入客户
+function doImportCustomers(data) {
+  if(!Array.isArray(data)) { showToast('数据格式错误，需要数组', 'err'); return; }
+  var d = initData();
+  var count = 0;
+  data.forEach(function(item) {
+    if(!item.name && !item.phone) return;
+    item.id = item.id || gid();
+    d.customers.push(item);
+    count++;
+  });
+  saveData(d); renderCustomers(); syncStats();
+  showToast('导入'+count+'条客户', 'ok');
+}
+
+// 导出车辆
+function doExportVehicles() {
+  var d = initData();
+  var rows = (d.vehicles||[]).map(function(v) {
+    var c = custById(v.customer_id);
+    v._cust_name = c.name||'';
+    return v;
+  });
+  var headers = [['车主','_cust_name'],['车牌','plate'],['品牌','brand'],['型号','model'],['VIN码','vin'],['注册日期','reg_date'],['发动机号','engine_no']];
+  exportCSV(rows, headers, '车辆数据_'+td()+'.csv');
+  showToast('导出'+rows.length+'条车辆', 'ok');
+}
+
+// 导入车辆
+function doImportVehicles(data) {
+  if(!Array.isArray(data)) { showToast('数据格式错误，需要数组', 'err'); return; }
+  var d = initData();
+  var count = 0;
+  data.forEach(function(item) {
+    if(!item.plate) return;
+    item.id = item.id || gid();
+    // Try to match customer by name
+    if(item._cust_name && !item.customer_id) {
+      var c = d.customers.find(function(x){ return x.name === item._cust_name; });
+      if(c) item.customer_id = c.id;
+    }
+    delete item._cust_name;
+    d.vehicles.push(item);
+    count++;
+  });
+  saveData(d); renderVehicles(); syncStats();
+  showToast('导入'+count+'条车辆', 'ok');
+}
+
+// 导出车险
+function doExportCarPol() {
+  var d = initData();
+  var rows = (d.car_policies||[]).map(function(p) {
+    var c = custById(p.customer_id);
+    var v = vehById(p.vehicle_id);
+    p._cust_name = c.name||'';
+    p._plate = v.plate||'';
+    return p;
+  });
+  var headers = [['车主','_cust_name'],['车牌','_plate'],['公司','company'],['商业险','biz_premium'],['交强险','compulsory_premium'],['车船税','tax_amount'],['总保费','total_premium'],['佣金','commission_amount'],['起保日','start_date'],['到期日','end_date'],['状态','status']];
+  exportCSV(rows, headers, '车险数据_'+td()+'.csv');
+  showToast('导出'+rows.length+'条车险', 'ok');
+}
+
+// 导入车险
+function doImportCarPol(data) {
+  if(!Array.isArray(data)) { showToast('数据格式错误，需要数组', 'err'); return; }
+  var d = initData();
+  var count = 0;
+  data.forEach(function(item) {
+    if(!item.company && !item.total_premium) return;
+    item.id = item.id || gid();
+    if(item._cust_name && !item.customer_id) {
+      var c = d.customers.find(function(x){ return x.name === item._cust_name; });
+      if(c) item.customer_id = c.id;
+    }
+    if(item._plate && !item.vehicle_id) {
+      var v = (d.vehicles||[]).find(function(x){ return x.plate === item._plate; });
+      if(v) item.vehicle_id = v.id;
+    }
+    delete item._cust_name;
+    delete item._plate;
+    d.car_policies.push(item);
+    count++;
+  });
+  saveData(d); renderCarInsurance(); syncStats();
+  showToast('导入'+count+'条车险', 'ok');
+}
+
+// 导出非车险
+function doExportNoncar() {
+  var d = initData();
+  var rows = (d.noncar_policies||[]).map(function(p) {
+    var c = custById(p.customer_id);
+    p._cust_name = c.name||'';
+    return p;
+  });
+  var headers = [['客户','_cust_name'],['险种','policy_type'],['公司','company'],['保费','premium'],['起保日','start_date'],['到期日','end_date'],['状态','status']];
+  exportCSV(rows, headers, '非车险数据_'+td()+'.csv');
+  showToast('导出'+rows.length+'条非车险', 'ok');
+}
+
+// 导入非车险
+function doImportNoncar(data) {
+  if(!Array.isArray(data)) { showToast('数据格式错误，需要数组', 'err'); return; }
+  var d = initData();
+  var count = 0;
+  data.forEach(function(item) {
+    if(!item.policy_type && !item.premium) return;
+    item.id = item.id || gid();
+    if(item._cust_name && !item.customer_id) {
+      var c = d.customers.find(function(x){ return x.name === item._cust_name; });
+      if(c) item.customer_id = c.id;
+    }
+    delete item._cust_name;
+    d.noncar_policies.push(item);
+    count++;
+  });
+  saveData(d); renderNoncarInsurance(); syncStats();
+  showToast('导入'+count+'条非车险', 'ok');
+}
+
+// 全量备份（客户+车辆+车险+非车险）
+function fullBackup() {
+  var d = initData();
+  var backup = {
+    version: '3.0',
+    export_time: new Date().toISOString(),
+    customers: d.customers || [],
+    vehicles: d.vehicles || [],
+    car_policies: d.car_policies || [],
+    noncar_policies: d.noncar_policies || [],
+    services: d.services || [],
+    followups: d.followups || []
+  };
+  exportJSON(backup, '\u8f66\u7ba1\u5bb6\u5168\u91cf\u5907\u4efd_'+td()+'.json');
+  showToast('\u5907\u4efd\u6210\u529f\uff1a\u5ba2\u6237'+backup.customers.length+'\u8f66\u8f86'+backup.vehicles.length+'\u8f66\u9669'+backup.car_policies.length+'\u975e\u8f66\u9669'+backup.noncar_policies.length, 'ok');
+}
+
+// 全量恢复
+function fullRestore(data) {
+  if(!data || typeof data !== 'object') { showToast('\u6570\u636e\u683c\u5f0f\u9519\u8bef', 'err'); return; }
+  if(!confirm('\u786e\u8ba4\u6062\u590d\u5907\u4efd\uff1f\u5f53\u524d\u6570\u636e\u5c06\u88ab\u8986\u76d6\uff01')) return;
+  var d = initData();
+  if(data.customers) d.customers = data.customers;
+  if(data.vehicles) d.vehicles = data.vehicles;
+  if(data.car_policies) d.car_policies = data.car_policies;
+  if(data.noncar_policies) d.noncar_policies = data.noncar_policies;
+  if(data.services) d.services = data.services;
+  if(data.followups) d.followups = data.followups;
+  saveData(d); syncStats();
+  showToast('\u6062\u590d\u6210\u529f', 'ok');
+  showPage('customers');
+}
+
+function filterCustOptions(inputEl) {
+  var sel = inputEl.parentElement.parentElement.querySelector('select');
+  if(!sel) return;
+  var kw = (inputEl.value||"").toLowerCase();
+  var opts = sel.options;
+  for(var i=0; i<opts.length; i++){
+    var txt = (opts[i].textContent||"").toLowerCase();
+    opts[i].style.display = (!kw || txt.indexOf(kw)>=0) ? "" : "none";
+  }
+}
+
+function filterCustSel(inputEl) {
+  var sel = inputEl.nextElementSibling;
+  if(!sel || sel.tagName !== 'SELECT') return;
+  var kw = (inputEl.value||"").toLowerCase();
+  for(var i=0; i<sel.options.length; i++){
+    var txt = (sel.options[i].textContent||"").toLowerCase();
+    sel.options[i].style.display = (!kw || txt.indexOf(kw)>=0) ? "" : "none";
+  }
+}
+
+// =============================================================
+// 客户下拉搜索组件
+// =============================================================
+function renderCustDropdown(filter) {
+  var d = initData();
+  var kw = (filter||"").toLowerCase();
+  var html = '';
+  var customers = (d.customers||[]).filter(function(c){
+    if(!kw) return true;
+    return (c.name||'').toLowerCase().indexOf(kw)>=0 || (c.phone||'').indexOf(kw)>=0;
+  });
+  customers.slice(0, 20).forEach(function(c){
+    html += '<div class="cust-option" data-id="'+c.id+'" data-name="'+esc(c.name)+'" onclick="selectCust(this)" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid #f1f5f9;">'+esc(c.name)+' <span style="color:#64748b;font-size:12px;">'+esc(c.phone||'')+'</span></div>';
+  });
+  if(!customers.length) {
+    html = '<div style="padding:12px;color:#94a3b8;text-align:center;">无匹配客户</div>';
+  }
+  return html;
+}
+
+function showCustDropdown(inputEl) {
+  var dropdown = E("cust_dropdown");
+  if(!dropdown) return;
+  dropdown.innerHTML = renderCustDropdown(inputEl.value);
+  dropdown.style.display = 'block';
+  // 点击外部关闭
+  setTimeout(function(){
+    document.addEventListener('click', hideCustDropdown);
+  }, 100);
+}
+
+function hideCustDropdown(e) {
+  var dropdown = E("cust_dropdown");
+  if(!dropdown) return;
+  if(e && e.target && (e.target.id === 'm_cust_search' || e.target.closest('.cust-dropdown'))) return;
+  dropdown.style.display = 'none';
+  document.removeEventListener('click', hideCustDropdown);
+}
+
+function filterCustOpts(inputEl) {
+  var dropdown = E("cust_dropdown");
+  if(!dropdown) return;
+  dropdown.innerHTML = renderCustDropdown(inputEl.value);
+  dropdown.style.display = 'block';
+  // 清空所有可能的隐藏字段
+  var pcust = E("m_pcust");
+  var ncust = E("m_ncust");
+  var cust = E("m_cust");
+  if(pcust) pcust.value = '';
+  if(ncust) ncust.value = '';
+  if(cust) cust.value = '';
+}
+
+function selectCust(el) {
+  var id = el.getAttribute('data-id');
+  var name = el.getAttribute('data-name');
+
+  // 更新搜索框显示
+  E("m_cust_search").value = name;
+
+  // 关闭下拉框
+  var dropdown = E("cust_dropdown");
+  if(dropdown) dropdown.style.display = 'none';
+
+  // 更新对应的隐藏字段（根据当前弹窗类型）
+  var pcust = E("m_pcust"); // 车险
+  var ncust = E("m_ncust"); // 非车险
+  var vcust = E("m_vcust"); // 车辆
+
+  if(pcust) {
+    pcust.value = id;
+    updPolVeh(); // 更新车险的车辆列表
+  }
+  if(ncust) ncust.value = id;
+  if(vcust) vcust.value = id;
+}
+
+// =============================================================
+// 客户导入（支持Excel/CSV/JSON）
+// =============================================================
+function downloadCustomerTemplate() {
+  var csv = 'name,phone,id_card,address,remark\n张三,13800138000,320123199001011234,江苏省常州市金坛区,示例客户\n李四,13900139000,320123199002022345,江苏省常州市武进区,\n王五,13700137000,,,备注信息';
+  var blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '客户导入模板.csv';
+  a.click();
+  showToast('模板已下载，请按格式填写后导入', 'ok');
+}
+
+// 解析CSV文本
+function parseCSV(text) {
+  var lines = text.split(/\r?\n/);
+  if(lines.length < 2) return [];
+  var headers = lines[0].split(',').map(function(h){ return h.trim().replace(/^"|"$/g, ''); });
+  var result = [];
+  for(var i=1; i<lines.length; i++) {
+    if(!lines[i].trim()) continue;
+    var values = lines[i].split(',');
+    var obj = {};
+    for(var j=0; j<headers.length && j<values.length; j++) {
+      var val = values[j].trim().replace(/^"|"$/g, '');
+      // 字段名映射
+      var key = headers[j];
+      if(key === '姓名') key = 'name';
+      else if(key === '电话' || key === '手机') key = 'phone';
+      else if(key === '身份证' || key === '证件号') key = 'id_card';
+      else if(key === '地址') key = 'address';
+      else if(key === '备注') key = 'remark';
+      obj[key] = val;
+    }
+    if(obj.name || obj.phone) result.push(obj);
+  }
+  return result;
+}
+
+// 导入客户（自动识别格式）
+function doImportCustomersEx(data, filename) {
+  var d = initData();
+  var count = 0;
+  if(Array.isArray(data)) {
+    // JSON数组
+    data.forEach(function(item) {
+      if(!item.name && !item.phone) return;
+      item.id = item.id || gid();
+      item.created_at = item.created_at || td();
+      d.customers.push(item);
+      count++;
+    });
+  } else {
+    showToast('数据格式错误', 'err');
+    return;
+  }
+  saveData(d); renderCustomers(); syncStats();
+  showToast('成功导入 '+count+' 条客户数据', 'ok');
+}
+
+// 文件选择处理
+function handleCustomerImport(evt) {
+  var file = evt.target.files[0];
+  if(!file) return;
+  var ext = file.name.split('.').pop().toLowerCase();
+  var reader = new FileReader();
+  
+  reader.onload = function(e) {
+    try {
+      var content = e.target.result;
+      if(ext === 'json') {
+        var data = JSON.parse(content);
+        doImportCustomersEx(Array.isArray(data) ? data : (data.customers || [data]), file.name);
+      } else if(ext === 'csv') {
+        var parsed = parseCSV(content);
+        doImportCustomersEx(parsed, file.name);
+      } else if(ext === 'xlsx' || ext === 'xls') {
+        showToast('Excel文件需要先转为CSV格式\n（用Excel打开后另存为CSV）', 'err');
+        return;
+      } else {
+        // 尝试按CSV解析
+        var parsed = parseCSV(content);
+        if(parsed.length > 0) {
+          doImportCustomersEx(parsed, file.name);
+        } else {
+          showToast('不支持的文件格式，请使用CSV或JSON', 'err');
+        }
+      }
+    } catch(err) {
+      showToast('文件解析失败: '+err.message, 'err');
+    }
+  };
+  
+  reader.readAsText(file, 'UTF-8');
+  evt.target.value = ''; // 清空以便重复导入
+}
+
+// 绑定文件选择事件
+document.addEventListener('DOMContentLoaded', function() {
+  var ifc = E('importFileCustomer');
+  if(ifc) ifc.addEventListener('change', handleCustomerImport);
+});
+</script>
+</body>
+</html>
