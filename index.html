@@ -377,14 +377,36 @@ textarea.form-control{resize:vertical;min-height:60px}
 <!-- ====== Font Awesome ====== -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-<!-- ====== Supabase SDK ====== -->
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<!-- ====== Supabase SDK（动态加载）====== -->
 <script>
-  // 检查 SDK 是否加载成功
-  if (!window.supabase) {
-    console.error('❌ Supabase SDK 加载失败，尝试备用CDN...');
-    document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script>');
+// 动态加载 Supabase SDK
+(function() {
+  var cdnList = [
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js',
+    'https://unpkg.com/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js',
+    'https://esm.sh/@supabase/supabase-js@2.39.0'
+  ];
+  var idx = 0;
+  
+  function loadNext() {
+    if (idx >= cdnList.length) {
+      console.error('❌ 所有 Supabase CDN 都加载失败');
+      return;
+    }
+    var script = document.createElement('script');
+    script.src = cdnList[idx];
+    script.onload = function() {
+      console.log('✅ Supabase SDK 加载成功:', cdnList[idx]);
+    };
+    script.onerror = function() {
+      console.warn('CDN 加载失败:', cdnList[idx]);
+      idx++;
+      loadNext();
+    };
+    document.head.appendChild(script);
   }
+  loadNext();
+})();
 </script>
 
 <!-- ====== 主JS ====== -->
@@ -398,17 +420,25 @@ var supabase = null;
 var isOnlineMode = false; // 默认离线模式
 var syncStatus = '离线'; // 同步状态
 
-// 初始化 Supabase 客户端
+// 初始化 Supabase 客户端（带重试）
 async function initSupabase() {
+  // 等待 SDK 加载（最多等5秒）
+  var wait = 0;
+  while (!window.supabase && wait < 5000) {
+    await new Promise(r => setTimeout(r, 200));
+    wait += 200;
+  }
+  
   try {
     // 检查 SDK 是否加载
     if (!window.supabase || !window.supabase.createClient) {
-      console.error('❌ Supabase SDK 未加载');
-      showToast('Supabase SDK 加载失败，请检查网络', 'error');
+      console.error('❌ Supabase SDK 未加载（等待5秒后超时）');
+      showToast('Supabase SDK 加载超时，请刷新页面重试', 'error');
       return false;
     }
     supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     console.log('✅ Supabase 初始化成功');
+    showToast('云端连接成功', 'ok');
     return true;
   } catch (e) {
     console.error('❌ Supabase 初始化失败:', e);
