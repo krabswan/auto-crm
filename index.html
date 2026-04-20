@@ -378,7 +378,14 @@ textarea.form-control{resize:vertical;min-height:60px}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 <!-- ====== Supabase SDK ====== -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script>
+  // 检查 SDK 是否加载成功
+  if (!window.supabase) {
+    console.error('❌ Supabase SDK 加载失败，尝试备用CDN...');
+    document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script>');
+  }
+</script>
 
 <!-- ====== 主JS ====== -->
 <script>
@@ -394,11 +401,18 @@ var syncStatus = '离线'; // 同步状态
 // 初始化 Supabase 客户端
 async function initSupabase() {
   try {
+    // 检查 SDK 是否加载
+    if (!window.supabase || !window.supabase.createClient) {
+      console.error('❌ Supabase SDK 未加载');
+      showToast('Supabase SDK 加载失败，请检查网络', 'error');
+      return false;
+    }
     supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     console.log('✅ Supabase 初始化成功');
     return true;
   } catch (e) {
     console.error('❌ Supabase 初始化失败:', e);
+    showToast('云端连接失败: ' + e.message, 'error');
     return false;
   }
 }
