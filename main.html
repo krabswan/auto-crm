@@ -123,7 +123,7 @@ tr:hover { background:#f9fafb; }
           <button class="btn btn-primary" onclick="openPolModal(null)">➕ 新增保单</button>
         </div>
       </div>
-      <table id="polTable"><thead><tr><th>车牌号</th><th>保险公司</th><th>商业险</th><th>交强险</th><th>车船税</th><th>到期日期</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <table id="polTable"><thead><tr><th>车牌号</th><th>保险公司</th><th>商业险</th><th>交强险</th><th>车船税</th><th>出单日期</th><th>到期日期</th><th>操作</th></tr></thead><tbody></tbody></table>
     </div>
   </div>
 
@@ -137,7 +137,7 @@ tr:hover { background:#f9fafb; }
           <button class="btn btn-primary" onclick="openNoncarModal(null)">➕ 新增保单</button>
         </div>
       </div>
-      <table id="noncarTable"><thead><tr><th>客户名称</th><th>险种</th><th>保险公司</th><th>保费</th><th>到期日期</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <table id="noncarTable"><thead><tr><th>客户名称</th><th>险种</th><th>保险公司</th><th>保费</th><th>出单日期</th><th>到期日期</th><th>操作</th></tr></thead><tbody></tbody></table>
     </div>
   </div>
 </div>
@@ -180,10 +180,11 @@ tr:hover { background:#f9fafb; }
     <div class="modal-body">
       <input type="hidden" id="polId">
       <div class="form-group"><label>车辆</label><select id="polVehicle"><option value="">请选择</option></select></div>
-      <div class="form-group"><label>保险公司</label><select id="polCompany"><option value="人保">人保</option><option value="平安">平安</option><option value="太平洋">太平洋</option><option value="国寿财">国寿财</option><option value="中华联合">中华联合</option></select></div>
+      <div class="form-group"><label>保险公司</label><select id="polCompany"><option value="人保">人保</option><option value="平安">平安</option><option value="太平洋">太平洋</option><option value="国寿财">国寿财</option><option value="中华联合">中华联合</option><option value="阳光">阳光</option><option value="大地">大地</option><option value="太平">太平</option><option value="天安">天安</option><option value="华安">华安</option><option value="永安">永安</option><option value="中银">中银</option><option value="英大">英大</option><option value="安盛">安盛</option><option value="都邦">都邦</option><option value="其他">其他</option></select></div>
       <div class="form-group"><label>商业险(元)</label><input id="polBiz" type="number" step="0.01"></div>
       <div class="form-group"><label>交强险(元)</label><input id="polForce" type="number" step="0.01"></div>
       <div class="form-group"><label>车船税(元)</label><input id="polTax" type="number" step="0.01"></div>
+      <div class="form-group"><label>出单日期</label><input id="polStart" type="date"></div>
       <div class="form-group"><label>到期日期</label><input id="polEnd" type="date"></div>
     </div>
     <div class="modal-footer"><button class="btn" onclick="closeModal('polModal')">取消</button><button class="btn btn-primary" onclick="savePol()">保存</button></div>
@@ -198,8 +199,9 @@ tr:hover { background:#f9fafb; }
       <input type="hidden" id="noncarId">
       <div class="form-group"><label>客户</label><select id="noncarCust"><option value="">请选择</option></select></div>
       <div class="form-group"><label>险种</label><select id="noncarType"><option value="">请选择</option><option value="意外险">意外险</option><option value="健康险">健康险</option><option value="家财险">家财险</option><option value="责任险">责任险</option><option value="其他">其他</option></select></div>
-      <div class="form-group"><label>保险公司</label><select id="noncarCompany"><option value="人保">人保</option><option value="平安">平安</option><option value="太平洋">太平洋</option><option value="国寿财">国寿财</option><option value="中华联合">中华联合</option></select></div>
+      <div class="form-group"><label>保险公司</label><select id="noncarCompany"><option value="人保">人保</option><option value="平安">平安</option><option value="太平洋">太平洋</option><option value="国寿财">国寿财</option><option value="中华联合">中华联合</option><option value="阳光">阳光</option><option value="大地">大地</option><option value="太平">太平</option><option value="天安">天安</option><option value="华安">华安</option><option value="永安">永安</option><option value="中银">中银</option><option value="英大">英大</option><option value="安盛">安盛</option><option value="都邦">都邦</option><option value="其他">其他</option></select></div>
       <div class="form-group"><label>保费(元)</label><input id="noncarPremium" type="number" step="0.01"></div>
+      <div class="form-group"><label>出单日期</label><input id="noncarStart" type="date"></div>
       <div class="form-group"><label>到期日期</label><input id="noncarEnd" type="date"></div>
     </div>
     <div class="modal-footer"><button class="btn" onclick="closeModal('noncarModal')">取消</button><button class="btn btn-primary" onclick="saveNoncar()">保存</button></div>
@@ -411,7 +413,7 @@ function renderPolicies() {
   d.policies.forEach(function(p) {
     var veh = d.vehicles.find(function(v) { return v.id === p.vehicleId; }) || {};
     var tr = document.createElement('tr');
-    tr.innerHTML = '<td>' + (veh.plate || '') + '</td><td>' + (p.company || '') + '</td><td>' + (p.biz || '0') + '</td><td>' + (p.force || '0') + '</td><td>' + (p.tax || '0') + '</td><td>' + (p.end || '') + '</td>' +
+    tr.innerHTML = '<td>' + (veh.plate || '') + '</td><td>' + (p.company || '') + '</td><td>' + (p.biz || '0') + '</td><td>' + (p.force || '0') + '</td><td>' + (p.tax || '0') + '</td><td>' + (p.start || '') + '</td><td>' + (p.end || '') + '</td>' +
       '<td><button class="btn btn-sm btn-primary" onclick="openPolModal(\'' + p.id + '\')">编辑</button> <button class="btn btn-sm btn-danger" onclick="delPol(\'' + p.id + '\')">删除</button></td>';
     tbody.appendChild(tr);
   });
@@ -425,6 +427,7 @@ function openPolModal(id) {
   document.getElementById('polBiz').value = p ? (p.biz || '') : '';
   document.getElementById('polForce').value = p ? (p.force || '') : '';
   document.getElementById('polTax').value = p ? (p.tax || '') : '';
+  document.getElementById('polStart').value = p ? (p.start || '') : '';
   document.getElementById('polEnd').value = p ? (p.end || '') : '';
   // 填充车辆下拉
   var sel = document.getElementById('polVehicle');
@@ -444,6 +447,7 @@ function savePol() {
     biz: document.getElementById('polBiz').value,
     force: document.getElementById('polForce').value,
     tax: document.getElementById('polTax').value,
+    start: document.getElementById('polStart').value,
     end: document.getElementById('polEnd').value
   };
   if (!p.vehicleId) { showToast('请选择车辆', 'err'); return; }
@@ -470,10 +474,10 @@ function delPol(id) {
 }
 function exportPolicies() {
   var d = loadData();
-  var rows = [['车牌号','保险公司','商业险','交强险','车船税','到期日期']];
+  var rows = [['车牌号','保险公司','商业险','交强险','车船税','出单日期','到期日期']];
   d.policies.forEach(function(p) {
     var veh = d.vehicles.find(function(v) { return v.id === p.vehicleId; }) || {};
-    rows.push([veh.plate, p.company, p.biz, p.force, p.tax, p.end]);
+    rows.push([veh.plate, p.company, p.biz, p.force, p.tax, p.start, p.end]);
   });
   var wb = XLSX.utils.book_new();
   var ws = XLSX.utils.aoa_to_sheet(rows);
@@ -490,7 +494,7 @@ function renderNoncar() {
   d.noncar.forEach(function(n) {
     var cust = d.customers.find(function(c) { return c.id === n.custId; }) || {};
     var tr = document.createElement('tr');
-    tr.innerHTML = '<td>' + (cust.name || '') + '</td><td>' + (n.type || '') + '</td><td>' + (n.company || '') + '</td><td>' + (n.premium || '0') + '</td><td>' + (n.end || '') + '</td>' +
+    tr.innerHTML = '<td>' + (cust.name || '') + '</td><td>' + (n.type || '') + '</td><td>' + (n.company || '') + '</td><td>' + (n.premium || '0') + '</td><td>' + (n.start || '') + '</td><td>' + (n.end || '') + '</td>' +
       '<td><button class="btn btn-sm btn-primary" onclick="openNoncarModal(\'' + n.id + '\')">编辑</button> <button class="btn btn-sm btn-danger" onclick="delNoncar(\'' + n.id + '\')">删除</button></td>';
     tbody.appendChild(tr);
   });
@@ -510,6 +514,7 @@ function openNoncarModal(id) {
   document.getElementById('noncarType').value = n ? (n.type || '') : '';
   document.getElementById('noncarCompany').value = n ? (n.company || '') : '人保';
   document.getElementById('noncarPremium').value = n ? (n.premium || '') : '';
+  document.getElementById('noncarStart').value = n ? (n.start || '') : '';
   document.getElementById('noncarEnd').value = n ? (n.end || '') : '';
   document.getElementById('noncarModal').classList.add('show');
 }
@@ -523,6 +528,7 @@ function saveNoncar() {
     type: document.getElementById('noncarType').value,
     company: document.getElementById('noncarCompany').value,
     premium: parseFloat(document.getElementById('noncarPremium').value) || 0,
+    start: document.getElementById('noncarStart').value,
     end: document.getElementById('noncarEnd').value
   };
   if (!n.custId) { showToast('请选择客户', 'err'); return; }
@@ -549,10 +555,10 @@ function delNoncar(id) {
 
 function exportNoncar() {
   var d = loadData();
-  var rows = [['客户名称','险种','保险公司','保费','到期日期']];
+  var rows = [['客户名称','险种','保险公司','保费','出单日期','到期日期']];
   d.noncar.forEach(function(n) {
     var cust = d.customers.find(function(c) { return c.id === n.custId; }) || {};
-    rows.push([cust.name, n.type, n.company, n.premium, n.end]);
+    rows.push([cust.name, n.type, n.company, n.premium, n.start, n.end]);
   });
   var wb = XLSX.utils.book_new();
   var ws = XLSX.utils.aoa_to_sheet(rows);
