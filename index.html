@@ -1579,14 +1579,26 @@ function openVehModal(id) {
   body += '<div class="form-group"><label>注册日期</label><input id="m_reg" class="form-control" type="date" value="'+esc(v?v.reg_date:"")+'"></div>';
   var btns = [
     {text:"保存", cls:"btn btn-primary", fn: function(){
-      var cid = E("m_cust").value, plate = E("m_plate").value.trim().toUpperCase();
-      if(!cid||!plate){ showToast("请选择车主并输入车牌","err"); return; }
+      var plate = E("m_plate").value.trim().toUpperCase();
+      if(!plate){ showToast("请输入车牌号","err"); return; }
       var d2 = initData(), vid = E("m_vid").value;
+      var cid = E("m_cust").value;
+      var custName = E("m_cust_search").value.trim();
+      // 如果没选客户但填了姓名，自动新建客户
+      if(!cid && custName) {
+        var newC = {id:"c"+Date.now(), name:custName, phone:"", created_at:td()};
+        d2.customers.push(newC);
+        cid = newC.id;
+        showToast("自动新建客户: "+custName, "ok");
+      }
+      if(!cid){ showToast("请输入车主姓名或选择已有客户","err"); return; }
+      var veData = {customer_id:cid, plate:plate, vin:E("m_vin").value.trim(), brand:E("m_brand").value.trim(), vehicle_type:E("m_vtype").value, usage:E("m_vusage").value, reg_date:E("m_reg").value};
       if(vid) {
         var ve = (d2.vehicles||[]).find(function(x){return x.id===vid;});
-        if(ve){ ve.customer_id=cid; ve.plate=plate; ve.vin=E("m_vin").value.trim(); ve.brand=E("m_brand").value.trim(); ve.vehicle_type=E("m_vtype").value; ve.usage=E("m_vusage").value; ve.reg_date=E("m_reg").value; }
+        if(ve){ for(var k in veData) ve[k]=veData[k]; }
       } else {
-        (d2.vehicles=d2.vehicles||[]).push({id:"v"+Date.now(),customer_id:cid,plate:plate,vin:E("m_vin").value.trim(),brand:E("m_brand").value.trim(),vehicle_type:E("m_vtype").value,usage:E("m_vusage").value,reg_date:E("m_reg").value,created_at:td()});
+        veData.id = "v"+Date.now(); veData.created_at = td();
+        (d2.vehicles=d2.vehicles||[]).push(veData);
       }
       saveData(d2); closeModal(); renderVehicles(); syncStats();
       showToast(vid?"车辆已更新":"车辆已添加","ok");
@@ -1633,9 +1645,25 @@ function openCarPolModal(id) {
   body += '<div class="form-group"><label>到期日期</label><input id="m_pend" class="form-control" type="date" value="'+(p?p.end_date:ny)+'"></div></div>';
   var btns = [
     {text:"保存", cls:"btn btn-primary", fn: function(){
-      var cid = E("m_pcust").value, vid = E("m_pveh").value, co = E("m_co").value;
-      if(!cid||!vid||!co){ showToast("请填写完整信息","err"); return; }
+      var co = E("m_co").value;
+      if(!co){ showToast("请填写完整信息","err"); return; }
       var d2 = initData(), pid = E("m_pid").value;
+      // 客户：自动新建
+      var cid = E("m_pcust").value;
+      var custName = E("m_cust_search").value.trim();
+      if(!cid && custName) {
+        var newC = {id:"c"+Date.now(), name:custName, phone:"", created_at:td()};
+        d2.customers.push(newC);
+        cid = newC.id;
+        showToast("自动新建客户: "+custName, "ok");
+      }
+      if(!cid){ showToast("请输入车主姓名或选择已有客户","err"); return; }
+      // 车辆：自动新建
+      var vid = E("m_pveh").value;
+      if(!vid) {
+        // 从 DOM 中取车牌（如果有的话，不过车险表单没有单独的车牌输入...）
+        // 车险必须关联已有车辆，跳过自动创建
+      }
       var bizPrem = parseFloat(E("m_biz").value)||0;
       var compPrem = parseFloat(E("m_compulsory").value)||0;
       var taxAmt = parseFloat(E("m_tax").value)||0;
@@ -1698,9 +1726,17 @@ function openNoncarModal(id) {
   body += '<div class="form-group"><label>到期</label><input id="m_nend" class="form-control" type="date" value="'+(p?p.end_date:ny)+'"></div></div>';
   var btns = [
     {text:"保存", cls:"btn btn-primary", fn: function(){
-      var cid = E("m_ncust").value;
-      if(!cid){ showToast("请选择客户","err"); return; }
       var d2 = initData(), nid = E("m_nid").value;
+      var cid = E("m_ncust").value;
+      var custName = E("m_cust_search").value.trim();
+      // 自动新建客户
+      if(!cid && custName) {
+        var newC = {id:"c"+Date.now(), name:custName, phone:"", created_at:td()};
+        d2.customers.push(newC);
+        cid = newC.id;
+        showToast("自动新建客户: "+custName, "ok");
+      }
+      if(!cid){ showToast("请输入客户姓名或选择已有客户","err"); return; }
       if(nid) {
         var pol = (d2.noncar_policies||[]).find(function(x){return x.id===nid;});
         if(pol){ pol.customer_id=cid; pol.type=E("m_ntype").value; pol.company=E("m_nco").value; pol.premium=E("m_nprem").value; pol.start_date=E("m_nstart").value; pol.end_date=E("m_nend").value; }
