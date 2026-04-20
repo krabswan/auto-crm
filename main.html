@@ -108,7 +108,7 @@ tr:hover { background:#f9fafb; }
           <button class="btn btn-primary" onclick="openVehModal(null)">➕ 新增车辆</button>
         </div>
       </div>
-      <table id="vehTable"><thead><tr><th>车牌号</th><th>品牌型号</th><th>车主</th><th>VIN码</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <table id="vehTable"><thead><tr><th>车牌号</th><th>车辆种类</th><th>使用性质</th><th>车主</th><th>VIN码</th><th>操作</th></tr></thead><tbody></tbody></table>
     </div>
   </div>
 
@@ -149,7 +149,8 @@ tr:hover { background:#f9fafb; }
     <div class="modal-body">
       <input type="hidden" id="vehId">
       <div class="form-group"><label>车牌号</label><input id="vehPlate" placeholder="如：苏D12345"></div>
-      <div class="form-group"><label>品牌型号</label><input id="vehModel"></div>
+      <div class="form-group"><label>车辆种类</label><select id="vehType"><option value="">请选择</option><option value="小型轿车">小型轿车</option><option value="小型普通客车">小型普通客车</option><option value="轻型普通货车">轻型普通货车</option><option value="轻型厢式货车">轻型厢式货车</option><option value="其他">其他</option></select></div>
+      <div class="form-group"><label>使用性质</label><select id="vehUse"><option value="">请选择</option><option value="家庭自用">家庭自用</option><option value="非营业企业">非营业企业</option><option value="营业货车">营业货车</option><option value="其他">其他</option></select></div>
       <div class="form-group"><label>车主</label><select id="vehOwner"><option value="">请选择</option></select></div>
       <div class="form-group"><label>VIN码</label><input id="vehVin"></div>
     </div>
@@ -300,7 +301,7 @@ function renderVehicles() {
   d.vehicles.forEach(function(v) {
     var owner = d.customers.find(function(c) { return c.id === v.ownerId; }) || {};
     var tr = document.createElement('tr');
-    tr.innerHTML = '<td>' + (v.plate || '') + '</td><td>' + (v.model || '') + '</td><td>' + (owner.name || '') + '</td><td>' + (v.vin || '') + '</td>' +
+    tr.innerHTML = '<td>' + (v.plate || '') + '</td><td>' + (v.type || '') + '</td><td>' + (v.use || '') + '</td><td>' + (owner.name || '') + '</td><td>' + (v.vin || '') + '</td>' +
       '<td><button class="btn btn-sm btn-primary" onclick="openVehModal(\'' + v.id + '\')">编辑</button> <button class="btn btn-sm btn-danger" onclick="delVeh(\'' + v.id + '\')">删除</button></td>';
     tbody.appendChild(tr);
   });
@@ -311,7 +312,8 @@ function openVehModal(id) {
   document.getElementById('vehModalTitle').textContent = id ? '编辑车辆' : '新增车辆';
   document.getElementById('vehId').value = id || '';
   document.getElementById('vehPlate').value = v ? (v.plate || '') : '';
-  document.getElementById('vehModel').value = v ? (v.model || '') : '';
+  document.getElementById('vehType').value = v ? (v.type || '') : '';
+  document.getElementById('vehUse').value = v ? (v.use || '') : '';
   document.getElementById('vehVin').value = v ? (v.vin || '') : '';
   // 填充车主下拉
   var sel = document.getElementById('vehOwner');
@@ -327,7 +329,8 @@ function saveVeh() {
   var v = {
     id: id || 'v' + Date.now(),
     plate: document.getElementById('vehPlate').value.trim(),
-    model: document.getElementById('vehModel').value.trim(),
+    type: document.getElementById('vehType').value,
+    use: document.getElementById('vehUse').value,
     ownerId: document.getElementById('vehOwner').value,
     vin: document.getElementById('vehVin').value.trim()
   };
@@ -355,10 +358,10 @@ function delVeh(id) {
 }
 function exportVehicles() {
   var d = loadData();
-  var rows = [['车牌号','品牌型号','车主','VIN码']];
+  var rows = [['车牌号','车辆种类','使用性质','车主','VIN码']];
   d.vehicles.forEach(function(v) {
     var owner = d.customers.find(function(c) { return c.id === v.ownerId; }) || {};
-    rows.push([v.plate, v.model, owner.name, v.vin]);
+    rows.push([v.plate, v.type, v.use, owner.name, v.vin]);
   });
   var wb = XLSX.utils.book_new();
   var ws = XLSX.utils.aoa_to_sheet(rows);
