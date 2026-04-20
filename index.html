@@ -419,7 +419,7 @@ textarea.form-control{resize:vertical;min-height:60px}
 // 🔌 Supabase 联网配置（V4.0）
 // =============================================================
 var SUPABASE_URL = 'https://xsqzmwzkdktzftrpsknc.supabase.co';
-var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzcXptd3prZGt0emZ0cnBza25jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MzI1OTMsImV4cCI6MjA5MjIwODU5M30.R2_7OrviHfusYkFq1TUCQydyl-IQYMu1y-6p-Rg-c5U';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzcXptd3prZGt0emZ0cnBza25jIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjYzMjU5MywiZXhwIjoyMDkyMjA4NTkzfQ.e7HQh0G32G0uoPwIhXSr7_Vg2cq7TBjWzVUKqkt-J0I';
 var supabase = null;
 var isOnlineMode = false; // 默认离线模式
 var syncStatus = '离线'; // 同步状态
@@ -473,14 +473,14 @@ async function loadFromCloud() {
     if (e1) { console.warn('customers表错误:', e1.message); }
     else { allData.customers = customers || []; }
     
-    // 加载保单（policies -> car_policies）
-    var { data: policies, error: e2 } = await supabase.from('policies').select('*');
-    if (e2) { console.warn('policies表错误:', e2.message); }
+    // 加载保单（car_policies）
+    var { data: policies, error: e2 } = await supabase.from('car_policies').select('*');
+    if (e2) { console.warn('car_policies表错误:', e2.message); }
     else { allData.car_policies = policies || []; }
     
-    // 加载非车险（noncar -> noncar_policies）
-    var { data: noncar, error: e3 } = await supabase.from('noncar').select('*');
-    if (e3) { console.warn('noncar表错误:', e3.message); }
+    // 加载非车险（noncar_policies）
+    var { data: noncar, error: e3 } = await supabase.from('noncar_policies').select('*');
+    if (e3) { console.warn('noncar_policies表错误:', e3.message); }
     else { allData.noncar_policies = noncar || []; }
     
     // 加载跟进记录
@@ -570,8 +570,8 @@ async function manualUpload() {
   var d = initData();
   var tableMap = {
     'customers': 'customers',
-    'car_policies': 'policies',
-    'noncar_policies': 'noncar',
+    'car_policies': 'car_policies',
+    'noncar_policies': 'noncar_policies',
     'followups': 'followups'
   };
   var total = 0;
@@ -879,8 +879,8 @@ async function syncToCloud(d) {
     // 表名映射：前端名 -> Supabase表名
     var tableMap = {
       'customers': 'customers',
-      'car_policies': 'policies',
-      'noncar_policies': 'noncar',
+      'car_policies': 'car_policies',
+      'noncar_policies': 'noncar_policies',
       'followups': 'followups'
     };
     
