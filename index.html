@@ -217,10 +217,8 @@ textarea.form-control{resize:vertical;min-height:60px}
       <button class="btn btn-primary btn-sm" id="btn-add-customer">+ 新增客户</button>
       <button class="btn btn-outline btn-sm" id="btn-export-customer" onclick="doExportCustomers()">📤 导出</button>
       <button class="btn btn-outline btn-sm" id="btn-backup-customer" onclick="fullBackup()">💾 备份</button>
-      <input type="file" id="importFileCustomer" accept=".json,.csv,.xlsx" style="display:none">
-      <button class="btn btn-outline btn-sm" id="btn-import-customer" onclick="E('importFileCustomer').click()">📥 导入Excel/CSV/JSON</button>
-      <input type="file" id="importCustTemplate" accept=".csv" style="display:none">
-      <button class="btn btn-outline btn-sm" id="btn-download-template" onclick="downloadCustomerTemplate()">📄 下载导入模板</button>
+      <button class="btn btn-outline btn-sm" id="btn-import-customer" onclick="openImportDialog('customers')">📥 导入Excel/CSV</button>
+      <button class="btn btn-outline btn-sm" onclick="downloadTemplate('customers')">📄 下载模板</button>
     </div>
     <div class="search-bar">
       <input type="text" id="searchCustomer" placeholder="搜索客户姓名、电话、车牌...">
@@ -236,7 +234,9 @@ textarea.form-control{resize:vertical;min-height:60px}
     <div class="page-title">🚗 车辆管理</div>
     <div class="page-bar">
       <button class="btn btn-primary btn-sm" id="btn-add-vehicle">+ 新增车辆</button>
-      <button class="btn btn-outline btn-sm" id="btn-import-vehicle" onclick="importJSON(doImportVehicles)">📥 导入</button> <button class="btn btn-outline btn-sm" id="btn-export-vehicle" onclick="doExportVehicles()">📤 导出</button>
+      <button class="btn btn-outline btn-sm" id="btn-import-vehicle" onclick="openImportDialog('vehicles')">📥 导入Excel/CSV</button>
+      <button class="btn btn-outline btn-sm" onclick="downloadTemplate('vehicles')">📄 模板</button>
+      <button class="btn btn-outline btn-sm" id="btn-export-vehicle" onclick="doExportVehicles()">📤 导出CSV</button>
     </div>
     <div class="table-wrap">
       <div id="vehTable"></div>
@@ -248,7 +248,9 @@ textarea.form-control{resize:vertical;min-height:60px}
     <div class="page-title">🛡️ 车险管理</div>
     <div class="page-bar">
       <button class="btn btn-primary btn-sm" id="btn-add-car-policy">+ 新增车险</button>
-      <button class="btn btn-outline btn-sm" id="btn-import-policy" onclick="importJSON(doImportCarPol)">📥 导入</button> <button class="btn btn-outline btn-sm" id="btn-export-policy" onclick="doExportCarPol()">📤 导出</button>
+      <button class="btn btn-outline btn-sm" onclick="openImportDialog('car_policies')">📥 导入Excel/CSV</button>
+      <button class="btn btn-outline btn-sm" onclick="downloadTemplate('car_policies')">📄 模板</button>
+      <button class="btn btn-outline btn-sm" id="btn-export-policy" onclick="doExportCarPol()">📤 导出CSV</button>
       <select id="filterStatus" style="width:auto;padding:6px 12px;border-radius:6px">
         <option value="">全部状态</option>
         <option value="active">生效中</option>
@@ -269,7 +271,8 @@ textarea.form-control{resize:vertical;min-height:60px}
     <div class="page-title">☂️ 非车险管理</div>
     <div class="page-bar">
       <button class="btn btn-primary btn-sm" id="btn-add-noncar">+ 新增非车险</button>
-      <button class="btn btn-primary btn-sm" id="btn-import-noncar" onclick="importJSON(doImportNoncar)">📥 导入</button>
+      <button class="btn btn-outline btn-sm" onclick="openImportDialog('noncar_policies')">📥 导入Excel/CSV</button>
+      <button class="btn btn-outline btn-sm" onclick="downloadTemplate('noncar_policies')">📄 模板</button>
       <button class="btn btn-outline btn-sm" id="btn-export-noncar" onclick="doExportNoncar()">📤 导出</button>
     </div>
     <div class="table-wrap">
@@ -377,9 +380,12 @@ textarea.form-control{resize:vertical;min-height:60px}
 <!-- ====== Font Awesome ====== -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-<!-- ====== Supabase SDK（动态加载）====== -->
+<!-- ====== 第三方SDK ====== -->
+<!-- SheetJS: Excel/CSV/JSON 解析库 -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<!-- Supabase SDK（动态加载） -->
 <script>
-// 动态加载 Supabase SDK
 (function() {
   var cdnList = [
     'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js',
@@ -387,23 +393,13 @@ textarea.form-control{resize:vertical;min-height:60px}
     'https://esm.sh/@supabase/supabase-js@2.39.0'
   ];
   var idx = 0;
-  
   function loadNext() {
-    if (idx >= cdnList.length) {
-      console.error('❌ 所有 Supabase CDN 都加载失败');
-      return;
-    }
-    var script = document.createElement('script');
-    script.src = cdnList[idx];
-    script.onload = function() {
-      console.log('✅ Supabase SDK 加载成功:', cdnList[idx]);
-    };
-    script.onerror = function() {
-      console.warn('CDN 加载失败:', cdnList[idx]);
-      idx++;
-      loadNext();
-    };
-    document.head.appendChild(script);
+    if (idx >= cdnList.length) { console.error('❌ Supabase CDN 全部失败'); return; }
+    var s = document.createElement('script');
+    s.src = cdnList[idx];
+    s.onload = function(){ console.log('✅ Supabase:', cdnList[idx]); };
+    s.onerror = function(){ idx++; loadNext(); };
+    document.head.appendChild(s);
   }
   loadNext();
 })();
@@ -1970,10 +1966,6 @@ document.addEventListener("DOMContentLoaded", function() {
   if(bec) bec.addEventListener("click", exportCustomers);
   var bic = E("btn-backup-customer");
   if(bic) bic.addEventListener("click", manualBackup);
-  var bimpc = E("btn-import-customer");
-  if(bimpc) bimpc.addEventListener("click", function(){ E("importFileCustomer").click(); });
-  var ifc = E("importFileCustomer");
-  if(ifc) ifc.addEventListener("change", importFile);
   var bscc = E("btn-search-customer");
   if(bscc) bscc.addEventListener("click", function(){ renderCustomers(E("searchCustomer").value); });
   var secc = E("searchCustomer");
@@ -2049,27 +2041,54 @@ function exportJSON(data, filename) {
   URL.revokeObjectURL(a.href);
 }
 
-function importJSON(callback) {
+// =============================================================
+// 通用导入：支持 Excel/CSV/JSON，自动 SheetJS 解析
+// =============================================================
+function openImportDialog(tableType) {
   var input = document.createElement('input');
   input.type = 'file';
-  input.accept = '.json';
+  input.accept = '.xlsx,.xls,.csv,.json';
   input.onchange = function(e) {
     var file = e.target.files[0];
     if(!file) return;
+    var ext = file.name.split('.').pop().toLowerCase();
     var reader = new FileReader();
     reader.onload = function(ev) {
       try {
-        var data = JSON.parse(ev.target.result);
-        callback(data);
+        var result;
+        if(ext === 'json') {
+          result = JSON.parse(ev.target.result);
+          if(!Array.isArray(result)) result = [result];
+        } else {
+          // SheetJS: 解析 Excel/CSV
+          var ab = new Uint8Array(ev.target.result);
+          var wb = XLSX.read(ab, {type:'array', cellDates:true});
+          var wsname = wb.SheetNames[0];
+          var ws = wb.Sheets[wsname];
+          result = XLSX.utils.sheet_to_json(ws, {defval:''});
+          // 过滤空行
+          result = result.filter(function(r){ return Object.values(r).some(function(v){ return v !== '' && v != null; }); });
+        }
+        // 分发处理
+        if(tableType === 'customers') doImportCustomers(result);
+        else if(tableType === 'vehicles') doImportVehicles(result);
+        else if(tableType === 'car_policies') doImportCarPol(result);
+        else if(tableType === 'noncar_policies') doImportNoncar(result);
+        else if(tableType === 'services') doImportServices(result);
+        else if(tableType === 'followups') doImportFollowups(result);
+        else showToast('未知数据类型', 'err');
       } catch(err) {
-        showToast('JSON格式错误: '+err.message, 'err');
+        showToast('文件解析失败: '+err.message, 'err');
+        console.error(err);
       }
     };
-    reader.readAsText(file);
+    if(ext === 'json') reader.readAsText(file, 'UTF-8');
+    else reader.readAsArrayBuffer(file);
   };
   input.click();
 }
 
+// 通用 CSV 导出（纯 JS，无库）
 function exportCSV(rows, headers, filename) {
   var csv = headers.map(function(h){return h[0];}).join(',');
   rows.forEach(function(r){
@@ -2085,52 +2104,97 @@ function exportCSV(rows, headers, filename) {
   a.click();
 }
 
-// 导出客户
+// 通用 Excel 导出（SheetJS）
+function exportExcel(rows, headers, filename) {
+  // 替换字段名
+  var data = rows.map(function(r){
+    var obj = {};
+    headers.forEach(function(h){ obj[h[0]] = r[h[1]] != null ? r[h[1]] : ''; });
+    return obj;
+  });
+  var ws = XLSX.utils.json_to_sheet(data);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '数据');
+  XLSX.writeFile(wb, filename);
+}
+
+// 下载导入模板
+function downloadTemplate(tableType) {
+  var meta = {
+    customers: {
+      filename: '客户导入模板.xlsx',
+      headers: [['姓名','name'],['电话','phone'],['身份证号','id_card'],['地址','address'],['备注','remark']],
+      sample: [{name:'张三',phone:'13800138000',id_card:'320123199001011234',address:'江苏省常州市金坛区',remark:'示例客户'}]
+    },
+    vehicles: {
+      filename: '车辆导入模板.xlsx',
+      headers: [['车主姓名','_cust_name'],['车牌号','plate'],['品牌','brand'],['型号','model'],['VIN码','vin'],['注册日期','reg_date']],
+      sample: [{_cust_name:'张三',plate:'苏D12345',brand:'宝马',model:'320Li',vin:'LGWEE4A58JH000001',reg_date:'2018-06-15'}]
+    },
+    car_policies: {
+      filename: '车险导入模板.xlsx',
+      headers: [['车主姓名','_cust_name'],['车牌号','_plate'],['承保公司','company'],['商业险保费','biz_premium'],['交强险保费','compulsory_premium'],['车船税','tax_amount'],['总保费','total_premium'],['佣金','commission_amount'],['起保日期','start_date'],['到期日期','end_date'],['状态','status']],
+      sample: [{_cust_name:'张三',_plate:'苏D12345',company:'平安保险',biz_premium:'3500',compulsory_premium:'950',tax_amount:'360',total_premium:'4810',commission_amount:'480',start_date:'2025-01-01',end_date:'2026-01-01',status:'active'}]
+    },
+    noncar_policies: {
+      filename: '非车险导入模板.xlsx',
+      headers: [['客户姓名','_cust_name'],['险种','policy_type'],['承保公司','company'],['保费','premium'],['起保日期','start_date'],['到期日期','end_date'],['状态','status']],
+      sample: [{_cust_name:'张三',policy_type:'驾乘险',company:'太平洋保险',premium:'300',start_date:'2025-01-01',end_date:'2026-01-01',status:'active'}]
+    }
+  };
+  if(!meta[tableType]) { showToast('无模板', 'err'); return; }
+  var m = meta[tableType];
+  exportExcel(m.sample, m.headers, m.filename);
+  showToast('模板已下载：'+m.filename, 'ok');
+}
+
+// =============================================================
+// 客户导入/导出
+// =============================================================
 function doExportCustomers() {
   var d = initData();
   var rows = d.customers || [];
-  var headers = [['姓名','name'],['电话','phone'],['身份证','idcard'],['地址','address'],['备注','remark']];
+  var headers = [['姓名','name'],['电话','phone'],['身份证号','id_card'],['地址','address'],['备注','remark']];
   exportCSV(rows, headers, '客户数据_'+td()+'.csv');
   showToast('导出'+rows.length+'条客户', 'ok');
 }
-
-// 导入客户
 function doImportCustomers(data) {
-  if(!Array.isArray(data)) { showToast('数据格式错误，需要数组', 'err'); return; }
+  if(!Array.isArray(data)) { showToast('数据格式错误', 'err'); return; }
   var d = initData();
   var count = 0;
   data.forEach(function(item) {
     if(!item.name && !item.phone) return;
     item.id = item.id || gid();
+    item.created_at = item.created_at || td();
     d.customers.push(item);
     count++;
   });
   saveData(d); renderCustomers(); syncStats();
-  showToast('导入'+count+'条客户', 'ok');
+  showToast('成功导入 '+count+' 条客户', 'ok');
 }
 
-// 导出车辆
+// =============================================================
+// 车辆导入/导出
+// =============================================================
 function doExportVehicles() {
   var d = initData();
   var rows = (d.vehicles||[]).map(function(v) {
     var c = custById(v.customer_id);
-    v._cust_name = c.name||'';
+    v._cust_name = c ? c.name : '';
     return v;
   });
-  var headers = [['车主','_cust_name'],['车牌','plate'],['品牌','brand'],['型号','model'],['VIN码','vin'],['注册日期','reg_date'],['发动机号','engine_no']];
+  var headers = [['车主','_cust_name'],['车牌','plate'],['品牌','brand'],['型号','model'],['VIN码','vin'],['注册日期','reg_date']];
   exportCSV(rows, headers, '车辆数据_'+td()+'.csv');
-  showToast('导出'+rows.length+'条车辆', 'ok');
+  showToast('导出'+(d.vehicles||[]).length+'条车辆', 'ok');
 }
-
-// 导入车辆
 function doImportVehicles(data) {
-  if(!Array.isArray(data)) { showToast('数据格式错误，需要数组', 'err'); return; }
+  if(!Array.isArray(data)) { showToast('数据格式错误', 'err'); return; }
   var d = initData();
   var count = 0;
   data.forEach(function(item) {
     if(!item.plate) return;
     item.id = item.id || gid();
-    // Try to match customer by name
+    // 按车主姓名匹配客户
     if(item._cust_name && !item.customer_id) {
       var c = d.customers.find(function(x){ return x.name === item._cust_name; });
       if(c) item.customer_id = c.id;
@@ -2140,27 +2204,27 @@ function doImportVehicles(data) {
     count++;
   });
   saveData(d); renderVehicles(); syncStats();
-  showToast('导入'+count+'条车辆', 'ok');
+  showToast('成功导入 '+count+' 条车辆', 'ok');
 }
 
-// 导出车险
+// =============================================================
+// 车险导入/导出
+// =============================================================
 function doExportCarPol() {
   var d = initData();
   var rows = (d.car_policies||[]).map(function(p) {
     var c = custById(p.customer_id);
     var v = vehById(p.vehicle_id);
-    p._cust_name = c.name||'';
-    p._plate = v.plate||'';
+    p._cust_name = c ? c.name : '';
+    p._plate = v ? v.plate : '';
     return p;
   });
   var headers = [['车主','_cust_name'],['车牌','_plate'],['公司','company'],['商业险','biz_premium'],['交强险','compulsory_premium'],['车船税','tax_amount'],['总保费','total_premium'],['佣金','commission_amount'],['起保日','start_date'],['到期日','end_date'],['状态','status']];
   exportCSV(rows, headers, '车险数据_'+td()+'.csv');
-  showToast('导出'+rows.length+'条车险', 'ok');
+  showToast('导出'+(d.car_policies||[]).length+'条车险', 'ok');
 }
-
-// 导入车险
 function doImportCarPol(data) {
-  if(!Array.isArray(data)) { showToast('数据格式错误，需要数组', 'err'); return; }
+  if(!Array.isArray(data)) { showToast('数据格式错误', 'err'); return; }
   var d = initData();
   var count = 0;
   data.forEach(function(item) {
@@ -2174,31 +2238,30 @@ function doImportCarPol(data) {
       var v = (d.vehicles||[]).find(function(x){ return x.plate === item._plate; });
       if(v) item.vehicle_id = v.id;
     }
-    delete item._cust_name;
-    delete item._plate;
+    delete item._cust_name; delete item._plate;
     d.car_policies.push(item);
     count++;
   });
   saveData(d); renderCarInsurance(); syncStats();
-  showToast('导入'+count+'条车险', 'ok');
+  showToast('成功导入 '+count+' 条车险', 'ok');
 }
 
-// 导出非车险
+// =============================================================
+// 非车险导入/导出
+// =============================================================
 function doExportNoncar() {
   var d = initData();
   var rows = (d.noncar_policies||[]).map(function(p) {
     var c = custById(p.customer_id);
-    p._cust_name = c.name||'';
+    p._cust_name = c ? c.name : '';
     return p;
   });
   var headers = [['客户','_cust_name'],['险种','policy_type'],['公司','company'],['保费','premium'],['起保日','start_date'],['到期日','end_date'],['状态','status']];
   exportCSV(rows, headers, '非车险数据_'+td()+'.csv');
-  showToast('导出'+rows.length+'条非车险', 'ok');
+  showToast('导出'+(d.noncar_policies||[]).length+'条非车险', 'ok');
 }
-
-// 导入非车险
 function doImportNoncar(data) {
-  if(!Array.isArray(data)) { showToast('数据格式错误，需要数组', 'err'); return; }
+  if(!Array.isArray(data)) { showToast('数据格式错误', 'err'); return; }
   var d = initData();
   var count = 0;
   data.forEach(function(item) {
@@ -2213,7 +2276,43 @@ function doImportNoncar(data) {
     count++;
   });
   saveData(d); renderNoncarInsurance(); syncStats();
-  showToast('导入'+count+'条非车险', 'ok');
+  showToast('成功导入 '+count+' 条非车险', 'ok');
+}
+
+// =============================================================
+// 售后/跟进导入（简化版）
+// =============================================================
+function doImportServices(data) {
+  if(!Array.isArray(data)) { showToast('数据格式错误', 'err'); return; }
+  var d = initData(); var count = 0;
+  data.forEach(function(item) {
+    if(!item.customer_id && !item.plate) return;
+    item.id = item.id || gid();
+    if(item.plate && !item.customer_id) {
+      var v = (d.vehicles||[]).find(function(x){ return x.plate === item.plate; });
+      if(v) item.customer_id = v.customer_id;
+    }
+    delete item.plate;
+    d.services.push(item); count++;
+  });
+  saveData(d); renderServices(); syncStats();
+  showToast('成功导入 '+count+' 条售后', 'ok');
+}
+function doImportFollowups(data) {
+  if(!Array.isArray(data)) { showToast('数据格式错误', 'err'); return; }
+  var d = initData(); var count = 0;
+  data.forEach(function(item) {
+    if(!item.customer_id && !item.plate) return;
+    item.id = item.id || gid();
+    if(item.plate && !item.customer_id) {
+      var v = (d.vehicles||[]).find(function(x){ return x.plate === item.plate; });
+      if(v) item.customer_id = v.customer_id;
+    }
+    delete item.plate;
+    d.followups.push(item); count++;
+  });
+  saveData(d); renderFollowups(); syncStats();
+  showToast('成功导入 '+count+' 条跟进', 'ok');
 }
 
 // 全量备份（客户+车辆+车险+非车险）
@@ -2347,108 +2446,6 @@ function selectCust(el) {
   if(vcust) vcust.value = id;
 }
 
-// =============================================================
-// 客户导入（支持Excel/CSV/JSON）
-// =============================================================
-function downloadCustomerTemplate() {
-  var csv = 'name,phone,id_card,address,remark\n张三,13800138000,320123199001011234,江苏省常州市金坛区,示例客户\n李四,13900139000,320123199002022345,江苏省常州市武进区,\n王五,13700137000,,,备注信息';
-  var blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8'});
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = '客户导入模板.csv';
-  a.click();
-  showToast('模板已下载，请按格式填写后导入', 'ok');
-}
-
-// 解析CSV文本
-function parseCSV(text) {
-  var lines = text.split(/\r?\n/);
-  if(lines.length < 2) return [];
-  var headers = lines[0].split(',').map(function(h){ return h.trim().replace(/^"|"$/g, ''); });
-  var result = [];
-  for(var i=1; i<lines.length; i++) {
-    if(!lines[i].trim()) continue;
-    var values = lines[i].split(',');
-    var obj = {};
-    for(var j=0; j<headers.length && j<values.length; j++) {
-      var val = values[j].trim().replace(/^"|"$/g, '');
-      // 字段名映射
-      var key = headers[j];
-      if(key === '姓名') key = 'name';
-      else if(key === '电话' || key === '手机') key = 'phone';
-      else if(key === '身份证' || key === '证件号') key = 'id_card';
-      else if(key === '地址') key = 'address';
-      else if(key === '备注') key = 'remark';
-      obj[key] = val;
-    }
-    if(obj.name || obj.phone) result.push(obj);
-  }
-  return result;
-}
-
-// 导入客户（自动识别格式）
-function doImportCustomersEx(data, filename) {
-  var d = initData();
-  var count = 0;
-  if(Array.isArray(data)) {
-    // JSON数组
-    data.forEach(function(item) {
-      if(!item.name && !item.phone) return;
-      item.id = item.id || gid();
-      item.created_at = item.created_at || td();
-      d.customers.push(item);
-      count++;
-    });
-  } else {
-    showToast('数据格式错误', 'err');
-    return;
-  }
-  saveData(d); renderCustomers(); syncStats();
-  showToast('成功导入 '+count+' 条客户数据', 'ok');
-}
-
-// 文件选择处理
-function handleCustomerImport(evt) {
-  var file = evt.target.files[0];
-  if(!file) return;
-  var ext = file.name.split('.').pop().toLowerCase();
-  var reader = new FileReader();
-  
-  reader.onload = function(e) {
-    try {
-      var content = e.target.result;
-      if(ext === 'json') {
-        var data = JSON.parse(content);
-        doImportCustomersEx(Array.isArray(data) ? data : (data.customers || [data]), file.name);
-      } else if(ext === 'csv') {
-        var parsed = parseCSV(content);
-        doImportCustomersEx(parsed, file.name);
-      } else if(ext === 'xlsx' || ext === 'xls') {
-        showToast('Excel文件需要先转为CSV格式\n（用Excel打开后另存为CSV）', 'err');
-        return;
-      } else {
-        // 尝试按CSV解析
-        var parsed = parseCSV(content);
-        if(parsed.length > 0) {
-          doImportCustomersEx(parsed, file.name);
-        } else {
-          showToast('不支持的文件格式，请使用CSV或JSON', 'err');
-        }
-      }
-    } catch(err) {
-      showToast('文件解析失败: '+err.message, 'err');
-    }
-  };
-  
-  reader.readAsText(file, 'UTF-8');
-  evt.target.value = ''; // 清空以便重复导入
-}
-
-// 绑定文件选择事件
-document.addEventListener('DOMContentLoaded', function() {
-  var ifc = E('importFileCustomer');
-  if(ifc) ifc.addEventListener('change', handleCustomerImport);
-});
 </script>
 </body>
 </html>
