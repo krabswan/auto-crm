@@ -121,9 +121,9 @@ textarea.form-control{resize:vertical;min-height:60px}
     </div>
     <div class="form-group">
       <label>密码</label>
-      <input type="password" id="loginPass" placeholder="请输入密码" value="">
+      <input type="password" id="loginPass" placeholder="请输入密码">
     </div>
-    <div id="loginError" style="color:#ef4444;font-size:13px;margin-bottom:12px;display:none">用户名或密码错误</div>
+    <div id="loginError" style="color:#ef4444;font-size:13px;margin-bottom:12px;display:none">账号或密码错误</div>
     <button class="btn btn-primary" onclick="doLogin()">登录</button>
   </div>
 </div>
@@ -867,7 +867,7 @@ function setText(id, val) { var e=E(id); if(e) e.textContent=val; }
 function doLogin() {
   var u = E("loginUser").value.trim();
   var p = E("loginPass").value;
-  if (u && p && p.length >= 4) {
+  if (u === "krabs" && p === "589842") {
     E("loginPage").style.display = "none";
     E("appLayout").style.display = "block";
     E("topbar").style.display = "flex";
@@ -877,7 +877,7 @@ function doLogin() {
     initApp();
   } else {
     var err = E("loginError");
-    if(err) { err.style.display = "block"; err.textContent = "请输入用户名和密码（密码至少4位）"; }
+    if(err) { err.style.display = "block"; err.textContent = "账号或密码错误"; }
   }
 }
 
