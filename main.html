@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -73,8 +73,9 @@ tr.renewal-soon:hover { background:#dbeafe !important; }
 <body>
 <div class="header">
   <h1>🚗 车险CRM</h1>
-  <span id="cloudStatus" style="margin-right:12px;font-size:13px;color:#9ca3af;"></span><div class="header-right">
-    <span id="userLabel">管理员</span>
+  <div class="header-right">
+    <span id="userLabel">管理员<span id="cloudStatus" style="margin-right:12px;font-size:13px;color:#9ca3af;"></span>
+    </span>
     <button class="btn-logout" onclick="doLogout()">退出</button>
   </div>
 </div>
@@ -259,8 +260,10 @@ tr.renewal-soon:hover { background:#dbeafe !important; }
 // 云端数据层 V2 - 蟹老板车管家
 window._db = { customers:[], vehicles:[], policies:[], noncar:[] };
 
-const SB_URL = 'https://xsqzmwzkdktzftrpsknc.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzcXptd3prZGt0emZ0cnBza25jIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjYzMjU5MywiZXhwIjoyMDkyMjA4NTkzfQ.e7HQh0G32G0uoPwIhXSr7_Vg2cq7TBjWzVUKqkt-J0I';
+const SB_URL = 'https://yjnkbippailouqoqivtv.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqbmtiaXBwYWlsb3Vxb3FpdnR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjczNjcsImV4cCI6MjA5MDg0MzM2N30.QXYd5vK6bjD8Z7UmoA7JMb0AokHpZj9SggGPUd-DqDc';
+const supabase = window.supabase.createClient(SB_URL, SB_KEY);
+
 const supabase = window.supabase.createClient(SB_URL, SB_KEY);
 
 const SB_HDR = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
@@ -303,7 +306,7 @@ async function cloudInit(){
   document.getElementById('cloudStatus').textContent='● 云端已连接';
   document.getElementById('cloudStatus').style.color='#10b981';
 }
-function in
+function init(){if(localStorage.getItem('crm_logged')!=='1'){location.href='index.html';return;}cloudInit();}
 
 function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function showToast(msg,type){var t=document.getElementById('toast');t.textContent=msg;t.style.background=type==='err'?'#ef4444':'#1f2937';t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2500);}
