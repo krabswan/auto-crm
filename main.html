@@ -312,12 +312,12 @@ function toDb(t,rec){var m=COL[t]||{};var row={};Object.keys(rec).forEach(functi
 function fromDb(t,row){var m=REV[t]||{};var rec={id:row.id};Object.keys(row).forEach(function(k){if(m[k])rec[m[k]]=row[k];else rec[k]=row[k];});return rec;}
 
 async function sbGet(t){
-  try{var r=await fetch(SB_URL+'/rest/v1/'+TBL[t]+'?select=*&order=created_at.asc',{headers:SB_HDR});if(!r.ok)return[];
+  try{var r=await fetch(SB_URL+'/rest/v1/'+TBL[t]+'?select=*',{headers:SB_HDR});if(!r.ok)return[];
     var arr=await r.json();window._db[t]=Array.isArray(arr)?arr.map(function(x){return fromDb(t,x);}):[];return window._db[t];}catch(e){console.error('sbGet',t,e);return window._db[t];}
 }
 async function sbPost(t,rec){
   try{var row=toDb(t,rec);if(row.id&&!rec._uuid)delete row.id;
-    var r=await fetch(SB_URL+'/rest/v1/'+TBL[t],{method:'POST',headers:SB_HDR,body:JSON.stringify(row)});if(r.ok)saveToLocal();return r.ok?await r.json():null;}catch(e){console.error('sbPost',t,e);return null;}
+    var r=await fetch(SB_URL+'/rest/v1/'+TBL[t],{method:'POST',headers:SB_HDR,body:JSON.stringify(row)});if(!r.ok){var err=await r.text();console.error('sbPost error',t,err);await saveToLocal();return null;}await saveToLocal();return r.status===201||r.status===204?null:await r.json().catch(function(){return null});}catch(e){console.error('sbPost',t,e);return null;}
 }
 async function sbPatch(t,id,rec){
   try{var r=await fetch(SB_URL+'/rest/v1/'+TBL[t]+'?id=eq.'+id,{method:'PATCH',headers:SB_HDR,body:JSON.stringify(toDb(t,rec))});if(r.ok)saveToLocal();return r.ok;}catch(e){console.error('sbPatch',t,e);return false;}
