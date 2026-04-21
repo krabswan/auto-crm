@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -66,18 +66,41 @@ tr.renewal-urgent { background:#fffbeb !important; }
 tr.renewal-urgent:hover { background:#fef3c7 !important; }
 tr.renewal-soon { background:#eff6ff !important; }
 tr.renewal-soon:hover { background:#dbeafe !important; }
+
+  /* Mobile responsive */
+  @media (max-width: 768px) {
+    .header { padding: 12px 16px; }
+    .header h1 { font-size: 16px; }
+    .sidebar { position: fixed; top: 48px; left: -180px; width: 180px; height: calc(100vh - 48px); z-index: 100; transition: left 0.3s; box-shadow: 2px 0 8px rgba(0,0,0,0.15); }
+    .sidebar.show { left: 0; }
+    .main { margin-left: 0; padding: 16px; padding-top: 60px; }
+    .stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .stat-card { padding: 14px; }
+    .stat-num { font-size: 24px; }
+    .card { padding: 14px; }
+    table { font-size: 13px; }
+    th, td { padding: 8px 6px; }
+    .mobile-menu-btn { display: block !important; }
+    .modal-content { width: 90% !important; max-width: 400px; }
+  }
+  .mobile-menu-btn { display: none; position: fixed; top: 10px; left: 10px; z-index: 101; background: #1a3a4a; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; font-size: 18px; }
+  .cloud-status-error { color: #ef4444 !important; }
+  .cloud-status-ok { color: #10b981 !important; }
+  .cloud-status-loading { color: #f59e0b !important; }
+
 </style>
 </head>
 <body>
 <div class="header">
   <h1>🚗 车险CRM</h1>
   <div class="header-right">
-    <span id="userLabel">管理员<span id="cloudStatus" style="margin-right:12px;font-size:13px;color:#9ca3af;"></span>
+    <span id="userLabel">管理员<span id="cloudStatus" style="margin-right:8px;font-size:12px;"></span>
     </span>
     <button class="btn-logout" onclick="doLogout()">退出</button>
   </div>
 </div>
 
+<button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
 <div class="sidebar">
   <div class="nav-item active" onclick="showPage('dashboard')">📊 仪表盘</div>
   <div class="nav-item" onclick="showPage('customers')">👤 客户管理</div>
@@ -255,6 +278,15 @@ tr.renewal-soon:hover { background:#dbeafe !important; }
 <div id="toast" class="toast"></div>
 
 <script>
+
+// Mobile sidebar toggle
+function toggleSidebar(){document.querySelector('.sidebar').classList.toggle('show');}
+
+// Offline support: save to localStorage as backup
+function saveToLocal(){try{localStorage.setItem('crm_db',JSON.stringify(window._db));localStorage.setItem('crm_db_time',Date.now());}catch(e){console.error('saveToLocal',e);}}
+function loadFromLocal(){try{var s=localStorage.getItem('crm_db');if(s){return JSON.parse(s);}}catch(e){console.error('loadFromLocal',e);}return null;}
+
+
 // 云端数据层 V2 - 蟹老板车管家
 window._db = { customers:[], vehicles:[], policies:[], noncar:[] };
 
@@ -280,25 +312,54 @@ async function sbGet(t){
 }
 async function sbPost(t,rec){
   try{var row=toDb(t,rec);if(row.id&&!rec._uuid)delete row.id;
-    var r=await fetch(SB_URL+'/rest/v1/'+TBL[t],{method:'POST',headers:SB_HDR,body:JSON.stringify(row)});return r.ok?await r.json():null;}catch(e){console.error('sbPost',t,e);return null;}
+    var r=await fetch(SB_URL+'/rest/v1/'+TBL[t],{method:'POST',headers:SB_HDR,body:JSON.stringify(row)});if(r.ok)saveToLocal();return r.ok?await r.json():null;}catch(e){console.error('sbPost',t,e);return null;}
 }
 async function sbPatch(t,id,rec){
-  try{var r=await fetch(SB_URL+'/rest/v1/'+TBL[t]+'?id=eq.'+id,{method:'PATCH',headers:SB_HDR,body:JSON.stringify(toDb(t,rec))});return r.ok;}catch(e){console.error('sbPatch',t,e);return false;}
+  try{var r=await fetch(SB_URL+'/rest/v1/'+TBL[t]+'?id=eq.'+id,{method:'PATCH',headers:SB_HDR,body:JSON.stringify(toDb(t,rec))});if(r.ok)saveToLocal();return r.ok;catch(e){console.error('sbPatch',t,e);return false;}
 }
 async function sbDel(t,id){
-  try{var r=await fetch(SB_URL+'/rest/v1/'+TBL[t]+'?id=eq.'+id,{method:'DELETE',headers:SB_HDR});return r.ok;}catch(e){console.error('sbDel',t,e);return false;}
+  try{var r=await fetch(SB_URL+'/rest/v1/'+TBL[t]+'?id=eq.'+id,{method:'DELETE',headers:SB_HDR});if(r.ok)saveToLocal();return r.ok;catch(e){console.error('sbDel',t,e);return false;}
 }
 
 function loadData(){return window._db;}
 function saveData(){}
 
 async function cloudInit(){
-  document.getElementById('cloudStatus').textContent='● 连接中...';
-  document.getElementById('cloudStatus').style.color='#6b7280';
-  await Promise.all([sbGet('customers'),sbGet('vehicles'),sbGet('policies'),sbGet('noncar')]);
-  refreshAll();
-  document.getElementById('cloudStatus').textContent='● 云端已连接';
-  document.getElementById('cloudStatus').style.color='#10b981';
+    document.getElementById('cloudStatus').textContent='● 加载中...';
+    document.getElementById('cloudStatus').className='cloud-status-loading';
+    
+    // Try cloud first, max 3 retries
+    var cloudOk = false;
+    for(var i=0;i<3;i++){
+        try{
+            await Promise.all([sbGet('customers'),sbGet('vehicles'),sbGet('policies'),sbGet('noncar')]);
+            cloudOk = true;
+            break;
+        }catch(e){
+            console.error('cloudInit attempt '+(i+1),e);
+            await new Promise(r=>setTimeout(r,1000));
+        }
+    }
+    
+    // If cloud failed, try localStorage
+    if(!cloudOk){
+        var local = loadFromLocal();
+        if(local && local.customers){
+            window._db = local;
+            document.getElementById('cloudStatus').textContent='● 离线模式';
+            document.getElementById('cloudStatus').className='cloud-status-error';
+            console.log('Using local data');
+        }else{
+            document.getElementById('cloudStatus').textContent='● 连接失败';
+            document.getElementById('cloudStatus').className='cloud-status-error';
+        }
+    }else{
+        document.getElementById('cloudStatus').textContent='● 云端已同步';
+        document.getElementById('cloudStatus').className='cloud-status-ok';
+        saveToLocal(); // Save to localStorage as backup
+    }
+    
+    renderCustomers();renderVehicles();renderPolicies();renderNoncar();refreshStats();
 }
 function init(){cloudInit();}
 
