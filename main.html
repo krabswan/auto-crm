@@ -308,7 +308,7 @@ const COL = {
 const REV = {};
 Object.keys(COL).forEach(function(t){REV[t]={};Object.keys(COL[t]).forEach(function(k){REV[t][COL[t][k]]=k;});});
 
-function toDb(t,rec){var m=COL[t]||{};var row={};Object.keys(rec).forEach(function(k){if(m[k])row[m[k]]=rec[k];else if(k==='id')row.id=rec.id;});return row;}
+function toDb(t,rec){var m=COL[t]||{};var row={};Object.keys(rec).forEach(function(k){var v=rec[k];if(v==='')v=null;if(m[k])row[m[k]]=v;else if(k==='id')row.id=v;});return row;}
 function fromDb(t,row){var m=REV[t]||{};var rec={id:row.id};Object.keys(row).forEach(function(k){if(m[k])rec[m[k]]=row[k];else rec[k]=row[k];});return rec;}
 
 async function sbGet(t){
