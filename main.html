@@ -333,15 +333,17 @@ function filterCustomers(kw) {
            (c.addr||'').toLowerCase().includes(k);
   }) : d.customers;
   _custSel = [];
-  renderCustRows(list);
+  renderCustRows(list, false);
 }
 
-function renderCustRows(list) {
+function renderCustRows(list, showAll) {
   var tbody = document.querySelector('#custTable tbody');
   tbody.innerHTML = '';
-  document.getElementById('custChkAll').checked = false;
-  document.getElementById('btnCustDel').style.display = 'none';
-  document.getElementById('custSelCnt').textContent = '0';
+  if (!showAll) {
+    document.getElementById('custChkAll').checked = false;
+    document.getElementById('btnCustDel').style.display = 'none';
+    document.getElementById('custSelCnt').textContent = '0';
+  }
   if (!list.length) {
     document.getElementById('custEmpty').style.display = 'block';
     return;
@@ -355,6 +357,11 @@ function renderCustRows(list) {
       '<td><button class="btn btn-sm btn-primary" onclick="openCustModal(\'' + c.id + '\')">编辑</button> <button class="btn btn-sm btn-danger" onclick="delCust(\'' + c.id + '\')">删除</button></td>';
     tbody.appendChild(tr);
   });
+  if (showAll) {
+    document.getElementById('custChkAll').checked = _custSel.length === list.length && list.length > 0;
+    document.getElementById('btnCustDel').style.display = _custSel.length ? '' : 'none';
+    document.getElementById('custSelCnt').textContent = _custSel.length;
+  }
 }
 
 function renderCustomers() {
@@ -374,9 +381,7 @@ function toggleCustAll() {
            (c.addr||'').toLowerCase().includes(kw);
   }) : d.customers;
   _custSel = checked ? list.map(function(c){ return c.id; }) : [];
-  renderCustRows(list);
-  if (_custSel.length) document.getElementById('btnCustDel').style.display = '';
-  document.getElementById('custSelCnt').textContent = _custSel.length;
+  renderCustRows(list, true);
 }
 
 function toggleCust(id, checked) {
@@ -478,16 +483,18 @@ function filterVehicles(kw) {
            (v.use||'').toLowerCase().includes(k);
   }) : d.vehicles;
   _vehSel = [];
-  renderVehRows(list);
+  renderVehRows(list, false);
 }
 
-function renderVehRows(list) {
+function renderVehRows(list, showAll) {
   var d = loadData();
   var tbody = document.querySelector('#vehTable tbody');
   tbody.innerHTML = '';
-  document.getElementById('vehChkAll').checked = false;
-  document.getElementById('btnVehDel').style.display = 'none';
-  document.getElementById('vehSelCnt').textContent = '0';
+  if (!showAll) {
+    document.getElementById('vehChkAll').checked = false;
+    document.getElementById('btnVehDel').style.display = 'none';
+    document.getElementById('vehSelCnt').textContent = '0';
+  }
   if (!list.length) { document.getElementById('vehEmpty').style.display = 'block'; return; }
   document.getElementById('vehEmpty').style.display = 'none';
   list.forEach(function(v) {
@@ -499,6 +506,11 @@ function renderVehRows(list) {
       '<td><button class="btn btn-sm btn-primary" onclick="openVehModal(\'' + v.id + '\')">编辑</button> <button class="btn btn-sm btn-danger" onclick="delVeh(\'' + v.id + '\')">删除</button></td>';
     tbody.appendChild(tr);
   });
+  if (showAll) {
+    document.getElementById('vehChkAll').checked = _vehSel.length === list.length && list.length > 0;
+    document.getElementById('btnVehDel').style.display = _vehSel.length ? '' : 'none';
+    document.getElementById('vehSelCnt').textContent = _vehSel.length;
+  }
 }
 
 function renderVehicles() {
@@ -519,10 +531,9 @@ var checked = cb.checked;
            (v.use||'').toLowerCase().includes(kw);
   }) : d.vehicles;
   _vehSel = checked ? list.map(function(v){ return v.id; }) : [];
-  renderVehRows(list);
+  renderVehRows(list, false);
   if (_vehSel.length) document.getElementById('btnVehDel').style.display = '';
-  document.getElementById('vehSelCnt').textContent = _vehSel.length;
-}
+  renderVehRows(list, true);
 
 function toggleVeh(id, checked) {
   var idx = _vehSel.indexOf(id);
@@ -634,16 +645,18 @@ function filterPolicies(kw) {
            (p.end||'').toLowerCase().includes(k);
   }) : d.policies;
   _polSel = [];
-  renderPolRows(list);
+  renderPolRows(list, false);
 }
 
-function renderPolRows(list) {
+function renderPolRows(list, showAll) {
   var d = loadData();
   var tbody = document.querySelector('#polTable tbody');
   tbody.innerHTML = '';
-  document.getElementById('polChkAll').checked = false;
-  document.getElementById('btnPolDel').style.display = 'none';
-  document.getElementById('polSelCnt').textContent = '0';
+  if (!showAll) {
+    document.getElementById('polChkAll').checked = false;
+    document.getElementById('btnPolDel').style.display = 'none';
+    document.getElementById('polSelCnt').textContent = '0';
+  }
   if (!list.length) { document.getElementById('polEmpty').style.display = 'block'; return; }
   document.getElementById('polEmpty').style.display = 'none';
   list.forEach(function(p) {
@@ -655,6 +668,11 @@ function renderPolRows(list) {
       '<td><button class="btn btn-sm btn-primary" onclick="openPolModal(\'' + p.id + '\')">编辑</button> <button class="btn btn-sm btn-danger" onclick="delPol(\'' + p.id + '\')">删除</button></td>';
     tbody.appendChild(tr);
   });
+  if (showAll) {
+    document.getElementById('polChkAll').checked = _polSel.length === list.length && list.length > 0;
+    document.getElementById('btnPolDel').style.display = _polSel.length ? '' : 'none';
+    document.getElementById('polSelCnt').textContent = _polSel.length;
+  }
 }
 
 function renderPolicies() {
@@ -662,9 +680,9 @@ function renderPolicies() {
 }
 
 function togglePolAll() {
-var cb = document.getElementById("polChkAll");
-cb.checked = !cb.checked;
-var checked = cb.checked;
+  var cb = document.getElementById('polChkAll');
+  cb.checked = !cb.checked;
+  var checked = cb.checked;
   var d = loadData();
   var kw = document.getElementById('polSearch').value.trim().toLowerCase();
   var list = kw ? d.policies.filter(function(p) {
@@ -674,9 +692,7 @@ var checked = cb.checked;
            (p.agent||'').toLowerCase().includes(kw);
   }) : d.policies;
   _polSel = checked ? list.map(function(p){ return p.id; }) : [];
-  renderPolRows(list);
-  if (_polSel.length) document.getElementById('btnPolDel').style.display = '';
-  document.getElementById('polSelCnt').textContent = _polSel.length;
+  renderPolRows(list, true);
 }
 
 function togglePol(id, checked) {
@@ -795,16 +811,18 @@ function filterNoncar(kw) {
            (n.end||'').toLowerCase().includes(k);
   }) : d.noncar;
   _ncSel = [];
-  renderNcRows(list);
+  renderNcRows(list, false);
 }
 
-function renderNcRows(list) {
+function renderNcRows(list, showAll) {
   var d = loadData();
   var tbody = document.querySelector('#noncarTable tbody');
   tbody.innerHTML = '';
-  document.getElementById('noncarChkAll').checked = false;
-  document.getElementById('btnNoncarDel').style.display = 'none';
-  document.getElementById('noncarSelCnt').textContent = '0';
+  if (!showAll) {
+    document.getElementById('noncarChkAll').checked = false;
+    document.getElementById('btnNoncarDel').style.display = 'none';
+    document.getElementById('noncarSelCnt').textContent = '0';
+  }
   if (!list.length) { document.getElementById('noncarEmpty').style.display = 'block'; return; }
   document.getElementById('noncarEmpty').style.display = 'none';
   list.forEach(function(n) {
@@ -816,6 +834,11 @@ function renderNcRows(list) {
       '<td><button class="btn btn-sm btn-primary" onclick="openNoncarModal(\'' + n.id + '\')">编辑</button> <button class="btn btn-sm btn-danger" onclick="delNoncar(\'' + n.id + '\')">删除</button></td>';
     tbody.appendChild(tr);
   });
+  if (showAll) {
+    document.getElementById('noncarChkAll').checked = _ncSel.length === list.length && list.length > 0;
+    document.getElementById('btnNoncarDel').style.display = _ncSel.length ? '' : 'none';
+    document.getElementById('noncarSelCnt').textContent = _ncSel.length;
+  }
 }
 
 function renderNoncar() {
@@ -824,8 +847,9 @@ function renderNoncar() {
 
 function toggleNcAll() {
 var cb = document.getElementById("noncarChkAll");
-cb.checked = !cb.checked;
-var checked = cb.checked;
+var cb = document.getElementById('noncarChkAll');
+  cb.checked = !cb.checked;
+  var checked = cb.checked;
   var d = loadData();
   var kw = document.getElementById('noncarSearch').value.trim().toLowerCase();
   var list = kw ? d.noncar.filter(function(n) {
@@ -836,10 +860,8 @@ var checked = cb.checked;
            (n.agent||'').toLowerCase().includes(kw);
   }) : d.noncar;
   _ncSel = checked ? list.map(function(n){ return n.id; }) : [];
-  renderNcRows(list);
-  if (_ncSel.length) document.getElementById('btnNoncarDel').style.display = '';
-  document.getElementById('noncarSelCnt').textContent = _ncSel.length;
-}
+  renderNcRows(list, true);
+  renderNcRows(list, true);}
 
 function toggleNc(id, checked) {
   var idx = _ncSel.indexOf(id);
@@ -983,20 +1005,22 @@ function filterRenewal(kw) {
   ncRenewals.sort(function(a, b) { return a.days - b.days; });
   _rpolSel = [];
   _rncSel = [];
-  renderRenewalRows(polRenewals, ncRenewals);
+  renderRenewalRows(polRenewals, ncRenewals, false);
 }
 
-function renderRenewalRows(polRenewals, ncRenewals) {
+function renderRenewalRows(polRenewals, ncRenewals, showAll) {
   var polTbody = document.querySelector('#renewalPolTable tbody');
   var ncTbody = document.querySelector('#renewalNoncarTable tbody');
   polTbody.innerHTML = '';
   ncTbody.innerHTML = '';
-  document.getElementById('rpolChkAll').checked = false;
-  document.getElementById('rncChkAll').checked = false;
-  document.getElementById('btnRPolDel').style.display = 'none';
-  document.getElementById('btnRncDel').style.display = 'none';
-  document.getElementById('rpolSelCnt').textContent = '0';
-  document.getElementById('rncSelCnt').textContent = '0';
+  if (!showAll) {
+    document.getElementById('rpolChkAll').checked = false;
+    document.getElementById('rncChkAll').checked = false;
+    document.getElementById('btnRPolDel').style.display = 'none';
+    document.getElementById('btnRncDel').style.display = 'none';
+    document.getElementById('rpolSelCnt').textContent = '0';
+    document.getElementById('rncSelCnt').textContent = '0';
+  }
   // 车险
   if (!polRenewals.length) {
     polTbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#9ca3af;">暂无即将到期的车险保单</td></tr>';
@@ -1030,6 +1054,22 @@ function renderRenewalRows(polRenewals, ncRenewals) {
   // 空提示
   var bothEmpty = !polRenewals.length && !ncRenewals.length;
   document.getElementById('renewalEmpty').style.display = bothEmpty ? 'block' : 'none';
+  if (showAll) {
+    document.getElementById('rpolChkAll').checked = _rpolSel.length === polRenewals.length && polRenewals.length > 0;
+    document.getElementById('rncChkAll').checked = _rncSel.length === ncRenewals.length && ncRenewals.length > 0;
+    document.getElementById('btnRPolDel').style.display = _rpolSel.length ? '' : 'none';
+    document.getElementById('btnRncDel').style.display = _rncSel.length ? '' : 'none';
+    document.getElementById('rpolSelCnt').textContent = _rpolSel.length;
+    document.getElementById('rncSelCnt').textContent = _rncSel.length;
+  }
+  if (showAll) {
+    document.getElementById('rpolChkAll').checked = _rpolSel.length === polRenewals.length && polRenewals.length > 0;
+    document.getElementById('rncChkAll').checked = _rncSel.length === ncRenewals.length && ncRenewals.length > 0;
+    document.getElementById('btnRPolDel').style.display = _rpolSel.length ? '' : 'none';
+    document.getElementById('btnRncDel').style.display = _rncSel.length ? '' : 'none';
+    document.getElementById('rpolSelCnt').textContent = _rpolSel.length;
+    document.getElementById('rncSelCnt').textContent = _rncSel.length;
+  }
 }
 
 function renderRenewal() {
@@ -1037,9 +1077,9 @@ function renderRenewal() {
 }
 
 function toggleRPolAll() {
-var cb = document.getElementById("rpolChkAll");
-cb.checked = !cb.checked;
-var checked = cb.checked;
+  var cb = document.getElementById('rpolChkAll');
+  cb.checked = !cb.checked;
+  var checked = cb.checked;
   var d = loadData();
   var kw = document.getElementById('renewalSearch').value.trim().toLowerCase();
   var polRenewals = [];
@@ -1053,22 +1093,7 @@ var checked = cb.checked;
   });
   polRenewals.sort(function(a, b) { return a.days - b.days; });
   _rpolSel = checked ? polRenewals.map(function(i){ return i.p.id; }) : [];
-  if (_rpolSel.length) document.getElementById('btnRPolDel').style.display = '';
-  document.getElementById('rpolSelCnt').textContent = _rpolSel.length;
-  document.getElementById('rpolChkAll').checked = checked;
-  // re-render just the pol table rows
-  var polTbody = document.querySelector('#renewalPolTable tbody');
-  polTbody.innerHTML = '';
-  polRenewals.forEach(function(item) {
-    var st = getRenewalStatus(item.days);
-    var tr = document.createElement('tr');
-    tr.className = st.cls;
-    var sel = _rpolSel.indexOf(item.p.id) >= 0 ? 'checked' : '';
-    tr.innerHTML = '<td><input type="checkbox" ' + sel + ' onchange="toggleRPol(\'' + item.p.id + '\',this.checked)"></td>' +
-      '<td>' + esc(item.veh.plate) + '</td><td>' + esc(item.p.company) + '</td><td>' + esc(item.p.agent) + '</td><td>' + esc(item.p.end) + '</td><td><strong>' + item.days + '</strong> 天</td><td>' + st.label + '</td>' +
-      '<td><button class="btn btn-sm btn-primary" onclick="openPolModal(\'' + item.p.id + '\')">编辑</button></td>';
-    polTbody.appendChild(tr);
-  });
+  renderRenewalRows(polRenewals, [], true);
 }
 
 function toggleRPol(id, checked) {
@@ -1105,9 +1130,9 @@ function batchDelRenewalPol() {
 }
 
 function toggleRncAll() {
-var cb = document.getElementById("rncChkAll");
-cb.checked = !cb.checked;
-var checked = cb.checked;
+  var cb = document.getElementById('rncChkAll');
+  cb.checked = !cb.checked;
+  var checked = cb.checked;
   var d = loadData();
   var kw = document.getElementById('renewalSearch').value.trim().toLowerCase();
   var ncRenewals = [];
@@ -1121,21 +1146,7 @@ var checked = cb.checked;
   });
   ncRenewals.sort(function(a, b) { return a.days - b.days; });
   _rncSel = checked ? ncRenewals.map(function(i){ return i.n.id; }) : [];
-  if (_rncSel.length) document.getElementById('btnRncDel').style.display = '';
-  document.getElementById('rncSelCnt').textContent = _rncSel.length;
-  document.getElementById('rncChkAll').checked = checked;
-  var ncTbody = document.querySelector('#renewalNoncarTable tbody');
-  ncTbody.innerHTML = '';
-  ncRenewals.forEach(function(item) {
-    var st = getRenewalStatus(item.days);
-    var tr = document.createElement('tr');
-    tr.className = st.cls;
-    var sel = _rncSel.indexOf(item.n.id) >= 0 ? 'checked' : '';
-    tr.innerHTML = '<td><input type="checkbox" ' + sel + ' onchange="toggleRnc(\'' + item.n.id + '\',this.checked)"></td>' +
-      '<td>' + esc(item.cust.name) + '</td><td>' + esc(item.n.type) + '</td><td>' + esc(item.n.company) + '</td><td>' + esc(item.n.agent) + '</td><td>' + esc(item.n.end) + '</td><td><strong>' + item.days + '</strong> 天</td><td>' + st.label + '</td>' +
-      '<td><button class="btn btn-sm btn-primary" onclick="openNoncarModal(\'' + item.n.id + '\')">编辑</button></td>';
-    ncTbody.appendChild(tr);
-  });
+  renderRenewalRows([], ncRenewals, true);
 }
 
 function toggleRnc(id, checked) {
