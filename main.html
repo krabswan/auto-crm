@@ -295,8 +295,8 @@ function loadFromLocal(){try{var s=localStorage.getItem('crm_db');if(s){return J
 // 云端数据层 V2 - 蟹老板车管家
 window._db = { customers:[], vehicles:[], policies:[], noncar:[] };
 
-const SB_URL = 'https://xsqzmwzkdktzftrpsknc.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzcXptd3prZGt0emZ0cnBza25jIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjYzMjU5MywiZXhwIjoyMDkyMjA4NTkzfQ.e7HQh0G32G0uoPwIhXSr7_Vg2cq7TBjWzVUKqkt-J0I';
+const SB_URL = 'https://qvxyvxeuhtigcqfpeuyt.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2eHl2eGV1aHRpZ2NxZnBldXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2Nzk4NjYsImV4cCI6MjA5MjI1NTg2Nn0.TrVIu6--Wg8vjDjYCnSL40PNXqCv6m17pfnS0fLF64o';
 const SB_HDR = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
 const TBL = { customers:'customers', vehicles:'vehicles', policies:'car_policies', noncar:'noncar_policies' };
 const COL = {
