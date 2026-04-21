@@ -112,7 +112,7 @@ tr.renewal-soon:hover { background:#dbeafe !important; }
         <button class="btn btn-sm btn-success" onclick="exportCustomers()">📥 导出</button>
         <button class="btn btn-sm btn-primary" onclick="openCustModal(null)">➕ 新增</button>
       </div>
-      <table id="custTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="custChkAll" onclick="toggleCustAll(!this.checked)"></th><th>客户名称</th><th>电话</th><th>证件号码</th><th>地址</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <table id="custTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="custChkAll" onclick="toggleCustAll()"></th><th>客户名称</th><th>电话</th><th>证件号码</th><th>地址</th><th>操作</th></tr></thead><tbody></tbody></table>
       <div id="custEmpty" style="text-align:center;color:#9ca3af;padding:30px;font-size:14px;display:none;">暂无数据</div>
     </div>
   </div>
@@ -127,7 +127,7 @@ tr.renewal-soon:hover { background:#dbeafe !important; }
         <button class="btn btn-sm btn-success" onclick="exportVehicles()">📥 导出</button>
         <button class="btn btn-sm btn-primary" onclick="openVehModal(null)">➕ 新增</button>
       </div>
-      <table id="vehTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="vehChkAll" onclick="toggleVehAll(!this.checked)"></th><th>车牌号</th><th>车辆种类</th><th>使用性质</th><th>车主</th><th>初登日期</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <table id="vehTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="vehChkAll" onclick="toggleVehAll()"></th><th>车牌号</th><th>车辆种类</th><th>使用性质</th><th>车主</th><th>初登日期</th><th>操作</th></tr></thead><tbody></tbody></table>
       <div id="vehEmpty" style="text-align:center;color:#9ca3af;padding:30px;font-size:14px;display:none;">暂无数据</div>
     </div>
   </div>
@@ -142,7 +142,7 @@ tr.renewal-soon:hover { background:#dbeafe !important; }
         <button class="btn btn-sm btn-success" onclick="exportPolicies()">📥 导出</button>
         <button class="btn btn-sm btn-primary" onclick="openPolModal(null)">➕ 新增</button>
       </div>
-      <table id="polTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="polChkAll" onclick="togglePolAll(!this.checked)"></th><th>车牌号</th><th>保险公司</th><th>商业险</th><th>交强险</th><th>车船税</th><th>代理人</th><th>出单日期</th><th>到期日期</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <table id="polTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="polChkAll" onclick="togglePolAll()"></th><th>车牌号</th><th>保险公司</th><th>商业险</th><th>交强险</th><th>车船税</th><th>代理人</th><th>出单日期</th><th>到期日期</th><th>操作</th></tr></thead><tbody></tbody></table>
       <div id="polEmpty" style="text-align:center;color:#9ca3af;padding:30px;font-size:14px;display:none;">暂无数据</div>
     </div>
   </div>
@@ -157,7 +157,7 @@ tr.renewal-soon:hover { background:#dbeafe !important; }
         <button class="btn btn-sm btn-success" onclick="exportNoncar()">📥 导出</button>
         <button class="btn btn-sm btn-primary" onclick="openNoncarModal(null)">➕ 新增</button>
       </div>
-      <table id="noncarTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="noncarChkAll" onclick="toggleNcAll(!this.checked)"></th><th>客户名称</th><th>险种</th><th>保险公司</th><th>保费</th><th>代理人</th><th>出单日期</th><th>到期日期</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <table id="noncarTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="noncarChkAll" onclick="toggleNcAll()"></th><th>客户名称</th><th>险种</th><th>保险公司</th><th>保费</th><th>代理人</th><th>出单日期</th><th>到期日期</th><th>操作</th></tr></thead><tbody></tbody></table>
       <div id="noncarEmpty" style="text-align:center;color:#9ca3af;padding:30px;font-size:14px;display:none;">暂无数据</div>
     </div>
   </div>
@@ -175,9 +175,9 @@ tr.renewal-soon:hover { background:#dbeafe !important; }
         <span style="display:inline-block;width:12px;height:12px;background:#0ea5e9;border-radius:50%;margin-right:4px;vertical-align:middle;"></span><span style="font-size:13px;vertical-align:middle;margin-right:16px;">30天内到期</span>
       </div>
       <h3 style="font-size:15px;margin-bottom:10px;">🚗 车险保单 <button class="btn btn-sm btn-danger" onclick="batchDelRenewalPol()" id="btnRPolDel" style="display:none;margin-left:10px;font-size:12px;">🗑 删除(<span id="rpolSelCnt">0</span>)</button></h3>
-      <table id="renewalPolTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="rpolChkAll" onclick="toggleRPolAll(!this.checked)"></th><th>车牌号</th><th>保险公司</th><th>代理人</th><th>到期日期</th><th>剩余天数</th><th>状态</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <table id="renewalPolTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="rpolChkAll" onclick="toggleRPolAll()"></th><th>车牌号</th><th>保险公司</th><th>代理人</th><th>到期日期</th><th>剩余天数</th><th>状态</th><th>操作</th></tr></thead><tbody></tbody></table>
       <h3 style="font-size:15px;margin:20px 0 10px;">📄 非车险保单 <button class="btn btn-sm btn-danger" onclick="batchDelRenewalNoncar()" id="btnRncDel" style="display:none;margin-left:10px;font-size:12px;">🗑 删除(<span id="rncSelCnt">0</span>)</button></h3>
-      <table id="renewalNoncarTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="rncChkAll" onclick="toggleRncAll(!this.checked)"></th><th>客户名称</th><th>险种</th><th>保险公司</th><th>代理人</th><th>到期日期</th><th>剩余天数</th><th>状态</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <table id="renewalNoncarTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="rncChkAll" onclick="toggleRncAll()"></th><th>客户名称</th><th>险种</th><th>保险公司</th><th>代理人</th><th>到期日期</th><th>剩余天数</th><th>状态</th><th>操作</th></tr></thead><tbody></tbody></table>
       <div id="renewalEmpty" style="text-align:center;color:#9ca3af;padding:30px;font-size:14px;display:none;">暂无即将到期的保单</div>
     </div>
   </div>
@@ -361,7 +361,10 @@ function renderCustomers() {
   filterCustomers(document.getElementById('custSearch').value);
 }
 
-function toggleCustAll(checked) {
+function toggleCustAll() {
+  var cb = document.getElementById('custChkAll');
+  cb.checked = !cb.checked;
+  var checked = cb.checked;
   var d = loadData();
   var kw = document.getElementById('custSearch').value.trim().toLowerCase();
   var list = kw ? d.customers.filter(function(c) {
@@ -372,7 +375,7 @@ function toggleCustAll(checked) {
   }) : d.customers;
   _custSel = checked ? list.map(function(c){ return c.id; }) : [];
   renderCustRows(list);
-  if (checked && _custSel.length) document.getElementById('btnCustDel').style.display = '';
+  if (_custSel.length) document.getElementById('btnCustDel').style.display = '';
   document.getElementById('custSelCnt').textContent = _custSel.length;
 }
 
@@ -502,7 +505,10 @@ function renderVehicles() {
   filterVehicles(document.getElementById('vehSearch').value);
 }
 
-function toggleVehAll(checked) {
+function toggleVehAll() {
+var cb = document.getElementById("vehChkAll");
+cb.checked = !cb.checked;
+var checked = cb.checked;
   var d = loadData();
   var kw = document.getElementById('vehSearch').value.trim().toLowerCase();
   var list = kw ? d.vehicles.filter(function(v) {
@@ -514,7 +520,7 @@ function toggleVehAll(checked) {
   }) : d.vehicles;
   _vehSel = checked ? list.map(function(v){ return v.id; }) : [];
   renderVehRows(list);
-  if (checked && _vehSel.length) document.getElementById('btnVehDel').style.display = '';
+  if (_vehSel.length) document.getElementById('btnVehDel').style.display = '';
   document.getElementById('vehSelCnt').textContent = _vehSel.length;
 }
 
@@ -655,7 +661,10 @@ function renderPolicies() {
   filterPolicies(document.getElementById('polSearch').value);
 }
 
-function togglePolAll(checked) {
+function togglePolAll() {
+var cb = document.getElementById("polChkAll");
+cb.checked = !cb.checked;
+var checked = cb.checked;
   var d = loadData();
   var kw = document.getElementById('polSearch').value.trim().toLowerCase();
   var list = kw ? d.policies.filter(function(p) {
@@ -666,7 +675,7 @@ function togglePolAll(checked) {
   }) : d.policies;
   _polSel = checked ? list.map(function(p){ return p.id; }) : [];
   renderPolRows(list);
-  if (checked && _polSel.length) document.getElementById('btnPolDel').style.display = '';
+  if (_polSel.length) document.getElementById('btnPolDel').style.display = '';
   document.getElementById('polSelCnt').textContent = _polSel.length;
 }
 
@@ -813,7 +822,10 @@ function renderNoncar() {
   filterNoncar(document.getElementById('noncarSearch').value);
 }
 
-function toggleNcAll(checked) {
+function toggleNcAll() {
+var cb = document.getElementById("noncarChkAll");
+cb.checked = !cb.checked;
+var checked = cb.checked;
   var d = loadData();
   var kw = document.getElementById('noncarSearch').value.trim().toLowerCase();
   var list = kw ? d.noncar.filter(function(n) {
@@ -825,7 +837,7 @@ function toggleNcAll(checked) {
   }) : d.noncar;
   _ncSel = checked ? list.map(function(n){ return n.id; }) : [];
   renderNcRows(list);
-  if (checked && _ncSel.length) document.getElementById('btnNoncarDel').style.display = '';
+  if (_ncSel.length) document.getElementById('btnNoncarDel').style.display = '';
   document.getElementById('noncarSelCnt').textContent = _ncSel.length;
 }
 
@@ -1024,7 +1036,10 @@ function renderRenewal() {
   filterRenewal(document.getElementById('renewalSearch').value);
 }
 
-function toggleRPolAll(checked) {
+function toggleRPolAll() {
+var cb = document.getElementById("rpolChkAll");
+cb.checked = !cb.checked;
+var checked = cb.checked;
   var d = loadData();
   var kw = document.getElementById('renewalSearch').value.trim().toLowerCase();
   var polRenewals = [];
@@ -1038,7 +1053,7 @@ function toggleRPolAll(checked) {
   });
   polRenewals.sort(function(a, b) { return a.days - b.days; });
   _rpolSel = checked ? polRenewals.map(function(i){ return i.p.id; }) : [];
-  if (checked && _rpolSel.length) document.getElementById('btnRPolDel').style.display = '';
+  if (_rpolSel.length) document.getElementById('btnRPolDel').style.display = '';
   document.getElementById('rpolSelCnt').textContent = _rpolSel.length;
   document.getElementById('rpolChkAll').checked = checked;
   // re-render just the pol table rows
@@ -1089,7 +1104,10 @@ function batchDelRenewalPol() {
   showToast('删除成功');
 }
 
-function toggleRncAll(checked) {
+function toggleRncAll() {
+var cb = document.getElementById("rncChkAll");
+cb.checked = !cb.checked;
+var checked = cb.checked;
   var d = loadData();
   var kw = document.getElementById('renewalSearch').value.trim().toLowerCase();
   var ncRenewals = [];
@@ -1103,7 +1121,7 @@ function toggleRncAll(checked) {
   });
   ncRenewals.sort(function(a, b) { return a.days - b.days; });
   _rncSel = checked ? ncRenewals.map(function(i){ return i.n.id; }) : [];
-  if (checked && _rncSel.length) document.getElementById('btnRncDel').style.display = '';
+  if (_rncSel.length) document.getElementById('btnRncDel').style.display = '';
   document.getElementById('rncSelCnt').textContent = _rncSel.length;
   document.getElementById('rncChkAll').checked = checked;
   var ncTbody = document.querySelector('#renewalNoncarTable tbody');
