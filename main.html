@@ -92,8 +92,8 @@ tr.renewal-soon:hover { background:#dbeafe !important; }
     <div class="stats">
       <div class="stat-card"><div class="stat-num" id="stat-customers">0</div><div class="stat-label">客户总数</div></div>
       <div class="stat-card green"><div class="stat-num" id="stat-vehicles">0</div><div class="stat-label">车辆总数</div></div>
-      <div class="stat-card orange"><div class="stat-num" id="stat-policies">0</div><div class="stat-label">保单总数</div></div>
-      <div class="stat-card purple"><div class="stat-num" id="stat-premium">0</div><div class="stat-label">总保费(元)</div></div>
+      <div class="stat-card orange"><div class="stat-num" id="stat-policies">0</div><div class="stat-label">车险保单总数</div></div>
+      <div class="stat-card purple"><div class="stat-num" id="stat-noncar">0</div><div class="stat-label">非车险保单总数</div></div>
     </div>
     <div class="card"><p style="color:#6b7280;">欢迎使用车险CRM系统，左侧导航操作。</p></div>
     <div class="card" id="dashRenewalCard" style="display:none;">
@@ -314,8 +314,7 @@ function refreshStats() {
   document.getElementById('stat-customers').textContent = d.customers.length;
   document.getElementById('stat-vehicles').textContent = d.vehicles.length;
   document.getElementById('stat-policies').textContent = d.policies.length;
-  var total = d.policies.reduce(function(s, p) { return s + (parseFloat(p.biz) || 0) + (parseFloat(p.force) || 0) + (parseFloat(p.tax) || 0); }, 0);
-  document.getElementById('stat-premium').textContent = total.toFixed(0);
+  document.getElementById('stat-noncar').textContent = d.noncar.length;
   renderDashRenewal();
   } catch(e) { console.error('refreshStats error', e); }
 }
