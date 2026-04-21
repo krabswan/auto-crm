@@ -518,9 +518,9 @@ function renderVehicles() {
 }
 
 function toggleVehAll() {
-var cb = document.getElementById("vehChkAll");
-cb.checked = !cb.checked;
-var checked = cb.checked;
+  var cb = document.getElementById('vehChkAll');
+  cb.checked = !cb.checked;
+  var checked = cb.checked;
   var d = loadData();
   var kw = document.getElementById('vehSearch').value.trim().toLowerCase();
   var list = kw ? d.vehicles.filter(function(v) {
@@ -531,9 +531,8 @@ var checked = cb.checked;
            (v.use||'').toLowerCase().includes(kw);
   }) : d.vehicles;
   _vehSel = checked ? list.map(function(v){ return v.id; }) : [];
-  renderVehRows(list, false);
-  if (_vehSel.length) document.getElementById('btnVehDel').style.display = '';
   renderVehRows(list, true);
+}
 
 function toggleVeh(id, checked) {
   var idx = _vehSel.indexOf(id);
@@ -846,8 +845,7 @@ function renderNoncar() {
 }
 
 function toggleNcAll() {
-var cb = document.getElementById("noncarChkAll");
-var cb = document.getElementById('noncarChkAll');
+  var cb = document.getElementById('noncarChkAll');
   cb.checked = !cb.checked;
   var checked = cb.checked;
   var d = loadData();
@@ -861,7 +859,7 @@ var cb = document.getElementById('noncarChkAll');
   }) : d.noncar;
   _ncSel = checked ? list.map(function(n){ return n.id; }) : [];
   renderNcRows(list, true);
-  renderNcRows(list, true);}
+}
 
 function toggleNc(id, checked) {
   var idx = _ncSel.indexOf(id);
