@@ -112,7 +112,7 @@ tr.renewal-soon:hover { background:#dbeafe !important; }
         <button class="btn btn-sm btn-success" onclick="exportCustomers()">📥 导出</button>
         <button class="btn btn-sm btn-primary" onclick="openCustModal(null)">➕ 新增</button>
       </div>
-      <table id="custTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="custChkAll" onchange="toggleCustAll(this.checked)"></th><th>客户名称</th><th>电话</th><th>证件号码</th><th>地址</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <table id="custTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="custChkAll" onchange="toggleCustAll(!this.checked)"></th><th>客户名称</th><th>电话</th><th>证件号码</th><th>地址</th><th>操作</th></tr></thead><tbody></tbody></table>
       <div id="custEmpty" style="text-align:center;color:#9ca3af;padding:30px;font-size:14px;display:none;">暂无数据</div>
     </div>
   </div>
@@ -127,7 +127,7 @@ tr.renewal-soon:hover { background:#dbeafe !important; }
         <button class="btn btn-sm btn-success" onclick="exportVehicles()">📥 导出</button>
         <button class="btn btn-sm btn-primary" onclick="openVehModal(null)">➕ 新增</button>
       </div>
-      <table id="vehTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="vehChkAll" onchange="toggleVehAll(this.checked)"></th><th>车牌号</th><th>车辆种类</th><th>使用性质</th><th>车主</th><th>初登日期</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <table id="vehTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="vehChkAll" onchange="toggleVehAll(!this.checked)"></th><th>车牌号</th><th>车辆种类</th><th>使用性质</th><th>车主</th><th>初登日期</th><th>操作</th></tr></thead><tbody></tbody></table>
       <div id="vehEmpty" style="text-align:center;color:#9ca3af;padding:30px;font-size:14px;display:none;">暂无数据</div>
     </div>
   </div>
@@ -142,7 +142,7 @@ tr.renewal-soon:hover { background:#dbeafe !important; }
         <button class="btn btn-sm btn-success" onclick="exportPolicies()">📥 导出</button>
         <button class="btn btn-sm btn-primary" onclick="openPolModal(null)">➕ 新增</button>
       </div>
-      <table id="polTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="polChkAll" onchange="togglePolAll(this.checked)"></th><th>车牌号</th><th>保险公司</th><th>商业险</th><th>交强险</th><th>车船税</th><th>代理人</th><th>出单日期</th><th>到期日期</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <table id="polTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="polChkAll" onchange="togglePolAll(!this.checked)"></th><th>车牌号</th><th>保险公司</th><th>商业险</th><th>交强险</th><th>车船税</th><th>代理人</th><th>出单日期</th><th>到期日期</th><th>操作</th></tr></thead><tbody></tbody></table>
       <div id="polEmpty" style="text-align:center;color:#9ca3af;padding:30px;font-size:14px;display:none;">暂无数据</div>
     </div>
   </div>
@@ -157,7 +157,7 @@ tr.renewal-soon:hover { background:#dbeafe !important; }
         <button class="btn btn-sm btn-success" onclick="exportNoncar()">📥 导出</button>
         <button class="btn btn-sm btn-primary" onclick="openNoncarModal(null)">➕ 新增</button>
       </div>
-      <table id="noncarTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="noncarChkAll" onchange="toggleNoncarAll(this.checked)"></th><th>客户名称</th><th>险种</th><th>保险公司</th><th>保费</th><th>代理人</th><th>出单日期</th><th>到期日期</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <table id="noncarTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="noncarChkAll" onchange="toggleNcAll(!this.checked)"></th><th>客户名称</th><th>险种</th><th>保险公司</th><th>保费</th><th>代理人</th><th>出单日期</th><th>到期日期</th><th>操作</th></tr></thead><tbody></tbody></table>
       <div id="noncarEmpty" style="text-align:center;color:#9ca3af;padding:30px;font-size:14px;display:none;">暂无数据</div>
     </div>
   </div>
@@ -175,9 +175,9 @@ tr.renewal-soon:hover { background:#dbeafe !important; }
         <span style="display:inline-block;width:12px;height:12px;background:#0ea5e9;border-radius:50%;margin-right:4px;vertical-align:middle;"></span><span style="font-size:13px;vertical-align:middle;margin-right:16px;">30天内到期</span>
       </div>
       <h3 style="font-size:15px;margin-bottom:10px;">🚗 车险保单 <button class="btn btn-sm btn-danger" onclick="batchDelRenewalPol()" id="btnRPolDel" style="display:none;margin-left:10px;font-size:12px;">🗑 删除(<span id="rpolSelCnt">0</span>)</button></h3>
-      <table id="renewalPolTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="rpolChkAll" onchange="toggleRPolAll(this.checked)"></th><th>车牌号</th><th>保险公司</th><th>代理人</th><th>到期日期</th><th>剩余天数</th><th>状态</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <table id="renewalPolTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="rpolChkAll" onchange="toggleRPolAll(!this.checked)"></th><th>车牌号</th><th>保险公司</th><th>代理人</th><th>到期日期</th><th>剩余天数</th><th>状态</th><th>操作</th></tr></thead><tbody></tbody></table>
       <h3 style="font-size:15px;margin:20px 0 10px;">📄 非车险保单 <button class="btn btn-sm btn-danger" onclick="batchDelRenewalNoncar()" id="btnRncDel" style="display:none;margin-left:10px;font-size:12px;">🗑 删除(<span id="rncSelCnt">0</span>)</button></h3>
-      <table id="renewalNoncarTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="rncChkAll" onchange="toggleRncAll(this.checked)"></th><th>客户名称</th><th>险种</th><th>保险公司</th><th>代理人</th><th>到期日期</th><th>剩余天数</th><th>状态</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <table id="renewalNoncarTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="rncChkAll" onchange="toggleRncAll(!this.checked)"></th><th>客户名称</th><th>险种</th><th>保险公司</th><th>代理人</th><th>到期日期</th><th>剩余天数</th><th>状态</th><th>操作</th></tr></thead><tbody></tbody></table>
       <div id="renewalEmpty" style="text-align:center;color:#9ca3af;padding:30px;font-size:14px;display:none;">暂无即将到期的保单</div>
     </div>
   </div>
