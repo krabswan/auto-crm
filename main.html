@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>车险CRM</title>
+<title>蟹老板车管家</title>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -254,1238 +254,147 @@ tr.renewal-soon:hover { background:#dbeafe !important; }
 <div id="toast" class="toast"></div>
 
 <script>
-var DATA_KEY = 'crm_data_v1';
+// 云端数据层 V2 - 蟹老板车管家
+window._db = { customers:[], vehicles:[], policies:[], noncar:[] };
 
-// 数据操作
-function loadData() {
-  var s = localStorage.getItem(DATA_KEY);
-  var d = s ? JSON.parse(s) : { customers: [], vehicles: [], policies: [], noncar: [] };
-  // 防御性初始化：确保所有数组存在
-  if (!Array.isArray(d.customers)) d.customers = [];
-  if (!Array.isArray(d.vehicles)) d.vehicles = [];
-  if (!Array.isArray(d.policies)) d.policies = [];
-  if (!Array.isArray(d.noncar)) d.noncar = [];
-  return d;
+const SB_URL = 'https://yjnkbippailouqoqivtv.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqbmtiaXBwYWlsb3Vxb3FpdnR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjczNjcsImV4cCI6MjA5MDg0MzM2N30.QXYd5vK6bjD8Z7UmoA7JMb0AokHpZj9SggGPUd-DqDc';
+const SB_HDR = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
+const TBL = { customers:'customers', vehicles:'vehicles', policies:'car_policies', noncar:'noncar_policies' };
+const COL = {
+  customers:{ name:'name', phone:'phone', idCard:'id_card', addr:'address' },
+  vehicles:{ plate:'plate', type:'type', use:'use_type', ownerId:'customer_id', regDate:'reg_date' },
+  policies:{ vehicleId:'vehicle_id', company:'company', biz:'commercial_premium', force:'compulsory_premium', tax:'vehicle_tax', agent:'agent', start:'start_date', end:'end_date' },
+  noncar:{ custId:'customer_id', type:'type', company:'company', premium:'premium', agent:'agent', start:'start_date', end:'end_date' },
+};
+const REV = {};
+Object.keys(COL).forEach(function(t){REV[t]={};Object.keys(COL[t]).forEach(function(k){REV[t][COL[t][k]]=k;});});
+
+function toDb(t,rec){var m=COL[t]||{};var row={};Object.keys(rec).forEach(function(k){if(m[k])row[m[k]]=rec[k];else if(k==='id')row.id=rec.id;});return row;}
+function fromDb(t,row){var m=REV[t]||{};var rec={id:row.id};Object.keys(row).forEach(function(k){if(m[k])rec[m[k]]=row[k];else rec[k]=row[k];});return rec;}
+
+async function sbGet(t){
+  try{var r=await fetch(SB_URL+'/rest/v1/'+TBL[t]+'?select=*&order=created_at.asc',{headers:SB_HDR});if(!r.ok)return[];
+    var arr=await r.json();window._db[t]=Array.isArray(arr)?arr.map(function(x){return fromDb(t,x);}):[];return window._db[t];}catch(e){console.error('sbGet',t,e);return window._db[t];}
 }
-function saveData(d) {
-  localStorage.setItem(DATA_KEY, JSON.stringify(d));
+async function sbPost(t,rec){
+  try{var row=toDb(t,rec);if(row.id&&!rec._uuid)delete row.id;
+    var r=await fetch(SB_URL+'/rest/v1/'+TBL[t],{method:'POST',headers:SB_HDR,body:JSON.stringify(row)});return r.ok?await r.json():null;}catch(e){console.error('sbPost',t,e);return null;}
+}
+async function sbPatch(t,id,rec){
+  try{var r=await fetch(SB_URL+'/rest/v1/'+TBL[t]+'?id=eq.'+id,{method:'PATCH',headers:SB_HDR,body:JSON.stringify(toDb(t,rec))});return r.ok;}catch(e){console.error('sbPatch',t,e);return false;}
+}
+async function sbDel(t,id){
+  try{var r=await fetch(SB_URL+'/rest/v1/'+TBL[t]+'?id=eq.'+id,{method:'DELETE',headers:SB_HDR});return r.ok;}catch(e){console.error('sbDel',t,e);return false;}
 }
 
-// HTML转义防XSS
-function esc(s) {
-  if (s == null) return '';
-  s = String(s);
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
+function loadData(){return window._db;}
+function saveData(){}
 
-// 初始化
-function init() {
-  if (localStorage.getItem('crm_logged') !== '1') {
-    location.href = 'index.html';
-    return;
-  }
+async function cloudInit(){
+  document.getElementById('cloudStatus').textContent='● 连接中...';
+  document.getElementById('cloudStatus').style.color='#6b7280';
+  await Promise.all([sbGet('customers'),sbGet('vehicles'),sbGet('policies'),sbGet('noncar')]);
   refreshAll();
+  document.getElementById('cloudStatus').textContent='● 云端已连接';
+  document.getElementById('cloudStatus').style.color='#10b981';
 }
+function init(){if(localStorage.getItem('crm_logged')!=='1'){location.href='index.html';return;}cloudInit();}
 
-// 页面切换
-function showPage(id) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('page-' + id).classList.add('active');
-  event.target.classList.add('active');
-  if (id === 'dashboard') refreshStats();
-  if (id === 'noncar') renderNoncar();
-  if (id === 'renewal') renderRenewal();
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function showToast(msg,type){var t=document.getElementById('toast');t.textContent=msg;t.style.background=type==='err'?'#ef4444':'#1f2937';t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2500);}
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+function doLogout(){localStorage.removeItem('crm_logged');location.href='index.html';}
+function showPage(id){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
+  document.getElementById('page-'+id).classList.add('active');
+  if(event&&event.target)event.target.classList.add('active');
+  if(id==='dashboard')refreshStats();
+  if(id==='noncar')renderNoncar();
+  if(id==='renewal')renderRenewal();
 }
+function refreshAll(){refreshStats();renderCustomers();renderVehicles();renderPolicies();renderNoncar();}
 
-// 刷新所有
-function refreshAll() {
-  refreshStats();
-  renderCustomers();
-  renderVehicles();
-  renderPolicies();
-  renderNoncar();
-}
+function refreshStats(){try{var d=window._db;document.getElementById('stat-customers').textContent=d.customers.length;document.getElementById('stat-vehicles').textContent=d.vehicles.length;document.getElementById('stat-policies').textContent=d.policies.length;document.getElementById('stat-noncar').textContent=d.noncar.length;renderDashRenewal();}catch(e){console.error('refreshStats',e);}}
 
-// 统计
-function refreshStats() {
-  try {
-  var d = loadData();
-  document.getElementById('stat-customers').textContent = d.customers.length;
-  document.getElementById('stat-vehicles').textContent = d.vehicles.length;
-  document.getElementById('stat-policies').textContent = d.policies.length;
-  document.getElementById('stat-noncar').textContent = d.noncar.length;
-  renderDashRenewal();
-  } catch(e) { console.error('refreshStats error', e); }
-}
+// ========== Customers ==========
+var _custSel=[];
+function filterCustomers(kw){var d=window._db;var k=kw.trim().toLowerCase();var list=k?d.customers.filter(function(c){return(c.name||'').toLowerCase().indexOf(k)>=0||(c.phone||'').toLowerCase().indexOf(k)>=0||(c.idCard||'').toLowerCase().indexOf(k)>=0||(c.addr||'').toLowerCase().indexOf(k)>=0;}):d.customers;_custSel=[];renderCustRows(list,false);}
+function renderCustRows(list,showAll){var d=window._db;var tbody=document.querySelector('#custTable tbody');tbody.innerHTML='';if(!showAll){document.getElementById('custChkAll').checked=false;document.getElementById('btnCustDel').style.display='none';document.getElementById('custSelCnt').textContent='0';}if(!list.length){document.getElementById('custEmpty').style.display='block';return;}document.getElementById('custEmpty').style.display='none';list.forEach(function(c){var tr=document.createElement('tr');var sel=_custSel.indexOf(c.id)>=0?'checked':'';tr.innerHTML='<td><input type="checkbox" '+sel+' onchange="toggleCust(\''+c.id+'\',this.checked)"></td>'+'<td>'+esc(c.name)+'</td><td>'+esc(c.phone)+'</td><td>'+esc(c.idCard)+'</td><td>'+esc(c.addr)+'</td>'+'<td><button class="btn btn-sm btn-primary" onclick="openCustModal(\''+c.id+'\')">编辑</button> <button class="btn btn-sm btn-danger" onclick="delCust(\''+c.id+'\')">删除</button></td>';tbody.appendChild(tr);});if(showAll){document.getElementById('custChkAll').checked=_custSel.length===list.length&&list.length>0;document.getElementById('btnCustDel').style.display=_custSel.length?'':null;document.getElementById('custSelCnt').textContent=_custSel.length;}}
+function renderCustomers(){filterCustomers(document.getElementById('custSearch').value);}
+function toggleCustAll(){var cb=document.getElementById('custChkAll');cb.checked=!cb.checked;var checked=cb.checked;var d=window._db;var kw=document.getElementById('custSearch').value.trim().toLowerCase();var list=kw?d.customers.filter(function(c){return(c.name||'').toLowerCase().indexOf(kw)>=0||(c.phone||'').toLowerCase().indexOf(kw)>=0||(c.idCard||'').toLowerCase().indexOf(kw)>=0||(c.addr||'').toLowerCase().indexOf(kw)>=0;}):d.customers;_custSel=checked?list.map(function(c){return c.id;}):[];renderCustRows(list,true);}
+function toggleCust(id,checked){var idx=_custSel.indexOf(id);if(checked&&idx<0)_custSel.push(id);else if(!checked&&idx>=0)_custSel.splice(idx,1);var d=window._db;var kw=document.getElementById('custSearch').value.trim().toLowerCase();var list=kw?d.customers.filter(function(c){return(c.name||'').toLowerCase().indexOf(kw)>=0||(c.phone||'').toLowerCase().indexOf(kw)>=0||(c.idCard||'').toLowerCase().indexOf(kw)>=0||(c.addr||'').toLowerCase().indexOf(kw)>=0;}):d.customers;document.getElementById('btnCustDel').style.display=_custSel.length?'':null;document.getElementById('custSelCnt').textContent=_custSel.length;document.getElementById('custChkAll').checked=_custSel.length===list.length&&list.length>0;}
+async function batchDelCust(){if(!_custSel.length)return;if(!confirm('确定删除选中的 '+_custSel.length+' 个客户？'))return;await Promise.all(_custSel.slice().map(function(id){return sbDel('customers',id);}));window._db.customers=window._db.customers.filter(function(c){return _custSel.indexOf(c.id)<0;});_custSel=[];renderCustomers();refreshStats();showToast('删除成功');}
+function openCustModal(id){var d=window._db;var c=id?d.customers.find(function(x){return x.id===id;}):null;document.getElementById('custModalTitle').textContent=id?'编辑客户':'新增客户';document.getElementById('custId').value=id||'';document.getElementById('custName').value=c?esc(c.name||''):'';document.getElementById('custPhone').value=c?esc(c.phone||''):'';document.getElementById('custIdCard').value=c?esc(c.idCard||''):'';document.getElementById('custAddr').value=c?esc(c.addr||''):'';document.getElementById('custModal').classList.add('show');}
+async function saveCust(){var d=window._db;var id=document.getElementById('custId').value;var c={id:id||'c'+Date.now(),name:document.getElementById('custName').value.trim(),phone:document.getElementById('custPhone').value.trim(),idCard:document.getElementById('custIdCard').value.trim(),addr:document.getElementById('custAddr').value.trim()};if(!c.name){showToast('请输入客户名称','err');return;}if(id){var idx=d.customers.findIndex(function(x){return x.id===id;});if(idx>=0)d.customers[idx]=c;}else{d.customers.push(c);}if(id)await sbPatch('customers',id,c);else await sbPost('customers',c);closeModal('custModal');renderCustomers();refreshStats();showToast('保存成功');}
+async function delCust(id){if(!confirm('确定删除？'))return;var d=window._db;d.customers=d.customers.filter(function(x){return x.id!==id;});d.vehicles=d.vehicles.filter(function(v){return v.ownerId!==id;});await sbDel('customers',id);renderCustomers();renderVehicles();refreshStats();showToast('已删除');}
+function exportCustomers(){var d=window._db;var rows=[['客户名称','电话','证件号码','地址']];d.customers.forEach(function(c){rows.push([c.name,c.phone,c.idCard,c.addr]);});var wb=XLSX.utils.book_new();var ws=XLSX.utils.aoa_to_sheet(rows);XLSX.utils.book_append_sheet(wb,ws,'客户');XLSX.writeFile(wb,'客户_'+new Date().toLocaleDateString()+'.xlsx');showToast('导出成功');}
 
-// ========== 客户 ==========
-var _custSel = []; // 选中的客户ID
+// ========== Vehicles ==========
+var _vehSel=[];
+function filterVehicles(kw){var d=window._db;var k=kw.trim().toLowerCase();var list=k?d.vehicles.filter(function(v){var owner=d.customers.find(function(c){return c.id===v.ownerId;})||{};return(v.plate||'').toLowerCase().indexOf(k)>=0||(owner.name||'').toLowerCase().indexOf(k)>=0||(v.type||'').toLowerCase().indexOf(k)>=0||(v.use||'').toLowerCase().indexOf(k)>=0;}):d.vehicles;_vehSel=[];renderVehRows(list,false);}
+function renderVehRows(list,showAll){var d=window._db;var tbody=document.querySelector('#vehTable tbody');tbody.innerHTML='';if(!showAll){document.getElementById('vehChkAll').checked=false;document.getElementById('btnVehDel').style.display='none';document.getElementById('vehSelCnt').textContent='0';}if(!list.length){document.getElementById('vehEmpty').style.display='block';return;}document.getElementById('vehEmpty').style.display='none';list.forEach(function(v){var owner=d.customers.find(function(c){return c.id===v.ownerId;})||{};var tr=document.createElement('tr');var sel=_vehSel.indexOf(v.id)>=0?'checked':'';tr.innerHTML='<td><input type="checkbox" '+sel+' onchange="toggleVeh(\''+v.id+'\',this.checked)"></td>'+'<td>'+esc(v.plate)+'</td><td>'+esc(v.type)+'</td><td>'+esc(v.use)+'</td><td>'+esc(owner.name)+'</td><td>'+esc(v.regDate)+'</td>'+'<td><button class="btn btn-sm btn-primary" onclick="openVehModal(\''+v.id+'\')">编辑</button> <button class="btn btn-sm btn-danger" onclick="delVeh(\''+v.id+'\')">删除</button></td>';tbody.appendChild(tr);});if(showAll){document.getElementById('vehChkAll').checked=_vehSel.length===list.length&&list.length>0;document.getElementById('btnVehDel').style.display=_vehSel.length?'':null;document.getElementById('vehSelCnt').textContent=_vehSel.length;}}
+function renderVehicles(){filterVehicles(document.getElementById('vehSearch').value);}
+function toggleVehAll(){var cb=document.getElementById('vehChkAll');cb.checked=!cb.checked;var checked=cb.checked;var d=window._db;var kw=document.getElementById('vehSearch').value.trim().toLowerCase();var list=kw?d.vehicles.filter(function(v){var owner=d.customers.find(function(c){return c.id===v.ownerId;})||{};return(v.plate||'').toLowerCase().indexOf(kw)>=0||(owner.name||'').toLowerCase().indexOf(kw)>=0||(v.type||'').toLowerCase().indexOf(kw)>=0||(v.use||'').toLowerCase().indexOf(kw)>=0;}):d.vehicles;_vehSel=checked?list.map(function(v){return v.id;}):[];renderVehRows(list,true);}
+function toggleVeh(id,checked){var idx=_vehSel.indexOf(id);if(checked&&idx<0)_vehSel.push(id);else if(!checked&&idx>=0)_vehSel.splice(idx,1);document.getElementById('btnVehDel').style.display=_vehSel.length?'':null;document.getElementById('vehSelCnt').textContent=_vehSel.length;var d=window._db;var kw=document.getElementById('vehSearch').value.trim().toLowerCase();var list=kw?d.vehicles.filter(function(v){var owner=d.customers.find(function(c){return c.id===v.ownerId;})||{};return(v.plate||'').toLowerCase().indexOf(kw)>=0||(owner.name||'').toLowerCase().indexOf(kw)>=0||(v.type||'').toLowerCase().indexOf(kw)>=0||(v.use||'').toLowerCase().indexOf(kw)>=0;}):d.vehicles;document.getElementById('vehChkAll').checked=_vehSel.length===list.length&&list.length>0;}
+async function batchDelVeh(){if(!_vehSel.length)return;if(!confirm('确定删除选中的 '+_vehSel.length+' 辆车？'))return;await Promise.all(_vehSel.slice().map(function(id){return sbDel('vehicles',id);}));window._db.vehicles=window._db.vehicles.filter(function(v){return _vehSel.indexOf(v.id)<0;});_vehSel=[];renderVehicles();refreshStats();showToast('删除成功');}
+function openVehModal(id){var d=window._db;var v=id?d.vehicles.find(function(x){return x.id===id;}):null;document.getElementById('vehModalTitle').textContent=id?'编辑车辆':'新增车辆';document.getElementById('vehId').value=id||'';document.getElementById('vehPlate').value=v?esc(v.plate||''):'';document.getElementById('vehType').value=v?esc(v.type||''):'';document.getElementById('vehUse').value=v?esc(v.use||''):'';document.getElementById('vehRegDate').value=v?esc(v.regDate||''):'';var dl=document.getElementById('vehOwnerList');dl.innerHTML='';d.customers.forEach(function(c){dl.innerHTML+='<option value="'+c.name+'">';});if(v&&v.ownerId){var cust=d.customers.find(function(c){return c.id===v.ownerId;});document.getElementById('vehOwner').value=cust?cust.name:'';}else{document.getElementById('vehOwner').value='';}document.getElementById('vehModal').classList.add('show');}
+async function saveVeh(){var d=window._db;var id=document.getElementById('vehId').value;var ownerName=document.getElementById('vehOwner').value.trim();var ownerId='';if(ownerName){var cust=d.customers.find(function(c){return c.name===ownerName;});if(cust)ownerId=cust.id;}var v={id:id||'v'+Date.now(),plate:document.getElementById('vehPlate').value.trim(),type:document.getElementById('vehType').value,use:document.getElementById('vehUse').value,ownerId:ownerId,regDate:document.getElementById('vehRegDate').value};if(!v.plate){showToast('请输入车牌号','err');return;}if(id){var idx=d.vehicles.findIndex(function(x){return x.id===id;});if(idx>=0)d.vehicles[idx]=v;}else{d.vehicles.push(v);}if(id)await sbPatch('vehicles',id,v);else await sbPost('vehicles',v);closeModal('vehModal');renderVehicles();refreshStats();showToast('保存成功');}
+async function delVeh(id){if(!confirm('确定删除？'))return;var d=window._db;d.vehicles=d.vehicles.filter(function(x){return x.id!==id;});await sbDel('vehicles',id);renderVehicles();refreshStats();showToast('已删除');}
+function exportVehicles(){var d=window._db;var rows=[['车牌号','车辆种类','使用性质','车主','初登日期']];d.vehicles.forEach(function(v){var owner=d.customers.find(function(c){return c.id===v.ownerId;})||{};rows.push([v.plate,v.type,v.use,owner.name,v.regDate]);});var wb=XLSX.utils.book_new();var ws=XLSX.utils.aoa_to_sheet(rows);XLSX.utils.book_append_sheet(wb,ws,'车辆');XLSX.writeFile(wb,'车辆_'+new Date().toLocaleDateString()+'.xlsx');showToast('导出成功');}
 
-function filterCustomers(kw) {
-  var d = loadData();
-  var k = kw.trim().toLowerCase();
-  var list = k ? d.customers.filter(function(c) {
-    return (c.name||'').toLowerCase().includes(k) ||
-           (c.phone||'').toLowerCase().includes(k) ||
-           (c.idCard||'').toLowerCase().includes(k) ||
-           (c.addr||'').toLowerCase().includes(k);
-  }) : d.customers;
-  _custSel = [];
-  renderCustRows(list, false);
-}
+// ========== Policies ==========
+var _polSel=[];
+function filterPolicies(kw){var d=window._db;var k=kw.trim().toLowerCase();var list=k?d.policies.filter(function(p){var veh=d.vehicles.find(function(v){return v.id===p.vehicleId;})||{};return(veh.plate||'').toLowerCase().indexOf(k)>=0||(p.company||'').toLowerCase().indexOf(k)>=0||(p.agent||'').toLowerCase().indexOf(k)>=0;}):d.policies;_polSel=[];renderPolRows(list,false);}
+function renderPolRows(list,showAll){var d=window._db;var tbody=document.querySelector('#polTable tbody');tbody.innerHTML='';if(!showAll){document.getElementById('polChkAll').checked=false;document.getElementById('btnPolDel').style.display='none';document.getElementById('polSelCnt').textContent='0';}if(!list.length){document.getElementById('polEmpty').style.display='block';return;}document.getElementById('polEmpty').style.display='none';list.forEach(function(p){var veh=d.vehicles.find(function(v){return v.id===p.vehicleId;})||{};var tr=document.createElement('tr');var sel=_polSel.indexOf(p.id)>=0?'checked':'';tr.innerHTML='<td><input type="checkbox" '+sel+' onchange="togglePol(\''+p.id+'\',this.checked)"></td>'+'<td>'+esc(veh.plate)+'</td><td>'+esc(p.company)+'</td><td>'+esc(p.biz)+'</td><td>'+esc(p.force)+'</td><td>'+esc(p.tax)+'</td><td>'+esc(p.agent)+'</td><td>'+esc(p.start)+'</td><td>'+esc(p.end)+'</td>'+'<td><button class="btn btn-sm btn-primary" onclick="openPolModal(\''+p.id+'\')">编辑</button> <button class="btn btn-sm btn-danger" onclick="delPol(\''+p.id+'\')">删除</button></td>';tbody.appendChild(tr);});if(showAll){document.getElementById('polChkAll').checked=_polSel.length===list.length&&list.length>0;document.getElementById('btnPolDel').style.display=_polSel.length?'':null;document.getElementById('polSelCnt').textContent=_polSel.length;}}
+function renderPolicies(){filterPolicies(document.getElementById('polSearch').value);}
+function togglePolAll(){var cb=document.getElementById('polChkAll');cb.checked=!cb.checked;var checked=cb.checked;var d=window._db;var kw=document.getElementById('polSearch').value.trim().toLowerCase();var list=kw?d.policies.filter(function(p){var veh=d.vehicles.find(function(v){return v.id===p.vehicleId;})||{};return(veh.plate||'').toLowerCase().indexOf(kw)>=0||(p.company||'').toLowerCase().indexOf(kw)>=0||(p.agent||'').toLowerCase().indexOf(kw)>=0;}):d.policies;_polSel=checked?list.map(function(p){return p.id;}):[];renderPolRows(list,true);}
+function togglePol(id,checked){var idx=_polSel.indexOf(id);if(checked&&idx<0)_polSel.push(id);else if(!checked&&idx>=0)_polSel.splice(idx,1);document.getElementById('btnPolDel').style.display=_polSel.length?'':null;document.getElementById('polSelCnt').textContent=_polSel.length;var d=window._db;var kw=document.getElementById('polSearch').value.trim().toLowerCase();var list=kw?d.policies.filter(function(p){var veh=d.vehicles.find(function(v){return v.id===p.vehicleId;})||{};return(veh.plate||'').toLowerCase().indexOf(kw)>=0||(p.company||'').toLowerCase().indexOf(kw)>=0||(p.agent||'').toLowerCase().indexOf(kw)>=0;}):d.policies;document.getElementById('polChkAll').checked=_polSel.length===list.length&&list.length>0;}
+async function batchDelPol(){if(!_polSel.length)return;if(!confirm('确定删除选中的 '+_polSel.length+' 个保单？'))return;await Promise.all(_polSel.slice().map(function(id){return sbDel('policies',id);}));window._db.policies=window._db.policies.filter(function(p){return _polSel.indexOf(p.id)<0;});_polSel=[];renderPolicies();refreshStats();showToast('删除成功');}
+function openPolModal(id){var d=window._db;var p=id?d.policies.find(function(x){return x.id===id;}):null;document.getElementById('polModalTitle').textContent=id?'编辑保单':'新增保单';document.getElementById('polId').value=id||'';document.getElementById('polCompany').value=p?esc(p.company||''):'人保';document.getElementById('polBiz').value=p?esc(p.biz||''):'';document.getElementById('polForce').value=p?esc(p.force||''):'';document.getElementById('polTax').value=p?esc(p.tax||''):'';document.getElementById('polAgent').value=p?esc(p.agent||''):'';document.getElementById('polStart').value=p?esc(p.start||''):'';document.getElementById('polEnd').value=p?esc(p.end||''):'';var dl=document.getElementById('polVehicleList');dl.innerHTML='';d.vehicles.forEach(function(v){dl.innerHTML+='<option value="'+v.plate+'">';});if(p&&p.vehicleId){var veh=d.vehicles.find(function(v){return v.id===p.vehicleId;});document.getElementById('polVehicle').value=veh?veh.plate:'';}else{document.getElementById('polVehicle').value='';}document.getElementById('polModal').classList.add('show');}
+async function savePol(){var d=window._db;var id=document.getElementById('polId').value;var plate=document.getElementById('polVehicle').value.trim();var vehicleId='';if(plate){var veh=d.vehicles.find(function(v){return v.plate===plate;});if(veh)vehicleId=veh.id;}var p={id:id||'p'+Date.now(),vehicleId:vehicleId,company:document.getElementById('polCompany').value,biz:document.getElementById('polBiz').value,force:document.getElementById('polForce').value,tax:document.getElementById('polTax').value,agent:document.getElementById('polAgent').value.trim(),start:document.getElementById('polStart').value,end:document.getElementById('polEnd').value};if(!p.vehicleId){showToast('请选择车辆','err');return;}if(id){var idx=d.policies.findIndex(function(x){return x.id===id;});if(idx>=0)d.policies[idx]=p;}else{d.policies.push(p);}if(id)await sbPatch('policies',id,p);else await sbPost('policies',p);closeModal('polModal');renderPolicies();refreshStats();showToast('保存成功');}
+async function delPol(id){if(!confirm('确定删除？'))return;var d=window._db;d.policies=d.policies.filter(function(x){return x.id!==id;});await sbDel('policies',id);renderPolicies();refreshStats();showToast('已删除');}
+function exportPolicies(){var d=window._db;var rows=[['车牌号','保险公司','商业险','交强险','车船税','代理人','出单日期','到期日期']];d.policies.forEach(function(p){var veh=d.vehicles.find(function(v){return v.id===p.vehicleId;})||{};rows.push([veh.plate,p.company,p.biz,p.force,p.tax,p.agent,p.start,p.end]);});var wb=XLSX.utils.book_new();var ws=XLSX.utils.aoa_to_sheet(rows);XLSX.utils.book_append_sheet(wb,ws,'保单');XLSX.writeFile(wb,'保单_'+new Date().toLocaleDateString()+'.xlsx');showToast('导出成功');}
 
-function renderCustRows(list, showAll) {
-  var tbody = document.querySelector('#custTable tbody');
-  tbody.innerHTML = '';
-  if (!showAll) {
-    document.getElementById('custChkAll').checked = false;
-    document.getElementById('btnCustDel').style.display = 'none';
-    document.getElementById('custSelCnt').textContent = '0';
-  }
-  if (!list.length) {
-    document.getElementById('custEmpty').style.display = 'block';
-    return;
-  }
-  document.getElementById('custEmpty').style.display = 'none';
-  list.forEach(function(c) {
-    var tr = document.createElement('tr');
-    var sel = _custSel.indexOf(c.id) >= 0 ? 'checked' : '';
-    tr.innerHTML = '<td><input type="checkbox" ' + sel + ' onchange="toggleCust(\'' + c.id + '\',this.checked)"></td>' +
-      '<td>' + esc(c.name) + '</td><td>' + esc(c.phone) + '</td><td>' + esc(c.idCard) + '</td><td>' + esc(c.addr) + '</td>' +
-      '<td><button class="btn btn-sm btn-primary" onclick="openCustModal(\'' + c.id + '\')">编辑</button> <button class="btn btn-sm btn-danger" onclick="delCust(\'' + c.id + '\')">删除</button></td>';
-    tbody.appendChild(tr);
-  });
-  if (showAll) {
-    document.getElementById('custChkAll').checked = _custSel.length === list.length && list.length > 0;
-    document.getElementById('btnCustDel').style.display = _custSel.length ? '' : 'none';
-    document.getElementById('custSelCnt').textContent = _custSel.length;
-  }
-}
+// ========== Noncar ==========
+var _ncSel=[];
+function filterNoncar(kw){var d=window._db;var k=kw.trim().toLowerCase();var list=k?d.noncar.filter(function(n){var cust=d.customers.find(function(c){return c.id===n.custId;})||{};return(cust.name||'').toLowerCase().indexOf(k)>=0||(n.type||'').toLowerCase().indexOf(k)>=0||(n.company||'').toLowerCase().indexOf(k)>=0||(n.agent||'').toLowerCase().indexOf(k)>=0;}):d.noncar;_ncSel=[];renderNcRows(list,false);}
+function renderNcRows(list,showAll){var d=window._db;var tbody=document.querySelector('#noncarTable tbody');tbody.innerHTML='';if(!showAll){document.getElementById('noncarChkAll').checked=false;document.getElementById('btnNoncarDel').style.display='none';document.getElementById('noncarSelCnt').textContent='0';}if(!list.length){document.getElementById('noncarEmpty').style.display='block';return;}document.getElementById('noncarEmpty').style.display='none';list.forEach(function(n){var cust=d.customers.find(function(c){return c.id===n.custId;})||{};var tr=document.createElement('tr');var sel=_ncSel.indexOf(n.id)>=0?'checked':'';tr.innerHTML='<td><input type="checkbox" '+sel+' onchange="toggleNc(\''+n.id+'\',this.checked)"></td>'+'<td>'+esc(cust.name)+'</td><td>'+esc(n.type)+'</td><td>'+esc(n.company)+'</td><td>'+esc(n.premium)+'</td><td>'+esc(n.agent)+'</td><td>'+esc(n.start)+'</td><td>'+esc(n.end)+'</td>'+'<td><button class="btn btn-sm btn-primary" onclick="openNoncarModal(\''+n.id+'\')">编辑</button> <button class="btn btn-sm btn-danger" onclick="delNoncar(\''+n.id+'\')">删除</button></td>';tbody.appendChild(tr);});if(showAll){document.getElementById('noncarChkAll').checked=_ncSel.length===list.length&&list.length>0;document.getElementById('btnNoncarDel').style.display=_ncSel.length?'':null;document.getElementById('noncarSelCnt').textContent=_ncSel.length;}}
+function renderNoncar(){filterNoncar(document.getElementById('noncarSearch').value);}
+function toggleNcAll(){var cb=document.getElementById('noncarChkAll');cb.checked=!cb.checked;var checked=cb.checked;var d=window._db;var kw=document.getElementById('noncarSearch').value.trim().toLowerCase();var list=kw?d.noncar.filter(function(n){var cust=d.customers.find(function(c){return c.id===n.custId;})||{};return(cust.name||'').toLowerCase().indexOf(kw)>=0||(n.type||'').toLowerCase().indexOf(kw)>=0||(n.company||'').toLowerCase().indexOf(kw)>=0||(n.agent||'').toLowerCase().indexOf(kw)>=0;}):d.noncar;_ncSel=checked?list.map(function(n){return n.id;}):[];renderNcRows(list,true);}
+function toggleNc(id,checked){var idx=_ncSel.indexOf(id);if(checked&&idx<0)_ncSel.push(id);else if(!checked&&idx>=0)_ncSel.splice(idx,1);document.getElementById('btnNoncarDel').style.display=_ncSel.length?'':null;document.getElementById('noncarSelCnt').textContent=_ncSel.length;var d=window._db;var kw=document.getElementById('noncarSearch').value.trim().toLowerCase();var list=kw?d.noncar.filter(function(n){var cust=d.customers.find(function(c){return c.id===n.custId;})||{};return(cust.name||'').toLowerCase().indexOf(kw)>=0||(n.type||'').toLowerCase().indexOf(kw)>=0||(n.company||'').toLowerCase().indexOf(kw)>=0||(n.agent||'').toLowerCase().indexOf(kw)>=0;}):d.noncar;document.getElementById('noncarChkAll').checked=_ncSel.length===list.length&&list.length>0;}
+async function batchDelNoncar(){if(!_ncSel.length)return;if(!confirm('确定删除选中的 '+_ncSel.length+' 个非车险保单？'))return;await Promise.all(_ncSel.slice().map(function(id){return sbDel('noncar',id);}));window._db.noncar=window._db.noncar.filter(function(n){return _ncSel.indexOf(n.id)<0;});_ncSel=[];renderNoncar();refreshStats();showToast('删除成功');}
+function openNoncarModal(id){var d=window._db;var n=id?d.noncar.find(function(x){return x.id===id;}):null;document.getElementById('noncarModalTitle').textContent=id?'编辑非车险保单':'新增非车险保单';document.getElementById('noncarId').value=id||'';var dl=document.getElementById('noncarCustList');dl.innerHTML='';d.customers.forEach(function(c){dl.innerHTML+='<option value="'+c.name+'">';});if(n&&n.custId){var cust=d.customers.find(function(c){return c.id===n.custId;});document.getElementById('noncarCust').value=cust?cust.name:'';}else{document.getElementById('noncarCust').value='';}document.getElementById('noncarType').value=n?esc(n.type||''):'';document.getElementById('noncarCompany').value=n?esc(n.company||''):'人保';document.getElementById('noncarPremium').value=n?esc(n.premium||''):'';document.getElementById('noncarAgent').value=n?esc(n.agent||''):'';document.getElementById('noncarStart').value=n?esc(n.start||''):'';document.getElementById('noncarEnd').value=n?esc(n.end||''):'';document.getElementById('noncarModal').classList.add('show');}
+async function saveNoncar(){var d=window._db;var id=document.getElementById('noncarId').value;var custName=document.getElementById('noncarCust').value.trim();var custId='';if(custName){var cust=d.customers.find(function(c){return c.name===custName;});if(cust)custId=cust.id;}var n={id:id||'n'+Date.now(),custId:custId,type:document.getElementById('noncarType').value,company:document.getElementById('noncarCompany').value,premium:parseFloat(document.getElementById('noncarPremium').value)||0,agent:document.getElementById('noncarAgent').value.trim(),start:document.getElementById('noncarStart').value,end:document.getElementById('noncarEnd').value};if(id){var idx=d.noncar.findIndex(function(x){return x.id===id;});if(idx>=0)d.noncar[idx]=n;}else{d.noncar.push(n);}if(id)await sbPatch('noncar',id,n);else await sbPost('noncar',n);closeModal('noncarModal');renderNoncar();refreshStats();showToast('保存成功');}
+async function delNoncar(id){if(!confirm('确定删除？'))return;var d=window._db;d.noncar=d.noncar.filter(function(x){return x.id!==id;});await sbDel('noncar',id);renderNoncar();refreshStats();showToast('已删除');}
+function exportNoncar(){var d=window._db;var rows=[['客户名称','险种','保险公司','保费','代理人','出单日期','到期日期']];d.noncar.forEach(function(n){var cust=d.customers.find(function(c){return c.id===n.custId;})||{};rows.push([cust.name,n.type,n.company,n.premium,n.agent,n.start,n.end]);});var wb=XLSX.utils.book_new();var ws=XLSX.utils.aoa_to_sheet(rows);XLSX.utils.book_append_sheet(wb,ws,'非车险');XLSX.writeFile(wb,'非车险保单_'+new Date().toLocaleDateString()+'.xlsx');showToast('导出成功');}
 
-function renderCustomers() {
-  filterCustomers(document.getElementById('custSearch').value);
-}
+// ========== Renewal ==========
+function getDaysLeft(end){if(!end)return null;return Math.ceil((new Date(end)-new Date())/86400000);}
+function getRenewalStatus(days){if(days==null)return{label:'未知',cls:''};if(days<0)return{label:'已过期',cls:'#ef4444'};if(days<=7)return{label:'7天内',cls:'#f59e0b'};if(days<=30)return{label:'30天内',cls:'#0ea5e9'};return{label:'正常',cls:''};}
+function filterRenewal(kw){var d=window._db;var polR=[],ncR=[];d.policies.forEach(function(p){var days=getDaysLeft(p.end);if(days!==null&&days<=30){var veh=d.vehicles.find(function(v){return v.id===p.vehicleId;})||{};var st=getRenewalStatus(days);if(!kw||(veh.plate||'').toLowerCase().indexOf(kw)>=0||(p.company||'').toLowerCase().indexOf(kw)>=0||(p.agent||'').toLowerCase().indexOf(kw)>=0)polR.push({p:p,veh:veh,days:days,st:st});}});d.noncar.forEach(function(n){var days=getDaysLeft(n.end);if(days!==null&&days<=30){var cust=d.customers.find(function(c){return c.id===n.custId;})||{};var st=getRenewalStatus(days);if(!kw||(cust.name||'').toLowerCase().indexOf(kw)>=0||(n.type||'').toLowerCase().indexOf(kw)>=0||(n.company||'').toLowerCase().indexOf(kw)>=0||(n.agent||'').toLowerCase().indexOf(kw)>=0)ncR.push({n:n,cust:cust,days:days,st:st});}});polR.sort(function(a,b){return a.days-b.days;});ncR.sort(function(a,b){return a.days-b.days;});renderRenewalRows(polR,ncR,false);}
+function renderRenewalRows(polR,ncR,showAll){if(!showAll){_rpolSel=[];_rncSel=[];document.getElementById('rpolChkAll').checked=false;document.getElementById('rncChkAll').checked=false;document.getElementById('rpolSelCnt').textContent='0';document.getElementById('rncSelCnt').textContent='0';}var pC=polR.length,nC=ncR.length;var empty=pC===0&&nC===0;document.getElementById('renewalEmpty').style.display=empty?'block':'none';if(empty)return;var pTbody=document.querySelector('#renewalPolTable tbody');var nTbody=document.querySelector('#renewalNoncarTable tbody');pTbody.innerHTML='';nTbody.innerHTML='';if(pC){document.getElementById('renewalPolCard').style.display='';polR.forEach(function(item){var p=item.p,veh=item.veh,st=item.st;var sel=(_rpolSel||[]).indexOf(p.id)>=0?'checked':'';var tr=document.createElement('tr');tr.innerHTML='<td><input type="checkbox" '+sel+' onchange="toggleRPol(\''+p.id+'\',this.checked)"></td><td>🚗</td><td>'+esc(veh.plate)+'</td><td>'+esc(p.company)+'</td><td style="color:'+st.cls+';font-weight:600;">'+item.days+'天</td><td style="color:'+st.cls+';">'+st.label+'</td><td><button class="btn btn-sm btn-primary" onclick="openPolModal(\''+p.id+'\')">编辑</button></td>';pTbody.appendChild(tr);});if(showAll){document.getElementById('rpolChkAll').checked=(_rpolSel||[]).length===pC&&pC>0;document.getElementById('rpolSelCnt').textContent=(_rpolSel||[]).length;}}else{document.getElementById('renewalPolCard').style.display='none';}if(nC){document.getElementById('renewalNoncarCard').style.display='';ncR.forEach(function(item){var n=item.n,cust=item.cust,st=item.st;var sel=(_rncSel||[]).indexOf(n.id)>=0?'checked':'';var tr=document.createElement('tr');tr.innerHTML='<td><input type="checkbox" '+sel+' onchange="toggleRnc(\''+n.id+'\',this.checked)"></td><td>📄</td><td>'+esc(cust.name)+'</td><td>'+esc(n.type)+'</td><td>'+esc(n.company)+'</td><td style="color:'+st.cls+';font-weight:600;">'+item.days+'天</td><td style="color:'+st.cls+';">'+st.label+'</td><td><button class="btn btn-sm btn-primary" onclick="openNoncarModal(\''+n.id+'\')">编辑</button></td>';nTbody.appendChild(tr);});if(showAll){document.getElementById('rncChkAll').checked=(_rncSel||[]).length===nC&&nC>0;document.getElementById('rncSelCnt').textContent=(_rncSel||[]).length;}}else{document.getElementById('renewalNoncarCard').style.display='none';}}
+function renderRenewal(){filterRenewal(document.getElementById('renewalSearch').value);}
+var _rpolSel=[],_rncSel=[];
+function toggleRPolAll(){var cb=document.getElementById('rpolChkAll');cb.checked=!cb.checked;var checked=cb.checked;var d=window._db;var kw=document.getElementById('renewalSearch').value.trim().toLowerCase();var polR=[];d.policies.forEach(function(p){var days=getDaysLeft(p.end);if(days!==null&&days<=30){var veh=d.vehicles.find(function(v){return v.id===p.vehicleId;})||{};if(!kw||(veh.plate||'').toLowerCase().indexOf(kw)>=0||(p.company||'').toLowerCase().indexOf(kw)>=0||(p.agent||'').toLowerCase().indexOf(kw)>=0)polR.push({p:p,veh:veh,days:days});}});polR.sort(function(a,b){return a.days-b.days;});_rpolSel=checked?polR.map(function(i){return i.p.id;}):[];renderRenewalRows(polR,[],true);}
+function toggleRPol(id,checked){var idx=_rpolSel.indexOf(id);if(checked&&idx<0)_rpolSel.push(id);else if(!checked&&idx>=0)_rpolSel.splice(idx,1);document.getElementById('rpolSelCnt').textContent=_rpolSel.length;document.getElementById('rpolChkAll').checked=false;}
+async function batchDelRenewalPol(){if(!_rpolSel.length)return;if(!confirm('确定删除选中的 '+_rpolSel.length+' 个保单？'))return;await Promise.all(_rpolSel.slice().map(function(id){return sbDel('policies',id);}));window._db.policies=window._db.policies.filter(function(p){return _rpolSel.indexOf(p.id)<0;});_rpolSel=[];renderRenewal();refreshStats();showToast('删除成功');}
+function toggleRncAll(){var cb=document.getElementById('rncChkAll');cb.checked=!cb.checked;var checked=cb.checked;var d=window._db;var kw=document.getElementById('renewalSearch').value.trim().toLowerCase();var ncR=[];d.noncar.forEach(function(n){var days=getDaysLeft(n.end);if(days!==null&&days<=30){var cust=d.customers.find(function(c){return c.id===n.custId;})||{};if(!kw||(cust.name||'').toLowerCase().indexOf(kw)>=0||(n.type||'').toLowerCase().indexOf(kw)>=0||(n.company||'').toLowerCase().indexOf(kw)>=0||(n.agent||'').toLowerCase().indexOf(kw)>=0)ncR.push({n:n,cust:cust,days:days});}});ncR.sort(function(a,b){return a.days-b.days;});_rncSel=checked?ncR.map(function(i){return i.n.id;}):[];renderRenewalRows([],ncR,true);}
+function toggleRnc(id,checked){var idx=_rncSel.indexOf(id);if(checked&&idx<0)_rncSel.push(id);else if(!checked&&idx>=0)_rncSel.splice(idx,1);document.getElementById('rncSelCnt').textContent=_rncSel.length;document.getElementById('rncChkAll').checked=false;}
+async function batchDelRenewalNoncar(){if(!_rncSel.length)return;if(!confirm('确定删除选中的 '+_rncSel.length+' 个非车险保单？'))return;await Promise.all(_rncSel.slice().map(function(id){return sbDel('noncar',id);}));window._db.noncar=window._db.noncar.filter(function(n){return _rncSel.indexOf(n.id)<0;});_rncSel=[];renderRenewal();refreshStats();showToast('删除成功');}
+function renderDashRenewal(){var d=window._db;var items=[];d.policies.forEach(function(p){var days=getDaysLeft(p.end);if(days!==null&&days<=30){var veh=d.vehicles.find(function(v){return v.id===p.vehicleId;})||{};items.push({name:veh.plate||'',type:'🚗',company:p.company||'',days:days,st:getRenewalStatus(days)});}});d.noncar.forEach(function(n){var days=getDaysLeft(n.end);if(days!==null&&days<=30){var cust=d.customers.find(function(c){return c.id===n.custId;})||{};items.push({name:cust.name||'',type:'📄',company:n.type||'',days:days,st:getRenewalStatus(days)});}});items.sort(function(a,b){return a.days-b.days;});var card=document.getElementById('dashRenewalCard');if(!items.length){card.style.display='none';return;}card.style.display='';var count=items.length;var html='<div class="card-header"><h2>🔔 即将到期保单（30天内）</h2></div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;">';items.slice(0,9).forEach(function(item){html+='<div style="background:#fef2f2;border-left:3px solid '+item.st.cls+';padding:10px 14px;border-radius:6px;">';html+='<div style="font-weight:600;font-size:14px;">'+esc(item.name)+'</div>';html+='<div style="font-size:12px;color:#6b7280;">'+item.type+' · '+esc(item.company)+'</div>';html+='<div style="font-size:13px;margin-top:4px;color:'+item.st.cls+';font-weight:600;">剩余 <strong>'+item.days+'</strong> 天 · '+item.st.label+'</div></div>';});html+='</div>';if(items.length>9)html+='<div style="text-align:center;margin-top:10px;"><button class="btn btn-sm btn-primary" onclick="showPage(\'renewal\')">查看全部 '+count+' 条提醒 →</button></div>';document.getElementById('dashRenewalContent').innerHTML=html;}
 
-function toggleCustAll() {
-  var cb = document.getElementById('custChkAll');
-  cb.checked = !cb.checked;
-  var checked = cb.checked;
-  var d = loadData();
-  var kw = document.getElementById('custSearch').value.trim().toLowerCase();
-  var list = kw ? d.customers.filter(function(c) {
-    return (c.name||'').toLowerCase().includes(kw) ||
-           (c.phone||'').toLowerCase().includes(kw) ||
-           (c.idCard||'').toLowerCase().includes(kw) ||
-           (c.addr||'').toLowerCase().includes(kw);
-  }) : d.customers;
-  _custSel = checked ? list.map(function(c){ return c.id; }) : [];
-  renderCustRows(list, true);
-}
+// ========== Import ==========
+function autoDetectCols(headers){var map={};headers.forEach(function(h){var s=(h||'').toLowerCase().trim();if(s.indexOf('车牌')>=0||s==='plate')map[h]='plate';else if(s.indexOf('车主')>=0||s.indexOf('客户名称')>=0||s==='name'||s==='customer')map[h]='custName';else if(s.indexOf('电话')>=0||s==='phone')map[h]='phone';else if(s.indexOf('证件')>=0||s==='idcard'||s==='id_card')map[h]='idCard';else if(s.indexOf('地址')>=0||s==='address')map[h]='addr';else if(s.indexOf('种类')>=0||s==='type'||s==='cartype')map[h]='type';else if(s.indexOf('性质')>=0||s==='use'||s==='use_type')map[h]='use';else if(s.indexOf('日期')>=0||s==='date'||s==='regdate')map[h]='regDate';else if(s.indexOf('公司')>=0||s==='company')map[h]='company';else if(s.indexOf('商业')>=0||s==='biz'||s==='commercial')map[h]='biz';else if(s.indexOf('交强')>=0||s==='force'||s==='compulsory')map[h]='force';else if(s.indexOf('车船')>=0||s==='tax'||s==='vehicle_tax')map[h]='tax';else if(s.indexOf('代理人')>=0||s==='agent')map[h]='agent';else if(s.indexOf('出单')>=0||s.indexOf('开始')>=0||s==='start'||s==='start_date')map[h]='start';else if(s.indexOf('到期')>=0||s.indexOf('结束')>=0||s==='end'||s==='end_date')map[h]='end';else if(s.indexOf('险种')>=0||s==='policy_type')map[h]='type';else if(s.indexOf('保费')>=0||s==='premium')map[h]='premium';});return map;}
+function showImportPreview(type){var file=document.getElementById(type+'File').files[0];if(!file)return;var reader=new FileReader();reader.onload=function(e){try{var data=new Uint8Array(e.target.result);var wb=XLSX.read(data,{type:'array'});var ws=wb.Sheets[wb.SheetNames[0]];var raw=XLSX.utils.sheet_to_json(ws,{header:1});if(!raw||raw.length<2){showToast('文件无数据','err');return;}var headers=raw[0].map(function(h){return String(h||'');});var colMap=autoDetectCols(headers);var rows=raw.slice(1,11).map(function(row){var rec={};headers.forEach(function(h,i){if(colMap[h])rec[colMap[h]]=row[i];});return rec;});window._importData={type:type,colMap:colMap,allRows:raw.slice(1)};var titles={cust:'客户导入预览',veh:'车辆导入预览',pol:'车险保单导入预览',nc:'非车险保单导入预览'};document.getElementById('importModalTitle').textContent=titles[type]||'导入预览';var tbl=document.getElementById('importTable');var h='<thead><tr>';Object.keys(colMap).forEach(function(k){h+='<th>'+k+'</th>';});h+='</tr></thead><tbody>';rows.forEach(function(r){h+='<tr>';Object.keys(colMap).forEach(function(k){h+='<td>'+esc(r[colMap[k]]||'')+'</td>';});h+='</tr>';});h+='</tbody>';tbl.innerHTML=h;document.getElementById('importModal').classList.add('show');document.getElementById('impRowCount').textContent=(raw.length-1)+' 条';}catch(err){showToast('解析失败：'+err.message,'err');}};reader.readAsArrayBuffer(file);}
+async function doImport(){var d=window._db,imp=window._importData;if(!imp)return;closeModal('importModal');showToast('正在导入...');var allRows=imp.allRows,colMap=imp.colMap,headers=Object.keys(colMap);var count=0;for(var i=0;i<allRows.length;i++){var row=allRows[i],rec={};headers.forEach(function(h,j){rec[colMap[h]]=row[j];});if(imp.type==='cust'){if(!rec.custName)continue;if(d.customers.some(function(c){return c.name===rec.custName;}))continue;var c={id:'c'+Date.now()+i,name:rec.custName,phone:rec.phone||'',idCard:rec.idCard||'',addr:rec.addr||''};d.customers.push(c);await sbPost('customers',c);count++;}else if(imp.type==='veh'){if(!rec.plate)continue;if(d.vehicles.some(function(v){return v.plate===rec.plate;}))continue;var ownerId='';if(rec.custName){var cust=d.customers.find(function(c){return c.name===rec.custName;});if(cust)ownerId=cust.id;}var v={id:'v'+Date.now()+i,plate:rec.plate,type:rec.type||'',use:rec.use||'',ownerId:ownerId,regDate:rec.regDate||''};d.vehicles.push(v);await sbPost('vehicles',v);count++;}else if(imp.type==='pol'){if(!rec.plate)continue;var vehicleId='';var veh=d.vehicles.find(function(v){return v.plate===rec.plate;});if(veh)vehicleId=veh.id;else continue;if(d.policies.some(function(p){return p.vehicleId===vehicleId&&p.company===rec.company;}))continue;var p={id:'p'+Date.now()+i,vehicleId:vehicleId,company:rec.company||'人保',biz:rec.biz||'',force:rec.force||'',tax:rec.tax||'',agent:rec.agent||'',start:rec.start||'',end:rec.end||''};d.policies.push(p);await sbPost('policies',p);count++;}else if(imp.type==='nc'){if(!rec.custName)continue;var custId='';var cust=d.customers.find(function(c){return c.name===rec.custName;});if(cust)custId=cust.id;else continue;if(d.noncar.some(function(n){return n.custId===custId&&n.type===rec.type&&n.company===rec.company;}))continue;var n={id:'n'+Date.now()+i,custId:custId,type:rec.type||'',company:rec.company||'人保',premium:parseFloat(rec.premium)||0,agent:rec.agent||'',start:rec.start||'',end:rec.end||''};d.noncar.push(n);await sbPost('noncar',n);count++;}}refreshAll();showToast('成功导入 '+count+' 条');}
+function readAndPreview(type,file){showImportPreview(type);}
 
-function toggleCust(id, checked) {
-  var idx = _custSel.indexOf(id);
-  if (checked && idx < 0) _custSel.push(id);
-  else if (!checked && idx >= 0) _custSel.splice(idx, 1);
-  var d = loadData();
-  var kw = document.getElementById('custSearch').value.trim().toLowerCase();
-  var list = kw ? d.customers.filter(function(c) {
-    return (c.name||'').toLowerCase().includes(kw) ||
-           (c.phone||'').toLowerCase().includes(kw) ||
-           (c.idCard||'').toLowerCase().includes(kw) ||
-           (c.addr||'').toLowerCase().includes(kw);
-  }) : d.customers;
-  var btn = document.getElementById('btnCustDel');
-  btn.style.display = _custSel.length ? '' : 'none';
-  document.getElementById('custSelCnt').textContent = _custSel.length;
-  document.getElementById('custChkAll').checked = _custSel.length === list.length && list.length > 0;
-}
-
-function batchDelCust() {
-  if (!_custSel.length) return;
-  if (!confirm('确定删除选中的 ' + _custSel.length + ' 个客户？')) return;
-  var d = loadData();
-  d.customers = d.customers.filter(function(c){ return _custSel.indexOf(c.id) < 0; });
-  saveData(d);
-  _custSel = [];
-  renderCustomers();
-  refreshStats();
-  showToast('删除成功');
-}
-function openCustModal(id) {
-  var d = loadData();
-  var c = id ? d.customers.find(function(x) { return x.id === id; }) : null;
-  document.getElementById('custModalTitle').textContent = id ? '编辑客户' : '新增客户';
-  document.getElementById('custId').value = id || '';
-  document.getElementById('custName').value = c ? (c.name || '') : '';
-  document.getElementById('custPhone').value = c ? (c.phone || '') : '';
-  document.getElementById('custIdCard').value = c ? (c.idCard || '') : '';
-  document.getElementById('custAddr').value = c ? (c.addr || '') : '';
-  document.getElementById('custModal').classList.add('show');
-}
-function saveCust() {
-  var d = loadData();
-  var id = document.getElementById('custId').value;
-  var c = {
-    id: id || 'c' + Date.now(),
-    name: document.getElementById('custName').value.trim(),
-    phone: document.getElementById('custPhone').value.trim(),
-    idCard: document.getElementById('custIdCard').value.trim(),
-    addr: document.getElementById('custAddr').value.trim()
-  };
-  if (!c.name) { showToast('请输入客户名称', 'err'); return; }
-  if (id) {
-    var idx = d.customers.findIndex(function(x) { return x.id === id; });
-    if (idx >= 0) d.customers[idx] = c;
-  } else {
-    d.customers.push(c);
-  }
-  saveData(d);
-  closeModal('custModal');
-  renderCustomers();
-  refreshStats();
-  showToast('保存成功');
-}
-function delCust(id) {
-  if (!confirm('确定删除？')) return;
-  var d = loadData();
-  d.customers = d.customers.filter(function(x) { return x.id !== id; });
-  d.vehicles = d.vehicles.filter(function(v) { return v.ownerId !== id; });
-  saveData(d);
-  renderCustomers();
-  renderVehicles();
-  refreshStats();
-  showToast('已删除');
-}
-function exportCustomers() {
-  var d = loadData();
-  var rows = [['客户名称','电话','证件号码','地址']];
-  d.customers.forEach(function(c) { rows.push([c.name, c.phone, c.idCard, c.addr]); });
-  var wb = XLSX.utils.book_new();
-  var ws = XLSX.utils.aoa_to_sheet(rows);
-  XLSX.utils.book_append_sheet(wb, ws, '客户');
-  XLSX.writeFile(wb, '客户_' + new Date().toLocaleDateString() + '.xlsx');
-  showToast('导出成功');
-}
-
-// ========== 车辆 ==========
-var _vehSel = [];
-
-function filterVehicles(kw) {
-  var d = loadData();
-  var k = kw.trim().toLowerCase();
-  var list = k ? d.vehicles.filter(function(v) {
-    var owner = d.customers.find(function(c){ return c.id === v.ownerId; }) || {};
-    return (v.plate||'').toLowerCase().includes(k) ||
-           (owner.name||'').toLowerCase().includes(k) ||
-           (v.type||'').toLowerCase().includes(k) ||
-           (v.use||'').toLowerCase().includes(k);
-  }) : d.vehicles;
-  _vehSel = [];
-  renderVehRows(list, false);
-}
-
-function renderVehRows(list, showAll) {
-  var d = loadData();
-  var tbody = document.querySelector('#vehTable tbody');
-  tbody.innerHTML = '';
-  if (!showAll) {
-    document.getElementById('vehChkAll').checked = false;
-    document.getElementById('btnVehDel').style.display = 'none';
-    document.getElementById('vehSelCnt').textContent = '0';
-  }
-  if (!list.length) { document.getElementById('vehEmpty').style.display = 'block'; return; }
-  document.getElementById('vehEmpty').style.display = 'none';
-  list.forEach(function(v) {
-    var owner = d.customers.find(function(c){ return c.id === v.ownerId; }) || {};
-    var tr = document.createElement('tr');
-    var sel = _vehSel.indexOf(v.id) >= 0 ? 'checked' : '';
-    tr.innerHTML = '<td><input type="checkbox" ' + sel + ' onchange="toggleVeh(\'' + v.id + '\',this.checked)"></td>' +
-      '<td>' + esc(v.plate) + '</td><td>' + esc(v.type) + '</td><td>' + esc(v.use) + '</td><td>' + esc(owner.name) + '</td><td>' + esc(v.regDate) + '</td>' +
-      '<td><button class="btn btn-sm btn-primary" onclick="openVehModal(\'' + v.id + '\')">编辑</button> <button class="btn btn-sm btn-danger" onclick="delVeh(\'' + v.id + '\')">删除</button></td>';
-    tbody.appendChild(tr);
-  });
-  if (showAll) {
-    document.getElementById('vehChkAll').checked = _vehSel.length === list.length && list.length > 0;
-    document.getElementById('btnVehDel').style.display = _vehSel.length ? '' : 'none';
-    document.getElementById('vehSelCnt').textContent = _vehSel.length;
-  }
-}
-
-function renderVehicles() {
-  filterVehicles(document.getElementById('vehSearch').value);
-}
-
-function toggleVehAll() {
-  var cb = document.getElementById('vehChkAll');
-  cb.checked = !cb.checked;
-  var checked = cb.checked;
-  var d = loadData();
-  var kw = document.getElementById('vehSearch').value.trim().toLowerCase();
-  var list = kw ? d.vehicles.filter(function(v) {
-    var owner = d.customers.find(function(c){ return c.id === v.ownerId; }) || {};
-    return (v.plate||'').toLowerCase().includes(kw) ||
-           (owner.name||'').toLowerCase().includes(kw) ||
-           (v.type||'').toLowerCase().includes(kw) ||
-           (v.use||'').toLowerCase().includes(kw);
-  }) : d.vehicles;
-  _vehSel = checked ? list.map(function(v){ return v.id; }) : [];
-  renderVehRows(list, true);
-}
-
-function toggleVeh(id, checked) {
-  var idx = _vehSel.indexOf(id);
-  if (checked && idx < 0) _vehSel.push(id);
-  else if (!checked && idx >= 0) _vehSel.splice(idx, 1);
-  var btn = document.getElementById('btnVehDel');
-  btn.style.display = _vehSel.length ? '' : 'none';
-  document.getElementById('vehSelCnt').textContent = _vehSel.length;
-  var d = loadData();
-  var kw = document.getElementById('vehSearch').value.trim().toLowerCase();
-  var list = kw ? d.vehicles.filter(function(v) {
-    var owner = d.customers.find(function(c){ return c.id === v.ownerId; }) || {};
-    return (v.plate||'').toLowerCase().includes(kw) ||
-           (owner.name||'').toLowerCase().includes(kw) ||
-           (v.type||'').toLowerCase().includes(kw) ||
-           (v.use||'').toLowerCase().includes(kw);
-  }) : d.vehicles;
-  document.getElementById('vehChkAll').checked = _vehSel.length === list.length && list.length > 0;
-}
-
-function batchDelVeh() {
-  if (!_vehSel.length) return;
-  if (!confirm('确定删除选中的 ' + _vehSel.length + ' 辆车？')) return;
-  var d = loadData();
-  d.vehicles = d.vehicles.filter(function(v){ return _vehSel.indexOf(v.id) < 0; });
-  saveData(d);
-  _vehSel = [];
-  renderVehicles();
-  refreshStats();
-  showToast('删除成功');
-}
-function openVehModal(id) {
-  var d = loadData();
-  var v = id ? d.vehicles.find(function(x) { return x.id === id; }) : null;
-  document.getElementById('vehModalTitle').textContent = id ? '编辑车辆' : '新增车辆';
-  document.getElementById('vehId').value = id || '';
-  document.getElementById('vehPlate').value = v ? (v.plate || '') : '';
-  document.getElementById('vehType').value = v ? (v.type || '') : '';
-  document.getElementById('vehUse').value = v ? (v.use || '') : '';
-  document.getElementById('vehRegDate').value = v ? (v.regDate || '') : '';
-  // 填充车主（支持手动输入+自动筛选）
-  var dl = document.getElementById('vehOwnerList');
-  dl.innerHTML = '';
-  d.customers.forEach(function(c) {
-    dl.innerHTML += '<option value="' + c.name + '">';
-  });
-  // 回填：显示车主姓名
-  if (v && v.ownerId) {
-    var cust = d.customers.find(function(c){ return c.id === v.ownerId; });
-    document.getElementById('vehOwner').value = cust ? cust.name : '';
-  } else {
-    document.getElementById('vehOwner').value = '';
-  }
-  document.getElementById('vehModal').classList.add('show');
-}
-function saveVeh() {
-  var d = loadData();
-  var id = document.getElementById('vehId').value;
-  var v = {
-    id: id || 'v' + Date.now(),
-    plate: document.getElementById('vehPlate').value.trim(),
-    type: document.getElementById('vehType').value,
-    use: document.getElementById('vehUse').value,
-    ownerId: (function() {
-      var name = document.getElementById('vehOwner').value.trim();
-      if (!name) return '';
-      var cust = d.customers.find(function(c){ return c.name === name; });
-      return cust ? cust.id : '';
-    })(),
-    regDate: document.getElementById('vehRegDate').value
-  };
-  if (!v.plate) { showToast('请输入车牌号', 'err'); return; }
-  if (id) {
-    var idx = d.vehicles.findIndex(function(x) { return x.id === id; });
-    if (idx >= 0) d.vehicles[idx] = v;
-  } else {
-    d.vehicles.push(v);
-  }
-  saveData(d);
-  closeModal('vehModal');
-  renderVehicles();
-  refreshStats();
-  showToast('保存成功');
-}
-function delVeh(id) {
-  if (!confirm('确定删除？')) return;
-  var d = loadData();
-  d.vehicles = d.vehicles.filter(function(x) { return x.id !== id; });
-  saveData(d);
-  renderVehicles();
-  refreshStats();
-  showToast('已删除');
-}
-function exportVehicles() {
-  var d = loadData();
-  var rows = [['车牌号','车辆种类','使用性质','车主','初登日期']];
-  d.vehicles.forEach(function(v) {
-    var owner = d.customers.find(function(c) { return c.id === v.ownerId; }) || {};
-    rows.push([v.plate, v.type, v.use, owner.name, v.regDate]);
-  });
-  var wb = XLSX.utils.book_new();
-  var ws = XLSX.utils.aoa_to_sheet(rows);
-  XLSX.utils.book_append_sheet(wb, ws, '车辆');
-  XLSX.writeFile(wb, '车辆_' + new Date().toLocaleDateString() + '.xlsx');
-  showToast('导出成功');
-}
-
-// ========== 保单 ==========
-// ========== 车险保单 ==========
-var _polSel = [];
-
-function filterPolicies(kw) {
-  var d = loadData();
-  var k = kw.trim().toLowerCase();
-  var list = k ? d.policies.filter(function(p) {
-    var veh = d.vehicles.find(function(v){ return v.id === p.vehicleId; }) || {};
-    return (veh.plate||'').toLowerCase().includes(k) ||
-           (p.company||'').toLowerCase().includes(k) ||
-           (p.agent||'').toLowerCase().includes(k) ||
-           (p.start||'').toLowerCase().includes(k) ||
-           (p.end||'').toLowerCase().includes(k);
-  }) : d.policies;
-  _polSel = [];
-  renderPolRows(list, false);
-}
-
-function renderPolRows(list, showAll) {
-  var d = loadData();
-  var tbody = document.querySelector('#polTable tbody');
-  tbody.innerHTML = '';
-  if (!showAll) {
-    document.getElementById('polChkAll').checked = false;
-    document.getElementById('btnPolDel').style.display = 'none';
-    document.getElementById('polSelCnt').textContent = '0';
-  }
-  if (!list.length) { document.getElementById('polEmpty').style.display = 'block'; return; }
-  document.getElementById('polEmpty').style.display = 'none';
-  list.forEach(function(p) {
-    var veh = d.vehicles.find(function(v){ return v.id === p.vehicleId; }) || {};
-    var tr = document.createElement('tr');
-    var sel = _polSel.indexOf(p.id) >= 0 ? 'checked' : '';
-    tr.innerHTML = '<td><input type="checkbox" ' + sel + ' onchange="togglePol(\'' + p.id + '\',this.checked)"></td>' +
-      '<td>' + esc(veh.plate) + '</td><td>' + esc(p.company) + '</td><td>' + esc(p.biz) + '</td><td>' + esc(p.force) + '</td><td>' + esc(p.tax) + '</td><td>' + esc(p.agent) + '</td><td>' + esc(p.start) + '</td><td>' + esc(p.end) + '</td>' +
-      '<td><button class="btn btn-sm btn-primary" onclick="openPolModal(\'' + p.id + '\')">编辑</button> <button class="btn btn-sm btn-danger" onclick="delPol(\'' + p.id + '\')">删除</button></td>';
-    tbody.appendChild(tr);
-  });
-  if (showAll) {
-    document.getElementById('polChkAll').checked = _polSel.length === list.length && list.length > 0;
-    document.getElementById('btnPolDel').style.display = _polSel.length ? '' : 'none';
-    document.getElementById('polSelCnt').textContent = _polSel.length;
-  }
-}
-
-function renderPolicies() {
-  filterPolicies(document.getElementById('polSearch').value);
-}
-
-function togglePolAll() {
-  var cb = document.getElementById('polChkAll');
-  cb.checked = !cb.checked;
-  var checked = cb.checked;
-  var d = loadData();
-  var kw = document.getElementById('polSearch').value.trim().toLowerCase();
-  var list = kw ? d.policies.filter(function(p) {
-    var veh = d.vehicles.find(function(v){ return v.id === p.vehicleId; }) || {};
-    return (veh.plate||'').toLowerCase().includes(kw) ||
-           (p.company||'').toLowerCase().includes(kw) ||
-           (p.agent||'').toLowerCase().includes(kw);
-  }) : d.policies;
-  _polSel = checked ? list.map(function(p){ return p.id; }) : [];
-  renderPolRows(list, true);
-}
-
-function togglePol(id, checked) {
-  var idx = _polSel.indexOf(id);
-  if (checked && idx < 0) _polSel.push(id);
-  else if (!checked && idx >= 0) _polSel.splice(idx, 1);
-  var btn = document.getElementById('btnPolDel');
-  btn.style.display = _polSel.length ? '' : 'none';
-  document.getElementById('polSelCnt').textContent = _polSel.length;
-  var d = loadData();
-  var kw = document.getElementById('polSearch').value.trim().toLowerCase();
-  var list = kw ? d.policies.filter(function(p) {
-    var veh = d.vehicles.find(function(v){ return v.id === p.vehicleId; }) || {};
-    return (veh.plate||'').toLowerCase().includes(kw) ||
-           (p.company||'').toLowerCase().includes(kw) ||
-           (p.agent||'').toLowerCase().includes(kw);
-  }) : d.policies;
-  document.getElementById('polChkAll').checked = _polSel.length === list.length && list.length > 0;
-}
-
-function batchDelPol() {
-  if (!_polSel.length) return;
-  if (!confirm('确定删除选中的 ' + _polSel.length + ' 个保单？')) return;
-  var d = loadData();
-  d.policies = d.policies.filter(function(p){ return _polSel.indexOf(p.id) < 0; });
-  saveData(d);
-  _polSel = [];
-  renderPolicies();
-  refreshStats();
-  showToast('删除成功');
-}
-function openPolModal(id) {
-  var d = loadData();
-  var p = id ? d.policies.find(function(x) { return x.id === id; }) : null;
-  document.getElementById('polModalTitle').textContent = id ? '编辑保单' : '新增保单';
-  document.getElementById('polId').value = id || '';
-  document.getElementById('polCompany').value = p ? (p.company || '人保') : '人保';
-  document.getElementById('polBiz').value = p ? (p.biz || '') : '';
-  document.getElementById('polForce').value = p ? (p.force || '') : '';
-  document.getElementById('polTax').value = p ? (p.tax || '') : '';
-  document.getElementById('polAgent').value = p ? (p.agent || '') : '';
-  document.getElementById('polStart').value = p ? (p.start || '') : '';
-  document.getElementById('polEnd').value = p ? (p.end || '') : '';
-  // 填充车辆（支持手动输入+自动筛选）
-  var dl = document.getElementById('polVehicleList');
-  dl.innerHTML = '';
-  d.vehicles.forEach(function(v) {
-    dl.innerHTML += '<option value="' + v.plate + '">';
-  });
-  // 回填：显示车牌号
-  if (p && p.vehicleId) {
-    var veh = d.vehicles.find(function(v){ return v.id === p.vehicleId; });
-    document.getElementById('polVehicle').value = veh ? veh.plate : '';
-  } else {
-    document.getElementById('polVehicle').value = '';
-  }
-  document.getElementById('polModal').classList.add('show');
-}
-function savePol() {
-  var d = loadData();
-  var id = document.getElementById('polId').value;
-  var p = {
-    id: id || 'p' + Date.now(),
-    vehicleId: (function() {
-      var plate = document.getElementById('polVehicle').value.trim();
-      if (!plate) return '';
-      var veh = d.vehicles.find(function(v){ return v.plate === plate; });
-      return veh ? veh.id : '';
-    })(),
-    company: document.getElementById('polCompany').value,
-    biz: document.getElementById('polBiz').value,
-    force: document.getElementById('polForce').value,
-    tax: document.getElementById('polTax').value,
-    agent: document.getElementById('polAgent').value.trim(),
-    start: document.getElementById('polStart').value,
-    end: document.getElementById('polEnd').value
-  };
-  if (!p.vehicleId) { showToast('请选择车辆', 'err'); return; }
-  if (id) {
-    var idx = d.policies.findIndex(function(x) { return x.id === id; });
-    if (idx >= 0) d.policies[idx] = p;
-  } else {
-    d.policies.push(p);
-  }
-  saveData(d);
-  closeModal('polModal');
-  renderPolicies();
-  refreshStats();
-  showToast('保存成功');
-}
-function delPol(id) {
-  if (!confirm('确定删除？')) return;
-  var d = loadData();
-  d.policies = d.policies.filter(function(x) { return x.id !== id; });
-  saveData(d);
-  renderPolicies();
-  refreshStats();
-  showToast('已删除');
-}
-function exportPolicies() {
-  var d = loadData();
-  var rows = [['车牌号','保险公司','商业险','交强险','车船税','代理人','出单日期','到期日期']];
-  d.policies.forEach(function(p) {
-    var veh = d.vehicles.find(function(v) { return v.id === p.vehicleId; }) || {};
-    rows.push([veh.plate, p.company, p.biz, p.force, p.tax, p.agent, p.start, p.end]);
-  });
-  var wb = XLSX.utils.book_new();
-  var ws = XLSX.utils.aoa_to_sheet(rows);
-  XLSX.utils.book_append_sheet(wb, ws, '保单');
-  XLSX.writeFile(wb, '保单_' + new Date().toLocaleDateString() + '.xlsx');
-  showToast('导出成功');
-}
-
-// ========== 非车险保单 ==========
-// ========== 非车险保单 ==========
-var _ncSel = [];
-
-function filterNoncar(kw) {
-  var d = loadData();
-  var k = kw.trim().toLowerCase();
-  var list = k ? d.noncar.filter(function(n) {
-    var cust = d.customers.find(function(c){ return c.id === n.custId; }) || {};
-    return (cust.name||'').toLowerCase().includes(k) ||
-           (n.type||'').toLowerCase().includes(k) ||
-           (n.company||'').toLowerCase().includes(k) ||
-           (n.agent||'').toLowerCase().includes(k) ||
-           (n.start||'').toLowerCase().includes(k) ||
-           (n.end||'').toLowerCase().includes(k);
-  }) : d.noncar;
-  _ncSel = [];
-  renderNcRows(list, false);
-}
-
-function renderNcRows(list, showAll) {
-  var d = loadData();
-  var tbody = document.querySelector('#noncarTable tbody');
-  tbody.innerHTML = '';
-  if (!showAll) {
-    document.getElementById('noncarChkAll').checked = false;
-    document.getElementById('btnNoncarDel').style.display = 'none';
-    document.getElementById('noncarSelCnt').textContent = '0';
-  }
-  if (!list.length) { document.getElementById('noncarEmpty').style.display = 'block'; return; }
-  document.getElementById('noncarEmpty').style.display = 'none';
-  list.forEach(function(n) {
-    var cust = d.customers.find(function(c){ return c.id === n.custId; }) || {};
-    var tr = document.createElement('tr');
-    var sel = _ncSel.indexOf(n.id) >= 0 ? 'checked' : '';
-    tr.innerHTML = '<td><input type="checkbox" ' + sel + ' onchange="toggleNc(\'' + n.id + '\',this.checked)"></td>' +
-      '<td>' + esc(cust.name) + '</td><td>' + esc(n.type) + '</td><td>' + esc(n.company) + '</td><td>' + esc(n.premium) + '</td><td>' + esc(n.agent) + '</td><td>' + esc(n.start) + '</td><td>' + esc(n.end) + '</td>' +
-      '<td><button class="btn btn-sm btn-primary" onclick="openNoncarModal(\'' + n.id + '\')">编辑</button> <button class="btn btn-sm btn-danger" onclick="delNoncar(\'' + n.id + '\')">删除</button></td>';
-    tbody.appendChild(tr);
-  });
-  if (showAll) {
-    document.getElementById('noncarChkAll').checked = _ncSel.length === list.length && list.length > 0;
-    document.getElementById('btnNoncarDel').style.display = _ncSel.length ? '' : 'none';
-    document.getElementById('noncarSelCnt').textContent = _ncSel.length;
-  }
-}
-
-function renderNoncar() {
-  filterNoncar(document.getElementById('noncarSearch').value);
-}
-
-function toggleNcAll() {
-  var cb = document.getElementById('noncarChkAll');
-  cb.checked = !cb.checked;
-  var checked = cb.checked;
-  var d = loadData();
-  var kw = document.getElementById('noncarSearch').value.trim().toLowerCase();
-  var list = kw ? d.noncar.filter(function(n) {
-    var cust = d.customers.find(function(c){ return c.id === n.custId; }) || {};
-    return (cust.name||'').toLowerCase().includes(kw) ||
-           (n.type||'').toLowerCase().includes(kw) ||
-           (n.company||'').toLowerCase().includes(kw) ||
-           (n.agent||'').toLowerCase().includes(kw);
-  }) : d.noncar;
-  _ncSel = checked ? list.map(function(n){ return n.id; }) : [];
-  renderNcRows(list, true);
-}
-
-function toggleNc(id, checked) {
-  var idx = _ncSel.indexOf(id);
-  if (checked && idx < 0) _ncSel.push(id);
-  else if (!checked && idx >= 0) _ncSel.splice(idx, 1);
-  var btn = document.getElementById('btnNoncarDel');
-  btn.style.display = _ncSel.length ? '' : 'none';
-  document.getElementById('noncarSelCnt').textContent = _ncSel.length;
-  var d = loadData();
-  var kw = document.getElementById('noncarSearch').value.trim().toLowerCase();
-  var list = kw ? d.noncar.filter(function(n) {
-    var cust = d.customers.find(function(c){ return c.id === n.custId; }) || {};
-    return (cust.name||'').toLowerCase().includes(kw) ||
-           (n.type||'').toLowerCase().includes(kw) ||
-           (n.company||'').toLowerCase().includes(kw) ||
-           (n.agent||'').toLowerCase().includes(kw);
-  }) : d.noncar;
-  document.getElementById('noncarChkAll').checked = _ncSel.length === list.length && list.length > 0;
-}
-
-function batchDelNoncar() {
-  if (!_ncSel.length) return;
-  if (!confirm('确定删除选中的 ' + _ncSel.length + ' 个非车险保单？')) return;
-  var d = loadData();
-  d.noncar = d.noncar.filter(function(n){ return _ncSel.indexOf(n.id) < 0; });
-  saveData(d);
-  _ncSel = [];
-  renderNoncar();
-  refreshStats();
-  showToast('删除成功');
-}
-
-function openNoncarModal(id) {
-  var d = loadData();
-  var n = id ? d.noncar.find(function(x) { return x.id === id; }) : null;
-  document.getElementById('noncarModalTitle').textContent = id ? '编辑非车险保单' : '新增非车险保单';
-  document.getElementById('noncarId').value = id || '';
-  // 填充客户（支持手动输入+自动筛选）
-  var dl = document.getElementById('noncarCustList');
-  dl.innerHTML = '';
-  d.customers.forEach(function(c) {
-    dl.innerHTML += '<option value="' + c.name + '">';
-  });
-  // 回填：显示客户姓名
-  if (n && n.custId) {
-    var cust = d.customers.find(function(c){ return c.id === n.custId; });
-    document.getElementById('noncarCust').value = cust ? cust.name : '';
-  } else {
-    document.getElementById('noncarCust').value = '';
-  }
-  document.getElementById('noncarType').value = n ? (n.type || '') : '';
-  document.getElementById('noncarCompany').value = n ? (n.company || '') : '人保';
-  document.getElementById('noncarPremium').value = n ? (n.premium || '') : '';
-  document.getElementById('noncarAgent').value = n ? (n.agent || '') : '';
-  document.getElementById('noncarStart').value = n ? (n.start || '') : '';
-  document.getElementById('noncarEnd').value = n ? (n.end || '') : '';
-  document.getElementById('noncarModal').classList.add('show');
-}
-
-function saveNoncar() {
-  var d = loadData();
-  var id = document.getElementById('noncarId').value;
-  var n = {
-    id: id || 'n' + Date.now(),
-    custId: (function() {
-      var name = document.getElementById('noncarCust').value.trim();
-      if (!name) return '';
-      var cust = d.customers.find(function(c){ return c.name === name; });
-      return cust ? cust.id : '';
-    })(),
-    type: document.getElementById('noncarType').value,
-    company: document.getElementById('noncarCompany').value,
-    premium: parseFloat(document.getElementById('noncarPremium').value) || 0,
-    agent: document.getElementById('noncarAgent').value.trim(),
-    start: document.getElementById('noncarStart').value,
-    end: document.getElementById('noncarEnd').value
-  };
-  if (!n.custId) { showToast('请选择客户', 'err'); return; }
-  if (id) {
-    var idx = d.noncar.findIndex(function(x) { return x.id === id; });
-    if (idx >= 0) d.noncar[idx] = n;
-  } else {
-    d.noncar.push(n);
-  }
-  saveData(d);
-  closeModal('noncarModal');
-  renderNoncar();
-  showToast('保存成功');
-}
-
-function delNoncar(id) {
-  if (!confirm('确定删除？')) return;
-  var d = loadData();
-  d.noncar = d.noncar.filter(function(x) { return x.id !== id; });
-  saveData(d);
-  renderNoncar();
-  showToast('删除成功');
-}
-
-function exportNoncar() {
-  var d = loadData();
-  var rows = [['客户名称','险种','保险公司','保费','代理人','出单日期','到期日期']];
-  d.noncar.forEach(function(n) {
-    var cust = d.customers.find(function(c) { return c.id === n.custId; }) || {};
-    rows.push([cust.name, n.type, n.company, n.premium, n.agent, n.start, n.end]);
-  });
-  var wb = XLSX.utils.book_new();
-  var ws = XLSX.utils.aoa_to_sheet(rows);
-  XLSX.utils.book_append_sheet(wb, ws, '非车险');
-  XLSX.writeFile(wb, '非车险保单_' + new Date().toLocaleDateString() + '.xlsx');
-  showToast('导出成功');
-}
-
-// ========== 续保提醒 ==========
-function getDaysLeft(endDate) {
-  if (!endDate) return null;
-  var today = new Date(); today.setHours(0,0,0,0);
-  var end = new Date(endDate); end.setHours(0,0,0,0);
-  return Math.ceil((end - today) / 86400000);
-}
-function getRenewalStatus(days) {
-  if (days === null) return { label: '无日期', cls: '' };
-  if (days < 0) return { label: '已过期' + Math.abs(days) + '天', cls: 'renewal-expired' };
-  if (days <= 7) return { label: '即将到期', cls: 'renewal-urgent' };
-  return { label: '待续保', cls: 'renewal-soon' };
-}
-// ========== 续保提醒 ==========
-var _rpolSel = [];
-var _rncSel = [];
-
-function filterRenewal(kw) {
-  var d = loadData();
-  var k = kw.trim().toLowerCase();
-  var polRenewals = [];
-  d.policies.forEach(function(p) {
-    var days = getDaysLeft(p.end);
-    if (days !== null && days <= 30) {
-      var veh = d.vehicles.find(function(v){ return v.id === p.vehicleId; }) || {};
-      if (!k || (veh.plate||'').toLowerCase().includes(k) || (p.company||'').toLowerCase().includes(k) || (p.agent||'').toLowerCase().includes(k) || (p.end||'').toLowerCase().includes(k))
-        polRenewals.push({ p: p, veh: veh, days: days });
-    }
-  });
-  polRenewals.sort(function(a, b) { return a.days - b.days; });
-  var ncRenewals = [];
-  d.noncar.forEach(function(n) {
-    var days = getDaysLeft(n.end);
-    if (days !== null && days <= 30) {
-      var cust = d.customers.find(function(c){ return c.id === n.custId; }) || {};
-      if (!k || (cust.name||'').toLowerCase().includes(k) || (n.type||'').toLowerCase().includes(k) || (n.company||'').toLowerCase().includes(k) || (n.agent||'').toLowerCase().includes(k) || (n.end||'').toLowerCase().includes(k))
-        ncRenewals.push({ n: n, cust: cust, days: days });
-    }
-  });
-  ncRenewals.sort(function(a, b) { return a.days - b.days; });
-  _rpolSel = [];
-  _rncSel = [];
-  renderRenewalRows(polRenewals, ncRenewals, false);
-}
-
-function renderRenewalRows(polRenewals, ncRenewals, showAll) {
-  var polTbody = document.querySelector('#renewalPolTable tbody');
-  var ncTbody = document.querySelector('#renewalNoncarTable tbody');
-  polTbody.innerHTML = '';
-  ncTbody.innerHTML = '';
-  if (!showAll) {
-    document.getElementById('rpolChkAll').checked = false;
-    document.getElementById('rncChkAll').checked = false;
-    document.getElementById('btnRPolDel').style.display = 'none';
-    document.getElementById('btnRncDel').style.display = 'none';
-    document.getElementById('rpolSelCnt').textContent = '0';
-    document.getElementById('rncSelCnt').textContent = '0';
-  }
-  // 车险
-  if (!polRenewals.length) {
-    polTbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#9ca3af;">暂无即将到期的车险保单</td></tr>';
-  } else {
-    polRenewals.forEach(function(item) {
-      var st = getRenewalStatus(item.days);
-      var tr = document.createElement('tr');
-      tr.className = st.cls;
-      var sel = _rpolSel.indexOf(item.p.id) >= 0 ? 'checked' : '';
-      tr.innerHTML = '<td><input type="checkbox" ' + sel + ' onchange="toggleRPol(\'' + item.p.id + '\',this.checked)"></td>' +
-        '<td>' + esc(item.veh.plate) + '</td><td>' + esc(item.p.company) + '</td><td>' + esc(item.p.agent) + '</td><td>' + esc(item.p.end) + '</td><td><strong>' + item.days + '</strong> 天</td><td>' + st.label + '</td>' +
-        '<td><button class="btn btn-sm btn-primary" onclick="openPolModal(\'' + item.p.id + '\')">编辑</button></td>';
-      polTbody.appendChild(tr);
-    });
-  }
-  // 非车险
-  if (!ncRenewals.length) {
-    ncTbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#9ca3af;">暂无即将到期的非车险保单</td></tr>';
-  } else {
-    ncRenewals.forEach(function(item) {
-      var st = getRenewalStatus(item.days);
-      var tr = document.createElement('tr');
-      tr.className = st.cls;
-      var sel = _rncSel.indexOf(item.n.id) >= 0 ? 'checked' : '';
-      tr.innerHTML = '<td><input type="checkbox" ' + sel + ' onchange="toggleRnc(\'' + item.n.id + '\',this.checked)"></td>' +
-        '<td>' + esc(item.cust.name) + '</td><td>' + esc(item.n.type) + '</td><td>' + esc(item.n.company) + '</td><td>' + esc(item.n.agent) + '</td><td>' + esc(item.n.end) + '</td><td><strong>' + item.days + '</strong> 天</td><td>' + st.label + '</td>' +
-        '<td><button class="btn btn-sm btn-primary" onclick="openNoncarModal(\'' + item.n.id + '\')">编辑</button></td>';
-      ncTbody.appendChild(tr);
-    });
-  }
-  // 空提示
-  var bothEmpty = !polRenewals.length && !ncRenewals.length;
-  document.getElementById('renewalEmpty').style.display = bothEmpty ? 'block' : 'none';
-  if (showAll) {
-    document.getElementById('rpolChkAll').checked = _rpolSel.length === polRenewals.length && polRenewals.length > 0;
-    document.getElementById('rncChkAll').checked = _rncSel.length === ncRenewals.length && ncRenewals.length > 0;
-    document.getElementById('btnRPolDel').style.display = _rpolSel.length ? '' : 'none';
-    document.getElementById('btnRncDel').style.display = _rncSel.length ? '' : 'none';
-    document.getElementById('rpolSelCnt').textContent = _rpolSel.length;
-    document.getElementById('rncSelCnt').textContent = _rncSel.length;
-  }
-  if (showAll) {
-    document.getElementById('rpolChkAll').checked = _rpolSel.length === polRenewals.length && polRenewals.length > 0;
-    document.getElementById('rncChkAll').checked = _rncSel.length === ncRenewals.length && ncRenewals.length > 0;
-    document.getElementById('btnRPolDel').style.display = _rpolSel.length ? '' : 'none';
-    document.getElementById('btnRncDel').style.display = _rncSel.length ? '' : 'none';
-    document.getElementById('rpolSelCnt').textContent = _rpolSel.length;
-    document.getElementById('rncSelCnt').textContent = _rncSel.length;
-  }
-}
-
-function renderRenewal() {
-  filterRenewal(document.getElementById('renewalSearch').value);
-}
-
-function toggleRPolAll() {
-  var cb = document.getElementById('rpolChkAll');
-  cb.checked = !cb.checked;
-  var checked = cb.checked;
-  var d = loadData();
-  var kw = document.getElementById('renewalSearch').value.trim().toLowerCase();
-  var polRenewals = [];
-  d.policies.forEach(function(p) {
-    var days = getDaysLeft(p.end);
-    if (days !== null && days <= 30) {
-      var veh = d.vehicles.find(function(v){ return v.id === p.vehicleId; }) || {};
-      if (!kw || (veh.plate||'').toLowerCase().includes(kw) || (p.company||'').toLowerCase().includes(kw) || (p.agent||'').toLowerCase().includes(kw))
-        polRenewals.push({ p: p, veh: veh, days: days });
-    }
-  });
-  polRenewals.sort(function(a, b) { return a.days - b.days; });
-  _rpolSel = checked ? polRenewals.map(function(i){ return i.p.id; }) : [];
-  renderRenewalRows(polRenewals, [], true);
-}
-
-function toggleRPol(id, checked) {
-  var idx = _rpolSel.indexOf(id);
-  if (checked && idx < 0) _rpolSel.push(id);
-  else if (!checked && idx >= 0) _rpolSel.splice(idx, 1);
-  document.getElementById('btnRPolDel').style.display = _rpolSel.length ? '' : 'none';
-  document.getElementById('rpolSelCnt').textContent = _rpolSel.length;
-  var d = loadData();
-  var kw = document.getElementById('renewalSearch').value.trim().toLowerCase();
-  var polRenewals = [];
-  d.policies.forEach(function(p) {
-    var days = getDaysLeft(p.end);
-    if (days !== null && days <= 30) {
-      var veh = d.vehicles.find(function(v){ return v.id === p.vehicleId; }) || {};
-      if (!kw || (veh.plate||'').toLowerCase().includes(kw) || (p.company||'').toLowerCase().includes(kw) || (p.agent||'').toLowerCase().includes(kw))
-        polRenewals.push({ p: p, veh: veh, days: days });
-    }
-  });
-  polRenewals.sort(function(a, b) { return a.days - b.days; });
-  document.getElementById('rpolChkAll').checked = _rpolSel.length === polRenewals.length && polRenewals.length > 0;
-}
-
-function batchDelRenewalPol() {
-  if (!_rpolSel.length) return;
-  if (!confirm('确定删除选中的 ' + _rpolSel.length + ' 个车险保单？')) return;
-  var d = loadData();
-  d.policies = d.policies.filter(function(p){ return _rpolSel.indexOf(p.id) < 0; });
-  saveData(d);
-  _rpolSel = [];
-  renderRenewal();
-  refreshStats();
-  showToast('删除成功');
-}
-
-function toggleRncAll() {
-  var cb = document.getElementById('rncChkAll');
-  cb.checked = !cb.checked;
-  var checked = cb.checked;
-  var d = loadData();
-  var kw = document.getElementById('renewalSearch').value.trim().toLowerCase();
-  var ncRenewals = [];
-  d.noncar.forEach(function(n) {
-    var days = getDaysLeft(n.end);
-    if (days !== null && days <= 30) {
-      var cust = d.customers.find(function(c){ return c.id === n.custId; }) || {};
-      if (!kw || (cust.name||'').toLowerCase().includes(kw) || (n.type||'').toLowerCase().includes(kw) || (n.company||'').toLowerCase().includes(kw) || (n.agent||'').toLowerCase().includes(kw))
-        ncRenewals.push({ n: n, cust: cust, days: days });
-    }
-  });
-  ncRenewals.sort(function(a, b) { return a.days - b.days; });
-  _rncSel = checked ? ncRenewals.map(function(i){ return i.n.id; }) : [];
-  renderRenewalRows([], ncRenewals, true);
-}
-
-function toggleRnc(id, checked) {
-  var idx = _rncSel.indexOf(id);
-  if (checked && idx < 0) _rncSel.push(id);
-  else if (!checked && idx >= 0) _rncSel.splice(idx, 1);
-  document.getElementById('btnRncDel').style.display = _rncSel.length ? '' : 'none';
-  document.getElementById('rncSelCnt').textContent = _rncSel.length;
-  var d = loadData();
-  var kw = document.getElementById('renewalSearch').value.trim().toLowerCase();
-  var ncRenewals = [];
-  d.noncar.forEach(function(n) {
-    var days = getDaysLeft(n.end);
-    if (days !== null && days <= 30) {
-      var cust = d.customers.find(function(c){ return c.id === n.custId; }) || {};
-      if (!kw || (cust.name||'').toLowerCase().includes(kw) || (n.type||'').toLowerCase().includes(kw) || (n.company||'').toLowerCase().includes(kw) || (n.agent||'').toLowerCase().includes(kw))
-        ncRenewals.push({ n: n, cust: cust, days: days });
-    }
-  });
-  ncRenewals.sort(function(a, b) { return a.days - b.days; });
-  document.getElementById('rncChkAll').checked = _rncSel.length === ncRenewals.length && ncRenewals.length > 0;
-}
-
-function batchDelRenewalNoncar() {
-  if (!_rncSel.length) return;
-  if (!confirm('确定删除选中的 ' + _rncSel.length + ' 个非车险保单？')) return;
-  var d = loadData();
-  d.noncar = d.noncar.filter(function(n){ return _rncSel.indexOf(n.id) < 0; });
-  saveData(d);
-  _rncSel = [];
-  renderRenewal();
-  refreshStats();
-  showToast('删除成功');
-}
-function renderDashRenewal() {
-  var d = loadData();
-  var count = 0;
-  var items = [];
-  d.policies.forEach(function(p) {
-    var days = getDaysLeft(p.end);
-    if (days !== null && days <= 30) {
-      count++;
-      var veh = d.vehicles.find(function(v) { return v.id === p.vehicleId; }) || {};
-      var st = getRenewalStatus(days);
-      items.push({ name: (veh.plate || ''), type: '车险', company: p.company, days: days, st: st });
-    }
-  });
-  d.noncar.forEach(function(n) {
-    var days = getDaysLeft(n.end);
-    if (days !== null && days <= 30) {
-      count++;
-      var cust = d.customers.find(function(c) { return c.id === n.custId; }) || {};
-      var st = getRenewalStatus(days);
-      items.push({ name: (cust.name || ''), type: n.type || '非车险', company: n.company, days: days, st: st });
-    }
-  });
-  items.sort(function(a, b) { return a.days - b.days; });
-  var card = document.getElementById('dashRenewalCard');
-  var list = document.getElementById('dashRenewalList');
-  if (count === 0) {
-    card.style.display = 'none';
-    return;
-  }
-  card.style.display = 'block';
-  var html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">';
-  items.slice(0, 9).forEach(function(item) {
-    var bg = item.days < 0 ? '#fef2f2' : item.days <= 7 ? '#fffbeb' : '#eff6ff';
-    var bc = item.days < 0 ? '#ef4444' : item.days <= 7 ? '#f59e0b' : '#0ea5e9';
-    html += '<div style="background:' + bg + ';border-left:3px solid ' + bc + ';padding:10px 14px;border-radius:6px;">';
-    html += '<div style="font-weight:600;font-size:14px;">' + item.name + '</div>';
-    html += '<div style="font-size:12px;color:#6b7280;">' + item.type + ' · ' + item.company + '</div>';
-    html += '<div style="font-size:13px;margin-top:4px;color:' + bc + ';font-weight:600;">剩余 <strong>' + item.days + '</strong> 天 · ' + item.st.label + '</div>';
-    html += '</div>';
-  });
-  html += '</div>';
-  if (items.length > 9) {
-    html += '<div style="text-align:center;margin-top:10px;"><button class="btn btn-sm btn-primary" onclick="showPage(\'renewal\')">查看全部 ' + count + ' 条提醒 →</button></div>';
-  }
-  list.innerHTML = html;
-}
-
-// ========== 工具函数 ==========
-function closeModal(id) { document.getElementById(id).classList.remove('show'); }
-function showToast(msg, type) {
-  var t = document.getElementById('toast');
-  t.textContent = msg;
-  t.style.background = type === 'err' ? '#ef4444' : '#1f2937';
-  t.classList.add('show');
-  setTimeout(function() { t.classList.remove('show'); }, 2000);
-}
-function doLogout() {
-  localStorage.removeItem('crm_logged');
-  location.href = 'index.html';
-}
-
-// 启动
+// ========== Init ==========
 init();
 
-// ========== Excel导入（自动识别列名） ==========
-var _importData = [];   // 待导入的原始行数据
-var _importType = '';   // 'cust'|'veh'|'pol'|'nc'
-var _importRawSheet = []; // 原始sheet行数组（预览用）
-
-// 自动识别列名：返回 {fieldName: colIndex} 的映射
-function autoDetectCols(headers, fieldMap) {
-  var result = {};
-  var norm = function(s) { return (s||'').toString().replace(/\s+/g,'').toLowerCase(); };
-  headers.forEach(function(h, idx) {
-    var n = norm(h);
-    for (var f in fieldMap) {
-      var aliases = fieldMap[f];
-      if (!Array.isArray(aliases)) aliases = [aliases];
-      for (var i = 0; i < aliases.length; i++) {
-        if (norm(aliases[i]) === n) { result[f] = idx; break; }
-      }
-    }
-  });
-  return result;
-}
-
-// 预览导入数据
-function showImportPreview(type, sheet) {
-  _importType = type;
-  var allRows = XLSX.utils.sheet_to_json(sheet, {header:1});
-  if (allRows.length < 2) { showToast('文件为空或无数据', 'err'); return; }
-  var headers = allRows[0].map(function(h){ return h === null || h === undefined ? '' : String(h); });
-  var dataRows = allRows.slice(1).filter(function(r){ return r.some(function(c){ return c !== null && c !== undefined && String(c).trim(); }); });
-
-  var fieldMap, title, idField;
-  if (type === 'cust') {
-    fieldMap = {name:['客户名称','姓名','名称','name','客户名'], phone:['电话','手机','手机号','联系方式','phone','tel'], idCard:['证件','身份证','证件号','证件号码','idcard','id'], addr:['地址','详细地址','addr','address']};
-    title = '客户导入预览'; idField = 'name';
-  } else if (type === 'veh') {
-    fieldMap = {plate:['车牌','车牌号','plate','车号','车牌号'], type:['种类','车辆种类','type','车型','车辆种类'], use:['使用性质','使用性质','use','性质'], ownerName:['车主','车主姓名','车主名称','owner','ownername'], regDate:['初登日期','注册日期','regdate','初登','注册']};
-    title = '车辆导入预览'; idField = 'plate';
-  } else if (type === 'pol') {
-    fieldMap = {plate:['车牌','车牌号','plate','车号'], company:['保险公司','承保公司','company','保险公司'], biz:['商业险','商业险保费','biz'], force:['交强险','交强险保费','force'], tax:['车船税','tax'], agent:['代理人','agent'], start:['出单日期','生效日期','start'], end:['到期日期','截止日期','end']};
-    title = '车险保单导入预览'; idField = 'plate';
-  } else {
-    fieldMap = {custName:['客户','客户名称','客户名','姓名','name'], type:['险种','type'], company:['保险公司','company'], premium:['保费','premium'], agent:['代理人','agent'], start:['出单日期','start'], end:['到期日期','end']};
-    title = '非车险保单导入预览'; idField = 'custName';
-  }
-
-  var colMap = autoDetectCols(headers, fieldMap);
-  _importData = dataRows;
-  _importRawSheet = allRows;
-
-  var fieldNames = Object.keys(colMap);
-  if (fieldNames.length === 0) {
-    showToast('未识别到有效列名，请确保表头包含：' + Object.values(fieldMap).flat().join('/'), 'err');
-    return;
-  }
-
-  // 显示预览表格（最多显示10行）
-  var previewRows = dataRows.slice(0, 10);
-  var displayFields = fieldNames.slice(0, 7); // 最多7列
-  var h = '<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr>';
-  displayFields.forEach(function(f){ h += '<th style="border:1px solid #d1d5db;padding:6px 8px;background:#f3f4f6;text-align:left;">'+esc(f)+'</th>'; });
-  h += '</tr></thead><tbody>';
-  previewRows.forEach(function(row) {
-    h += '<tr>';
-    displayFields.forEach(function(f){
-      var val = colMap[f] !== undefined ? (row[colMap[f]] || '') : '';
-      h += '<td style="border:1px solid #d1d5db;padding:6px 8px;">'+esc(String(val))+'</td>';
-    });
-    h += '</tr>';
-  });
-  h += '</tbody></table>';
-  if (dataRows.length > 10) h += '<p style="color:#6b7280;margin-top:8px;">共 '+dataRows.length+' 条，还有 '+(dataRows.length-10)+' 条未显示</p>';
-  document.getElementById('importPreview').innerHTML = h;
-  document.getElementById('importInfo').textContent = '已识别到 ' + dataRows.length + ' 条数据，字段：' + fieldNames.join(', ');
-  document.getElementById('importModalTitle').textContent = title;
-  document.getElementById('importModal').classList.add('show');
-}
-
-function doImport() {
-  var type = _importType;
-  var dataRows = _importData;
-  if (!dataRows.length) { closeModal('importModal'); return; }
-  var d = loadData();
-  var allRows = _importRawSheet;
-  var headers = allRows[0].map(function(h){ return h === null || h === undefined ? '' : String(h); });
-  var dataRows2 = allRows.slice(1).filter(function(r){ return r.some(function(c){ return c !== null && c !== undefined && String(c).trim(); }); });
-
-  var fieldMap, colMap;
-  if (type === 'cust') {
-    fieldMap = {name:['客户名称','姓名','名称','name','客户名'], phone:['电话','手机','手机号','联系方式','phone','tel'], idCard:['证件','身份证','证件号','证件号码','idcard','id'], addr:['地址','详细地址','addr','address']};
-    colMap = autoDetectCols(headers, fieldMap);
-    var imported = 0;
-    dataRows2.forEach(function(row) {
-      var name = colMap.name !== undefined ? String(row[colMap.name]||'').trim() : '';
-      if (!name) return;
-      var existing = d.customers.find(function(c){ return c.name === name; });
-      if (existing) return; // 跳过重复
-      d.customers.push({
-        id: 'c' + Date.now() + Math.random().toString(36).substr(2,5),
-        name: name,
-        phone: colMap.phone !== undefined ? String(row[colMap.phone]||'').trim() : '',
-        idCard: colMap.idCard !== undefined ? String(row[colMap.idCard]||'').trim() : '',
-        addr: colMap.addr !== undefined ? String(row[colMap.addr]||'').trim() : ''
-      });
-      imported++;
-    });
-    saveData(d);
-    renderCustomers();
-  } else if (type === 'veh') {
-    fieldMap = {plate:['车牌','车牌号','plate','车号','车牌号'], type:['种类','车辆种类','type','车型'], use:['使用性质','use','性质'], ownerName:['车主','车主姓名','车主名称','owner','ownername'], regDate:['初登日期','注册日期','regdate','初登']};
-    colMap = autoDetectCols(headers, fieldMap);
-    var imported = 0;
-    dataRows2.forEach(function(row) {
-      var plate = colMap.plate !== undefined ? String(row[colMap.plate]||'').trim().toUpperCase() : '';
-      if (!plate) return;
-      var existing = d.vehicles.find(function(v){ return v.plate === plate; });
-      if (existing) return;
-      var ownerName = colMap.ownerName !== undefined ? String(row[colMap.ownerName]||'').trim() : '';
-      var ownerId = '';
-      if (ownerName) { var cust = d.customers.find(function(c){ return c.name === ownerName; }); if (cust) ownerId = cust.id; }
-      d.vehicles.push({
-        id: 'v' + Date.now() + Math.random().toString(36).substr(2,5),
-        plate: plate,
-        type: colMap.type !== undefined ? String(row[colMap.type]||'').trim() : '',
-        use: colMap.use !== undefined ? String(row[colMap.use]||'').trim() : '',
-        ownerId: ownerId,
-        regDate: colMap.regDate !== undefined ? String(row[colMap.regDate]||'').trim() : ''
-      });
-      imported++;
-    });
-    saveData(d);
-    renderVehicles();
-  } else if (type === 'pol') {
-    fieldMap = {plate:['车牌','车牌号','plate','车号'], company:['保险公司','承保公司','company'], biz:['商业险','商业险保费','biz'], force:['交强险','交强险保费','force'], tax:['车船税','tax'], agent:['代理人','agent'], start:['出单日期','生效日期','start'], end:['到期日期','截止日期','end']};
-    colMap = autoDetectCols(headers, fieldMap);
-    var imported = 0;
-    dataRows2.forEach(function(row) {
-      var plate = colMap.plate !== undefined ? String(row[colMap.plate]||'').trim().toUpperCase() : '';
-      if (!plate) return;
-      var veh = d.vehicles.find(function(v){ return v.plate === plate; });
-      if (!veh) return; // 跳过找不到车辆的
-      var existing = d.policies.find(function(p){ return p.vehicleId === veh.id && (colMap.company === undefined || p.company === String(row[colMap.company]||'')); });
-      if (existing) return;
-      d.policies.push({
-        id: 'p' + Date.now() + Math.random().toString(36).substr(2,5),
-        vehicleId: veh.id,
-        company: colMap.company !== undefined ? String(row[colMap.company]||'').trim() : '人保',
-        biz: colMap.biz !== undefined ? String(row[colMap.biz]||'') : '',
-        force: colMap.force !== undefined ? String(row[colMap.force]||'') : '',
-        tax: colMap.tax !== undefined ? String(row[colMap.tax]||'') : '',
-        agent: colMap.agent !== undefined ? String(row[colMap.agent]||'').trim() : '',
-        start: colMap.start !== undefined ? String(row[colMap.start]||'').trim() : '',
-        end: colMap.end !== undefined ? String(row[colMap.end]||'').trim() : ''
-      });
-      imported++;
-    });
-    saveData(d);
-    renderPolicies();
-  } else {
-    fieldMap = {custName:['客户','客户名称','客户名','姓名','name'], type:['险种','type'], company:['保险公司','company'], premium:['保费','premium'], agent:['代理人','agent'], start:['出单日期','start'], end:['到期日期','end']};
-    colMap = autoDetectCols(headers, fieldMap);
-    var imported = 0;
-    dataRows2.forEach(function(row) {
-      var custName = colMap.custName !== undefined ? String(row[colMap.custName]||'').trim() : '';
-      if (!custName) return;
-      var custId = '';
-      var cust = d.customers.find(function(c){ return c.name === custName; });
-      if (cust) custId = cust.id;
-      d.noncar.push({
-        id: 'n' + Date.now() + Math.random().toString(36).substr(2,5),
-        custId: custId,
-        type: colMap.type !== undefined ? String(row[colMap.type]||'').trim() : '',
-        company: colMap.company !== undefined ? String(row[colMap.company]||'').trim() : '人保',
-        premium: colMap.premium !== undefined ? (parseFloat(row[colMap.premium]) || 0) : 0,
-        agent: colMap.agent !== undefined ? String(row[colMap.agent]||'').trim() : '',
-        start: colMap.start !== undefined ? String(row[colMap.start]||'').trim() : '',
-        end: colMap.end !== undefined ? String(row[colMap.end]||'').trim() : ''
-      });
-      imported++;
-    });
-    saveData(d);
-    renderNoncar();
-  }
-  closeModal('importModal');
-  refreshStats();
-  showToast('成功导入 ' + imported + ' 条数据');
-}
-
-// Read file with SheetJS
-function readAndPreview(type, file) {
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      var data = new Uint8Array(e.target.result);
-      var wb = XLSX.read(data, {type:'array', cellDates:true, cellNF:true});
-      var sheet = wb.Sheets[wb.SheetNames[0]];
-      showImportPreview(type, sheet);
-    } catch(err) {
-      showToast('文件解析失败: ' + err.message, 'err');
-    }
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-function importCustomers(file) { if (!file) return; readAndPreview('cust', file); }
-function importVehicles(file)  { if (!file) return; readAndPreview('veh',  file); }
-function importPolicies(file)  { if (!file) return; readAndPreview('pol',  file); }
-function importNoncar(file)    { if (!file) return; readAndPreview('nc',   file); }
-</script>
+</script></script>
 <!-- 导入用隐藏文件域 -->
 <input type="file" id="fileImportCust" accept=".xlsx,.xls" style="display:none" onchange="importCustomers(this.files[0])">
 <input type="file" id="fileImportVeh"  accept=".xlsx,.xls" style="display:none" onchange="importVehicles(this.files[0])">
