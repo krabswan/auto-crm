@@ -247,7 +247,13 @@ var DATA_KEY = 'crm_data_v1';
 // 数据操作
 function loadData() {
   var s = localStorage.getItem(DATA_KEY);
-  return s ? JSON.parse(s) : { customers: [], vehicles: [], policies: [], noncar: [] };
+  var d = s ? JSON.parse(s) : { customers: [], vehicles: [], policies: [], noncar: [] };
+  // 防御性初始化：确保所有数组存在
+  if (!Array.isArray(d.customers)) d.customers = [];
+  if (!Array.isArray(d.vehicles)) d.vehicles = [];
+  if (!Array.isArray(d.policies)) d.policies = [];
+  if (!Array.isArray(d.noncar)) d.noncar = [];
+  return d;
 }
 function saveData(d) {
   localStorage.setItem(DATA_KEY, JSON.stringify(d));
