@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>蟹老板车管家</title>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body { font-family:sans-serif; background:#f0f2f5; }
@@ -262,10 +260,6 @@ window._db = { customers:[], vehicles:[], policies:[], noncar:[] };
 
 const SB_URL = 'https://yjnkbippailouqoqivtv.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqbmtiaXBwYWlsb3Vxb3FpdnR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjczNjcsImV4cCI6MjA5MDg0MzM2N30.QXYd5vK6bjD8Z7UmoA7JMb0AokHpZj9SggGPUd-DqDc';
-const supabase = window.supabase.createClient(SB_URL, SB_KEY);
-
-const supabase = window.supabase.createClient(SB_URL, SB_KEY);
-
 const SB_HDR = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
 const TBL = { customers:'customers', vehicles:'vehicles', policies:'car_policies', noncar:'noncar_policies' };
 const COL = {
