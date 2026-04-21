@@ -109,7 +109,7 @@ tr.renewal-soon:hover { background:#dbeafe !important; }
         <h2>客户列表</h2>
         <input id="custSearch" placeholder="🔍 搜索客户名称/电话/证件号" oninput="filterCustomers(this.value)" style="padding:7px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:14px;margin-left:8px;flex:1;max-width:260px;">
         <button class="btn btn-sm btn-danger" onclick="batchDelCust()" id="btnCustDel" style="display:none;">🗑 批量删除 (<span id="custSelCnt">0</span>)</button>
-        <button class="btn btn-sm btn-success" onclick="exportCustomers()">📥 导出</button>
+        <button class="btn btn-sm btn-success" onclick="exportCustomers()">📥 导出</button> <button class="btn btn-sm btn-primary" onclick="document.getElementById('fileImportCust').click()">📤 导入</button>
         <button class="btn btn-sm btn-primary" onclick="openCustModal(null)">➕ 新增</button>
       </div>
       <table id="custTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="custChkAll" onclick="toggleCustAll()"></th><th>客户名称</th><th>电话</th><th>证件号码</th><th>地址</th><th>操作</th></tr></thead><tbody></tbody></table>
@@ -124,7 +124,7 @@ tr.renewal-soon:hover { background:#dbeafe !important; }
         <h2>车辆列表</h2>
         <input id="vehSearch" placeholder="🔍 搜索车牌/车主" oninput="filterVehicles(this.value)" style="padding:7px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:14px;margin-left:8px;flex:1;max-width:260px;">
         <button class="btn btn-sm btn-danger" onclick="batchDelVeh()" id="btnVehDel" style="display:none;">🗑 批量删除 (<span id="vehSelCnt">0</span>)</button>
-        <button class="btn btn-sm btn-success" onclick="exportVehicles()">📥 导出</button>
+        <button class="btn btn-sm btn-success" onclick="exportVehicles()">📥 导出</button> <button class="btn btn-sm btn-primary" onclick="document.getElementById('fileImportVeh').click()">📤 导入</button>
         <button class="btn btn-sm btn-primary" onclick="openVehModal(null)">➕ 新增</button>
       </div>
       <table id="vehTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="vehChkAll" onclick="toggleVehAll()"></th><th>车牌号</th><th>车辆种类</th><th>使用性质</th><th>车主</th><th>初登日期</th><th>操作</th></tr></thead><tbody></tbody></table>
@@ -139,7 +139,7 @@ tr.renewal-soon:hover { background:#dbeafe !important; }
         <h2>保单列表</h2>
         <input id="polSearch" placeholder="🔍 搜索车牌/保险公司/代理人" oninput="filterPolicies(this.value)" style="padding:7px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:14px;margin-left:8px;flex:1;max-width:280px;">
         <button class="btn btn-sm btn-danger" onclick="batchDelPol()" id="btnPolDel" style="display:none;">🗑 批量删除 (<span id="polSelCnt">0</span>)</button>
-        <button class="btn btn-sm btn-success" onclick="exportPolicies()">📥 导出</button>
+        <button class="btn btn-sm btn-success" onclick="exportPolicies()">📥 导出</button> <button class="btn btn-sm btn-primary" onclick="document.getElementById('fileImportPol').click()">📤 导入</button>
         <button class="btn btn-sm btn-primary" onclick="openPolModal(null)">➕ 新增</button>
       </div>
       <table id="polTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="polChkAll" onclick="togglePolAll()"></th><th>车牌号</th><th>保险公司</th><th>商业险</th><th>交强险</th><th>车船税</th><th>代理人</th><th>出单日期</th><th>到期日期</th><th>操作</th></tr></thead><tbody></tbody></table>
@@ -154,7 +154,7 @@ tr.renewal-soon:hover { background:#dbeafe !important; }
         <h2>非车险保单列表</h2>
         <input id="noncarSearch" placeholder="🔍 搜索客户/险种/公司/代理人" oninput="filterNoncar(this.value)" style="padding:7px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:14px;margin-left:8px;flex:1;max-width:280px;">
         <button class="btn btn-sm btn-danger" onclick="batchDelNoncar()" id="btnNoncarDel" style="display:none;">🗑 批量删除 (<span id="noncarSelCnt">0</span>)</button>
-        <button class="btn btn-sm btn-success" onclick="exportNoncar()">📥 导出</button>
+        <button class="btn btn-sm btn-success" onclick="exportNoncar()">📥 导出</button> <button class="btn btn-sm btn-primary" onclick="document.getElementById('fileImportNc').click()">📤 导入</button>
         <button class="btn btn-sm btn-primary" onclick="openNoncarModal(null)">➕ 新增</button>
       </div>
       <table id="noncarTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="noncarChkAll" onclick="toggleNcAll()"></th><th>客户名称</th><th>险种</th><th>保险公司</th><th>保费</th><th>代理人</th><th>出单日期</th><th>到期日期</th><th>操作</th></tr></thead><tbody></tbody></table>
@@ -1277,6 +1277,234 @@ function doLogout() {
 
 // 启动
 init();
+
+// ========== Excel导入（自动识别列名） ==========
+var _importData = [];   // 待导入的原始行数据
+var _importType = '';   // 'cust'|'veh'|'pol'|'nc'
+var _importRawSheet = []; // 原始sheet行数组（预览用）
+
+// 自动识别列名：返回 {fieldName: colIndex} 的映射
+function autoDetectCols(headers, fieldMap) {
+  var result = {};
+  var norm = function(s) { return (s||'').toString().replace(/\s+/g,'').toLowerCase(); };
+  headers.forEach(function(h, idx) {
+    var n = norm(h);
+    for (var f in fieldMap) {
+      var aliases = fieldMap[f];
+      if (!Array.isArray(aliases)) aliases = [aliases];
+      for (var i = 0; i < aliases.length; i++) {
+        if (norm(aliases[i]) === n) { result[f] = idx; break; }
+      }
+    }
+  });
+  return result;
+}
+
+// 预览导入数据
+function showImportPreview(type, sheet) {
+  _importType = type;
+  var allRows = XLSX.utils.sheet_to_json(sheet, {header:1});
+  if (allRows.length < 2) { showToast('文件为空或无数据', 'err'); return; }
+  var headers = allRows[0].map(function(h){ return h === null || h === undefined ? '' : String(h); });
+  var dataRows = allRows.slice(1).filter(function(r){ return r.some(function(c){ return c !== null && c !== undefined && String(c).trim(); }); });
+
+  var fieldMap, title, idField;
+  if (type === 'cust') {
+    fieldMap = {name:['客户名称','姓名','名称','name','客户名'], phone:['电话','手机','手机号','联系方式','phone','tel'], idCard:['证件','身份证','证件号','证件号码','idcard','id'], addr:['地址','详细地址','addr','address']};
+    title = '客户导入预览'; idField = 'name';
+  } else if (type === 'veh') {
+    fieldMap = {plate:['车牌','车牌号','plate','车号','车牌号'], type:['种类','车辆种类','type','车型','车辆种类'], use:['使用性质','使用性质','use','性质'], ownerName:['车主','车主姓名','车主名称','owner','ownername'], regDate:['初登日期','注册日期','regdate','初登','注册']};
+    title = '车辆导入预览'; idField = 'plate';
+  } else if (type === 'pol') {
+    fieldMap = {plate:['车牌','车牌号','plate','车号'], company:['保险公司','承保公司','company','保险公司'], biz:['商业险','商业险保费','biz'], force:['交强险','交强险保费','force'], tax:['车船税','tax'], agent:['代理人','agent'], start:['出单日期','生效日期','start'], end:['到期日期','截止日期','end']};
+    title = '车险保单导入预览'; idField = 'plate';
+  } else {
+    fieldMap = {custName:['客户','客户名称','客户名','姓名','name'], type:['险种','type'], company:['保险公司','company'], premium:['保费','premium'], agent:['代理人','agent'], start:['出单日期','start'], end:['到期日期','end']};
+    title = '非车险保单导入预览'; idField = 'custName';
+  }
+
+  var colMap = autoDetectCols(headers, fieldMap);
+  _importData = dataRows;
+  _importRawSheet = allRows;
+
+  var fieldNames = Object.keys(colMap);
+  if (fieldNames.length === 0) {
+    showToast('未识别到有效列名，请确保表头包含：' + Object.values(fieldMap).flat().join('/'), 'err');
+    return;
+  }
+
+  // 显示预览表格（最多显示10行）
+  var previewRows = dataRows.slice(0, 10);
+  var displayFields = fieldNames.slice(0, 7); // 最多7列
+  var h = '<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr>';
+  displayFields.forEach(function(f){ h += '<th style="border:1px solid #d1d5db;padding:6px 8px;background:#f3f4f6;text-align:left;">'+esc(f)+'</th>'; });
+  h += '</tr></thead><tbody>';
+  previewRows.forEach(function(row) {
+    h += '<tr>';
+    displayFields.forEach(function(f){
+      var val = colMap[f] !== undefined ? (row[colMap[f]] || '') : '';
+      h += '<td style="border:1px solid #d1d5db;padding:6px 8px;">'+esc(String(val))+'</td>';
+    });
+    h += '</tr>';
+  });
+  h += '</tbody></table>';
+  if (dataRows.length > 10) h += '<p style="color:#6b7280;margin-top:8px;">共 '+dataRows.length+' 条，还有 '+(dataRows.length-10)+' 条未显示</p>';
+  document.getElementById('importPreview').innerHTML = h;
+  document.getElementById('importInfo').textContent = '已识别到 ' + dataRows.length + ' 条数据，字段：' + fieldNames.join(', ');
+  document.getElementById('importModalTitle').textContent = title;
+  document.getElementById('importModal').classList.add('show');
+}
+
+function doImport() {
+  var type = _importType;
+  var dataRows = _importData;
+  if (!dataRows.length) { closeModal('importModal'); return; }
+  var d = loadData();
+  var allRows = _importRawSheet;
+  var headers = allRows[0].map(function(h){ return h === null || h === undefined ? '' : String(h); });
+  var dataRows2 = allRows.slice(1).filter(function(r){ return r.some(function(c){ return c !== null && c !== undefined && String(c).trim(); }); });
+
+  var fieldMap, colMap;
+  if (type === 'cust') {
+    fieldMap = {name:['客户名称','姓名','名称','name','客户名'], phone:['电话','手机','手机号','联系方式','phone','tel'], idCard:['证件','身份证','证件号','证件号码','idcard','id'], addr:['地址','详细地址','addr','address']};
+    colMap = autoDetectCols(headers, fieldMap);
+    var imported = 0;
+    dataRows2.forEach(function(row) {
+      var name = colMap.name !== undefined ? String(row[colMap.name]||'').trim() : '';
+      if (!name) return;
+      var existing = d.customers.find(function(c){ return c.name === name; });
+      if (existing) return; // 跳过重复
+      d.customers.push({
+        id: 'c' + Date.now() + Math.random().toString(36).substr(2,5),
+        name: name,
+        phone: colMap.phone !== undefined ? String(row[colMap.phone]||'').trim() : '',
+        idCard: colMap.idCard !== undefined ? String(row[colMap.idCard]||'').trim() : '',
+        addr: colMap.addr !== undefined ? String(row[colMap.addr]||'').trim() : ''
+      });
+      imported++;
+    });
+    saveData(d);
+    renderCustomers();
+  } else if (type === 'veh') {
+    fieldMap = {plate:['车牌','车牌号','plate','车号','车牌号'], type:['种类','车辆种类','type','车型'], use:['使用性质','use','性质'], ownerName:['车主','车主姓名','车主名称','owner','ownername'], regDate:['初登日期','注册日期','regdate','初登']};
+    colMap = autoDetectCols(headers, fieldMap);
+    var imported = 0;
+    dataRows2.forEach(function(row) {
+      var plate = colMap.plate !== undefined ? String(row[colMap.plate]||'').trim().toUpperCase() : '';
+      if (!plate) return;
+      var existing = d.vehicles.find(function(v){ return v.plate === plate; });
+      if (existing) return;
+      var ownerName = colMap.ownerName !== undefined ? String(row[colMap.ownerName]||'').trim() : '';
+      var ownerId = '';
+      if (ownerName) { var cust = d.customers.find(function(c){ return c.name === ownerName; }); if (cust) ownerId = cust.id; }
+      d.vehicles.push({
+        id: 'v' + Date.now() + Math.random().toString(36).substr(2,5),
+        plate: plate,
+        type: colMap.type !== undefined ? String(row[colMap.type]||'').trim() : '',
+        use: colMap.use !== undefined ? String(row[colMap.use]||'').trim() : '',
+        ownerId: ownerId,
+        regDate: colMap.regDate !== undefined ? String(row[colMap.regDate]||'').trim() : ''
+      });
+      imported++;
+    });
+    saveData(d);
+    renderVehicles();
+  } else if (type === 'pol') {
+    fieldMap = {plate:['车牌','车牌号','plate','车号'], company:['保险公司','承保公司','company'], biz:['商业险','商业险保费','biz'], force:['交强险','交强险保费','force'], tax:['车船税','tax'], agent:['代理人','agent'], start:['出单日期','生效日期','start'], end:['到期日期','截止日期','end']};
+    colMap = autoDetectCols(headers, fieldMap);
+    var imported = 0;
+    dataRows2.forEach(function(row) {
+      var plate = colMap.plate !== undefined ? String(row[colMap.plate]||'').trim().toUpperCase() : '';
+      if (!plate) return;
+      var veh = d.vehicles.find(function(v){ return v.plate === plate; });
+      if (!veh) return; // 跳过找不到车辆的
+      var existing = d.policies.find(function(p){ return p.vehicleId === veh.id && (colMap.company === undefined || p.company === String(row[colMap.company]||'')); });
+      if (existing) return;
+      d.policies.push({
+        id: 'p' + Date.now() + Math.random().toString(36).substr(2,5),
+        vehicleId: veh.id,
+        company: colMap.company !== undefined ? String(row[colMap.company]||'').trim() : '人保',
+        biz: colMap.biz !== undefined ? String(row[colMap.biz]||'') : '',
+        force: colMap.force !== undefined ? String(row[colMap.force]||'') : '',
+        tax: colMap.tax !== undefined ? String(row[colMap.tax]||'') : '',
+        agent: colMap.agent !== undefined ? String(row[colMap.agent]||'').trim() : '',
+        start: colMap.start !== undefined ? String(row[colMap.start]||'').trim() : '',
+        end: colMap.end !== undefined ? String(row[colMap.end]||'').trim() : ''
+      });
+      imported++;
+    });
+    saveData(d);
+    renderPolicies();
+  } else {
+    fieldMap = {custName:['客户','客户名称','客户名','姓名','name'], type:['险种','type'], company:['保险公司','company'], premium:['保费','premium'], agent:['代理人','agent'], start:['出单日期','start'], end:['到期日期','end']};
+    colMap = autoDetectCols(headers, fieldMap);
+    var imported = 0;
+    dataRows2.forEach(function(row) {
+      var custName = colMap.custName !== undefined ? String(row[colMap.custName]||'').trim() : '';
+      if (!custName) return;
+      var custId = '';
+      var cust = d.customers.find(function(c){ return c.name === custName; });
+      if (cust) custId = cust.id;
+      d.noncar.push({
+        id: 'n' + Date.now() + Math.random().toString(36).substr(2,5),
+        custId: custId,
+        type: colMap.type !== undefined ? String(row[colMap.type]||'').trim() : '',
+        company: colMap.company !== undefined ? String(row[colMap.company]||'').trim() : '人保',
+        premium: colMap.premium !== undefined ? (parseFloat(row[colMap.premium]) || 0) : 0,
+        agent: colMap.agent !== undefined ? String(row[colMap.agent]||'').trim() : '',
+        start: colMap.start !== undefined ? String(row[colMap.start]||'').trim() : '',
+        end: colMap.end !== undefined ? String(row[colMap.end]||'').trim() : ''
+      });
+      imported++;
+    });
+    saveData(d);
+    renderNoncar();
+  }
+  closeModal('importModal');
+  refreshStats();
+  showToast('成功导入 ' + imported + ' 条数据');
+}
+
+// Read file with SheetJS
+function readAndPreview(type, file) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var data = new Uint8Array(e.target.result);
+      var wb = XLSX.read(data, {type:'array', cellDates:true, cellNF:true});
+      var sheet = wb.Sheets[wb.SheetNames[0]];
+      showImportPreview(type, sheet);
+    } catch(err) {
+      showToast('文件解析失败: ' + err.message, 'err');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function importCustomers(file) { if (!file) return; readAndPreview('cust', file); }
+function importVehicles(file)  { if (!file) return; readAndPreview('veh',  file); }
+function importPolicies(file)  { if (!file) return; readAndPreview('pol',  file); }
+function importNoncar(file)    { if (!file) return; readAndPreview('nc',   file); }
 </script>
+<!-- 导入用隐藏文件域 -->
+<input type="file" id="fileImportCust" accept=".xlsx,.xls" style="display:none" onchange="importCustomers(this.files[0])">
+<input type="file" id="fileImportVeh"  accept=".xlsx,.xls" style="display:none" onchange="importVehicles(this.files[0])">
+<input type="file" id="fileImportPol"  accept=".xlsx,.xls" style="display:none" onchange="importPolicies(this.files[0])">
+<input type="file" id="fileImportNc"   accept=".xlsx,.xls" style="display:none" onchange="importNoncar(this.files[0])">
+
+<!-- 导入预览弹窗 -->
+<div id="importModal" class="modal">
+  <div class="modal-content" style="max-width:800px;max-height:80vh;overflow:auto;">
+    <div class="modal-header"><h3 id="importModalTitle">导入预览</h3><button class="modal-close" onclick="closeModal('importModal')">×</button></div>
+    <div class="modal-body">
+      <p id="importInfo" style="color:#6b7280;margin-bottom:12px;"></p>
+      <div id="importPreview" style="overflow-x:auto;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('importModal')">取消</button>
+      <button class="btn btn-primary" id="btnImportConfirm" onclick="doImport()">确认导入</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
