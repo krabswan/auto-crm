@@ -320,7 +320,7 @@ async function sbPost(t,rec){
     var r=await fetch(SB_URL+'/rest/v1/'+TBL[t],{method:'POST',headers:SB_HDR,body:JSON.stringify(row)});if(r.ok)saveToLocal();return r.ok?await r.json():null;}catch(e){console.error('sbPost',t,e);return null;}
 }
 async function sbPatch(t,id,rec){
-  try{var r=await fetch(SB_URL+'/rest/v1/'+TBL[t]+'?id=eq.'+id,{method:'PATCH',headers:SB_HDR,body:JSON.stringify(toDb(t,rec))});if(r.ok)saveToLocal();return r.ok;catch(e){console.error('sbPatch',t,e);return false;}
+  try{var r=await fetch(SB_URL+'/rest/v1/'+TBL[t]+'?id=eq.'+id,{method:'PATCH',headers:SB_HDR,body:JSON.stringify(toDb(t,rec))});if(r.ok)saveToLocal();return r.ok;}catch(e){console.error('sbPatch',t,e);return false;}
 }
 async function sbDel(t,id){
   try{var r=await fetch(SB_URL+'/rest/v1/'+TBL[t]+'?id=eq.'+id,{method:'DELETE',headers:SB_HDR});if(r.ok)saveToLocal();return r.ok;catch(e){console.error('sbDel',t,e);return false;}
