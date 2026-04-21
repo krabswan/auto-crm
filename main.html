@@ -280,7 +280,12 @@ tr.renewal-soon:hover { background:#dbeafe !important; }
 <script>
 
 // Mobile sidebar toggle
-function toggleSidebar(){document.querySelector('.sidebar').classList.toggle('show');}
+function toggleSidebar(){
+  var sb = document.querySelector('.sidebar');
+  if (!sb) { alert('找不到侧边栏'); return; }
+  sb.classList.toggle('show');
+  console.log('toggleSidebar called, sidebar:', sb.classList.contains('show'));
+}
 
 // Offline support: save to localStorage as backup
 function saveToLocal(){try{localStorage.setItem('crm_db',JSON.stringify(window._db));localStorage.setItem('crm_db_time',Date.now());}catch(e){console.error('saveToLocal',e);}}
