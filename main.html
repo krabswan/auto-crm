@@ -28,7 +28,13 @@ body { font-family:sans-serif; background:#f0f2f5; }
 .btn-primary { background:#0ea5e9; color:#fff; }
 .btn-success { background:#10b981; color:#fff; }
 .btn-danger { background:#ef4444; color:#fff; }
-.btn-sm { padding:5px 10px; font-size:12px; }
+.btn-sm { padding:5px 10px; font-size:12px; border:none; border-radius:6px; cursor:pointer; transition:opacity 0.2s; }
+.btn-sm.btn-primary { background:#2563eb; color:#fff; }
+.btn-sm.btn-primary:hover { background:#1d4ed8; opacity:1; }
+.btn-sm.btn-danger { background:#ef4444; color:#fff; }
+.btn-sm.btn-danger:hover { background:#dc2626; opacity:1; }
+.btn-sm.btn-success { background:#16a34a; color:#fff; }
+.btn-sm.btn-success:hover { background:#15803d; opacity:1; }
 table { width:100%; border-collapse:collapse; }
 th,td { padding:10px 12px; text-align:left; border-bottom:1px solid #e5e7eb; }
 th { background:#f9fafb; font-weight:600; color:#374151; }
@@ -99,74 +105,80 @@ tr.renewal-soon:hover { background:#dbeafe !important; }
   <!-- 客户管理 -->
   <div id="page-customers" class="page">
     <div class="card">
-      <div class="card-header">
+      <div class="card-header" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
         <h2>客户列表</h2>
-        <div>
-          <button class="btn btn-success" onclick="exportCustomers()">📥 导出Excel</button>
-          <button class="btn btn-primary" onclick="openCustModal(null)">➕ 新增客户</button>
-        </div>
+        <input id="custSearch" placeholder="🔍 搜索客户名称/电话/证件号" oninput="filterCustomers(this.value)" style="padding:7px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:14px;margin-left:8px;flex:1;max-width:260px;">
+        <button class="btn btn-sm btn-danger" onclick="batchDelCust()" id="btnCustDel" style="display:none;">🗑 批量删除 (<span id="custSelCnt">0</span>)</button>
+        <button class="btn btn-sm btn-success" onclick="exportCustomers()">📥 导出</button>
+        <button class="btn btn-sm btn-primary" onclick="openCustModal(null)">➕ 新增</button>
       </div>
-      <table id="custTable"><thead><tr><th>客户名称</th><th>电话</th><th>证件号码</th><th>地址</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <table id="custTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="custChkAll" onchange="toggleCustAll(this.checked)"></th><th>客户名称</th><th>电话</th><th>证件号码</th><th>地址</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <div id="custEmpty" style="text-align:center;color:#9ca3af;padding:30px;font-size:14px;display:none;">暂无数据</div>
     </div>
   </div>
 
   <!-- 车辆管理 -->
   <div id="page-vehicles" class="page">
     <div class="card">
-      <div class="card-header">
+      <div class="card-header" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
         <h2>车辆列表</h2>
-        <div>
-          <button class="btn btn-success" onclick="exportVehicles()">📥 导出Excel</button>
-          <button class="btn btn-primary" onclick="openVehModal(null)">➕ 新增车辆</button>
-        </div>
+        <input id="vehSearch" placeholder="🔍 搜索车牌/车主" oninput="filterVehicles(this.value)" style="padding:7px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:14px;margin-left:8px;flex:1;max-width:260px;">
+        <button class="btn btn-sm btn-danger" onclick="batchDelVeh()" id="btnVehDel" style="display:none;">🗑 批量删除 (<span id="vehSelCnt">0</span>)</button>
+        <button class="btn btn-sm btn-success" onclick="exportVehicles()">📥 导出</button>
+        <button class="btn btn-sm btn-primary" onclick="openVehModal(null)">➕ 新增</button>
       </div>
-      <table id="vehTable"><thead><tr><th>车牌号</th><th>车辆种类</th><th>使用性质</th><th>车主</th><th>初登日期</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <table id="vehTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="vehChkAll" onchange="toggleVehAll(this.checked)"></th><th>车牌号</th><th>车辆种类</th><th>使用性质</th><th>车主</th><th>初登日期</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <div id="vehEmpty" style="text-align:center;color:#9ca3af;padding:30px;font-size:14px;display:none;">暂无数据</div>
     </div>
   </div>
 
   <!-- 车险保单 -->
   <div id="page-policies" class="page">
     <div class="card">
-      <div class="card-header">
+      <div class="card-header" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
         <h2>保单列表</h2>
-        <div>
-          <button class="btn btn-success" onclick="exportPolicies()">📥 导出Excel</button>
-          <button class="btn btn-primary" onclick="openPolModal(null)">➕ 新增保单</button>
-        </div>
+        <input id="polSearch" placeholder="🔍 搜索车牌/保险公司/代理人" oninput="filterPolicies(this.value)" style="padding:7px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:14px;margin-left:8px;flex:1;max-width:280px;">
+        <button class="btn btn-sm btn-danger" onclick="batchDelPol()" id="btnPolDel" style="display:none;">🗑 批量删除 (<span id="polSelCnt">0</span>)</button>
+        <button class="btn btn-sm btn-success" onclick="exportPolicies()">📥 导出</button>
+        <button class="btn btn-sm btn-primary" onclick="openPolModal(null)">➕ 新增</button>
       </div>
-      <table id="polTable"><thead><tr><th>车牌号</th><th>保险公司</th><th>商业险</th><th>交强险</th><th>车船税</th><th>代理人</th><th>出单日期</th><th>到期日期</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <table id="polTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="polChkAll" onchange="togglePolAll(this.checked)"></th><th>车牌号</th><th>保险公司</th><th>商业险</th><th>交强险</th><th>车船税</th><th>代理人</th><th>出单日期</th><th>到期日期</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <div id="polEmpty" style="text-align:center;color:#9ca3af;padding:30px;font-size:14px;display:none;">暂无数据</div>
     </div>
   </div>
 
   <!-- 非车险保单 -->
   <div id="page-noncar" class="page">
     <div class="card">
-      <div class="card-header">
+      <div class="card-header" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
         <h2>非车险保单列表</h2>
-        <div>
-          <button class="btn btn-success" onclick="exportNoncar()">📥 导出Excel</button>
-          <button class="btn btn-primary" onclick="openNoncarModal(null)">➕ 新增保单</button>
-        </div>
+        <input id="noncarSearch" placeholder="🔍 搜索客户/险种/公司/代理人" oninput="filterNoncar(this.value)" style="padding:7px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:14px;margin-left:8px;flex:1;max-width:280px;">
+        <button class="btn btn-sm btn-danger" onclick="batchDelNoncar()" id="btnNoncarDel" style="display:none;">🗑 批量删除 (<span id="noncarSelCnt">0</span>)</button>
+        <button class="btn btn-sm btn-success" onclick="exportNoncar()">📥 导出</button>
+        <button class="btn btn-sm btn-primary" onclick="openNoncarModal(null)">➕ 新增</button>
       </div>
-      <table id="noncarTable"><thead><tr><th>客户名称</th><th>险种</th><th>保险公司</th><th>保费</th><th>代理人</th><th>出单日期</th><th>到期日期</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <table id="noncarTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="noncarChkAll" onchange="toggleNoncarAll(this.checked)"></th><th>客户名称</th><th>险种</th><th>保险公司</th><th>保费</th><th>代理人</th><th>出单日期</th><th>到期日期</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <div id="noncarEmpty" style="text-align:center;color:#9ca3af;padding:30px;font-size:14px;display:none;">暂无数据</div>
     </div>
   </div>
 
   <!-- 续保提醒 -->
   <div id="page-renewal" class="page">
     <div class="card">
-      <div class="card-header">
+      <div class="card-header" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
         <h2>🔔 续保提醒（到期前30天）</h2>
+        <input id="renewalSearch" placeholder="🔍 搜索车牌/客户/公司/代理人" oninput="filterRenewal(this.value)" style="padding:7px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:14px;margin-left:8px;flex:1;max-width:280px;">
       </div>
       <div style="margin-bottom:14px;">
         <span style="display:inline-block;width:12px;height:12px;background:#ef4444;border-radius:50%;margin-right:4px;vertical-align:middle;"></span><span style="font-size:13px;vertical-align:middle;margin-right:16px;">已过期</span>
         <span style="display:inline-block;width:12px;height:12px;background:#f59e0b;border-radius:50%;margin-right:4px;vertical-align:middle;"></span><span style="font-size:13px;vertical-align:middle;margin-right:16px;">7天内到期</span>
         <span style="display:inline-block;width:12px;height:12px;background:#0ea5e9;border-radius:50%;margin-right:4px;vertical-align:middle;"></span><span style="font-size:13px;vertical-align:middle;margin-right:16px;">30天内到期</span>
       </div>
-      <h3 style="font-size:15px;margin-bottom:10px;">🚗 车险保单</h3>
-      <table id="renewalPolTable"><thead><tr><th>车牌号</th><th>保险公司</th><th>代理人</th><th>到期日期</th><th>剩余天数</th><th>状态</th><th>操作</th></tr></thead><tbody></tbody></table>
-      <h3 style="font-size:15px;margin:20px 0 10px;">📄 非车险保单</h3>
-      <table id="renewalNoncarTable"><thead><tr><th>客户名称</th><th>险种</th><th>保险公司</th><th>代理人</th><th>到期日期</th><th>剩余天数</th><th>状态</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <h3 style="font-size:15px;margin-bottom:10px;">🚗 车险保单 <button class="btn btn-sm btn-danger" onclick="batchDelRenewalPol()" id="btnRPolDel" style="display:none;margin-left:10px;font-size:12px;">🗑 删除(<span id="rpolSelCnt">0</span>)</button></h3>
+      <table id="renewalPolTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="rpolChkAll" onchange="toggleRPolAll(this.checked)"></th><th>车牌号</th><th>保险公司</th><th>代理人</th><th>到期日期</th><th>剩余天数</th><th>状态</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <h3 style="font-size:15px;margin:20px 0 10px;">📄 非车险保单 <button class="btn btn-sm btn-danger" onclick="batchDelRenewalNoncar()" id="btnRncDel" style="display:none;margin-left:10px;font-size:12px;">🗑 删除(<span id="rncSelCnt">0</span>)</button></h3>
+      <table id="renewalNoncarTable"><thead><tr><th style="width:30px;"><input type="checkbox" id="rncChkAll" onchange="toggleRncAll(this.checked)"></th><th>客户名称</th><th>险种</th><th>保险公司</th><th>代理人</th><th>到期日期</th><th>剩余天数</th><th>状态</th><th>操作</th></tr></thead><tbody></tbody></table>
+      <div id="renewalEmpty" style="text-align:center;color:#9ca3af;padding:30px;font-size:14px;display:none;">暂无即将到期的保单</div>
     </div>
   </div>
 </div>
@@ -259,6 +271,13 @@ function saveData(d) {
   localStorage.setItem(DATA_KEY, JSON.stringify(d));
 }
 
+// HTML转义防XSS
+function esc(s) {
+  if (s == null) return '';
+  s = String(s);
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 // 初始化
 function init() {
   if (localStorage.getItem('crm_logged') !== '1') {
@@ -302,16 +321,89 @@ function refreshStats() {
 }
 
 // ========== 客户 ==========
-function renderCustomers() {
+var _custSel = []; // 选中的客户ID
+
+function filterCustomers(kw) {
   var d = loadData();
+  var k = kw.trim().toLowerCase();
+  var list = k ? d.customers.filter(function(c) {
+    return (c.name||'').toLowerCase().includes(k) ||
+           (c.phone||'').toLowerCase().includes(k) ||
+           (c.idCard||'').toLowerCase().includes(k) ||
+           (c.addr||'').toLowerCase().includes(k);
+  }) : d.customers;
+  _custSel = [];
+  renderCustRows(list);
+}
+
+function renderCustRows(list) {
   var tbody = document.querySelector('#custTable tbody');
   tbody.innerHTML = '';
-  d.customers.forEach(function(c) {
+  document.getElementById('custChkAll').checked = false;
+  document.getElementById('btnCustDel').style.display = 'none';
+  document.getElementById('custSelCnt').textContent = '0';
+  if (!list.length) {
+    document.getElementById('custEmpty').style.display = 'block';
+    return;
+  }
+  document.getElementById('custEmpty').style.display = 'none';
+  list.forEach(function(c) {
     var tr = document.createElement('tr');
-    tr.innerHTML = '<td>' + (c.name || '') + '</td><td>' + (c.phone || '') + '</td><td>' + (c.idCard || '') + '</td><td>' + (c.addr || '') + '</td>' +
+    var sel = _custSel.indexOf(c.id) >= 0 ? 'checked' : '';
+    tr.innerHTML = '<td><input type="checkbox" ' + sel + ' onchange="toggleCust(\'' + c.id + '\',this.checked)"></td>' +
+      '<td>' + esc(c.name) + '</td><td>' + esc(c.phone) + '</td><td>' + esc(c.idCard) + '</td><td>' + esc(c.addr) + '</td>' +
       '<td><button class="btn btn-sm btn-primary" onclick="openCustModal(\'' + c.id + '\')">编辑</button> <button class="btn btn-sm btn-danger" onclick="delCust(\'' + c.id + '\')">删除</button></td>';
     tbody.appendChild(tr);
   });
+}
+
+function renderCustomers() {
+  filterCustomers(document.getElementById('custSearch').value);
+}
+
+function toggleCustAll(checked) {
+  var d = loadData();
+  var kw = document.getElementById('custSearch').value.trim().toLowerCase();
+  var list = kw ? d.customers.filter(function(c) {
+    return (c.name||'').toLowerCase().includes(kw) ||
+           (c.phone||'').toLowerCase().includes(kw) ||
+           (c.idCard||'').toLowerCase().includes(kw) ||
+           (c.addr||'').toLowerCase().includes(kw);
+  }) : d.customers;
+  _custSel = checked ? list.map(function(c){ return c.id; }) : [];
+  renderCustRows(list);
+  if (checked && _custSel.length) document.getElementById('btnCustDel').style.display = '';
+  document.getElementById('custSelCnt').textContent = _custSel.length;
+}
+
+function toggleCust(id, checked) {
+  var idx = _custSel.indexOf(id);
+  if (checked && idx < 0) _custSel.push(id);
+  else if (!checked && idx >= 0) _custSel.splice(idx, 1);
+  var d = loadData();
+  var kw = document.getElementById('custSearch').value.trim().toLowerCase();
+  var list = kw ? d.customers.filter(function(c) {
+    return (c.name||'').toLowerCase().includes(kw) ||
+           (c.phone||'').toLowerCase().includes(kw) ||
+           (c.idCard||'').toLowerCase().includes(kw) ||
+           (c.addr||'').toLowerCase().includes(kw);
+  }) : d.customers;
+  var btn = document.getElementById('btnCustDel');
+  btn.style.display = _custSel.length ? '' : 'none';
+  document.getElementById('custSelCnt').textContent = _custSel.length;
+  document.getElementById('custChkAll').checked = _custSel.length === list.length && list.length > 0;
+}
+
+function batchDelCust() {
+  if (!_custSel.length) return;
+  if (!confirm('确定删除选中的 ' + _custSel.length + ' 个客户？')) return;
+  var d = loadData();
+  d.customers = d.customers.filter(function(c){ return _custSel.indexOf(c.id) < 0; });
+  saveData(d);
+  _custSel = [];
+  renderCustomers();
+  refreshStats();
+  showToast('删除成功');
 }
 function openCustModal(id) {
   var d = loadData();
@@ -370,17 +462,91 @@ function exportCustomers() {
 }
 
 // ========== 车辆 ==========
-function renderVehicles() {
+var _vehSel = [];
+
+function filterVehicles(kw) {
+  var d = loadData();
+  var k = kw.trim().toLowerCase();
+  var list = k ? d.vehicles.filter(function(v) {
+    var owner = d.customers.find(function(c){ return c.id === v.ownerId; }) || {};
+    return (v.plate||'').toLowerCase().includes(k) ||
+           (owner.name||'').toLowerCase().includes(k) ||
+           (v.type||'').toLowerCase().includes(k) ||
+           (v.use||'').toLowerCase().includes(k);
+  }) : d.vehicles;
+  _vehSel = [];
+  renderVehRows(list);
+}
+
+function renderVehRows(list) {
   var d = loadData();
   var tbody = document.querySelector('#vehTable tbody');
   tbody.innerHTML = '';
-  d.vehicles.forEach(function(v) {
-    var owner = d.customers.find(function(c) { return c.id === v.ownerId; }) || {};
+  document.getElementById('vehChkAll').checked = false;
+  document.getElementById('btnVehDel').style.display = 'none';
+  document.getElementById('vehSelCnt').textContent = '0';
+  if (!list.length) { document.getElementById('vehEmpty').style.display = 'block'; return; }
+  document.getElementById('vehEmpty').style.display = 'none';
+  list.forEach(function(v) {
+    var owner = d.customers.find(function(c){ return c.id === v.ownerId; }) || {};
     var tr = document.createElement('tr');
-    tr.innerHTML = '<td>' + (v.plate || '') + '</td><td>' + (v.type || '') + '</td><td>' + (v.use || '') + '</td><td>' + (owner.name || '') + '</td><td>' + (v.regDate || '') + '</td>' +
+    var sel = _vehSel.indexOf(v.id) >= 0 ? 'checked' : '';
+    tr.innerHTML = '<td><input type="checkbox" ' + sel + ' onchange="toggleVeh(\'' + v.id + '\',this.checked)"></td>' +
+      '<td>' + esc(v.plate) + '</td><td>' + esc(v.type) + '</td><td>' + esc(v.use) + '</td><td>' + esc(owner.name) + '</td><td>' + esc(v.regDate) + '</td>' +
       '<td><button class="btn btn-sm btn-primary" onclick="openVehModal(\'' + v.id + '\')">编辑</button> <button class="btn btn-sm btn-danger" onclick="delVeh(\'' + v.id + '\')">删除</button></td>';
     tbody.appendChild(tr);
   });
+}
+
+function renderVehicles() {
+  filterVehicles(document.getElementById('vehSearch').value);
+}
+
+function toggleVehAll(checked) {
+  var d = loadData();
+  var kw = document.getElementById('vehSearch').value.trim().toLowerCase();
+  var list = kw ? d.vehicles.filter(function(v) {
+    var owner = d.customers.find(function(c){ return c.id === v.ownerId; }) || {};
+    return (v.plate||'').toLowerCase().includes(kw) ||
+           (owner.name||'').toLowerCase().includes(kw) ||
+           (v.type||'').toLowerCase().includes(kw) ||
+           (v.use||'').toLowerCase().includes(kw);
+  }) : d.vehicles;
+  _vehSel = checked ? list.map(function(v){ return v.id; }) : [];
+  renderVehRows(list);
+  if (checked && _vehSel.length) document.getElementById('btnVehDel').style.display = '';
+  document.getElementById('vehSelCnt').textContent = _vehSel.length;
+}
+
+function toggleVeh(id, checked) {
+  var idx = _vehSel.indexOf(id);
+  if (checked && idx < 0) _vehSel.push(id);
+  else if (!checked && idx >= 0) _vehSel.splice(idx, 1);
+  var btn = document.getElementById('btnVehDel');
+  btn.style.display = _vehSel.length ? '' : 'none';
+  document.getElementById('vehSelCnt').textContent = _vehSel.length;
+  var d = loadData();
+  var kw = document.getElementById('vehSearch').value.trim().toLowerCase();
+  var list = kw ? d.vehicles.filter(function(v) {
+    var owner = d.customers.find(function(c){ return c.id === v.ownerId; }) || {};
+    return (v.plate||'').toLowerCase().includes(kw) ||
+           (owner.name||'').toLowerCase().includes(kw) ||
+           (v.type||'').toLowerCase().includes(kw) ||
+           (v.use||'').toLowerCase().includes(kw);
+  }) : d.vehicles;
+  document.getElementById('vehChkAll').checked = _vehSel.length === list.length && list.length > 0;
+}
+
+function batchDelVeh() {
+  if (!_vehSel.length) return;
+  if (!confirm('确定删除选中的 ' + _vehSel.length + ' 辆车？')) return;
+  var d = loadData();
+  d.vehicles = d.vehicles.filter(function(v){ return _vehSel.indexOf(v.id) < 0; });
+  saveData(d);
+  _vehSel = [];
+  renderVehicles();
+  refreshStats();
+  showToast('删除成功');
 }
 function openVehModal(id) {
   var d = loadData();
@@ -447,17 +613,91 @@ function exportVehicles() {
 }
 
 // ========== 保单 ==========
-function renderPolicies() {
+// ========== 车险保单 ==========
+var _polSel = [];
+
+function filterPolicies(kw) {
+  var d = loadData();
+  var k = kw.trim().toLowerCase();
+  var list = k ? d.policies.filter(function(p) {
+    var veh = d.vehicles.find(function(v){ return v.id === p.vehicleId; }) || {};
+    return (veh.plate||'').toLowerCase().includes(k) ||
+           (p.company||'').toLowerCase().includes(k) ||
+           (p.agent||'').toLowerCase().includes(k) ||
+           (p.start||'').toLowerCase().includes(k) ||
+           (p.end||'').toLowerCase().includes(k);
+  }) : d.policies;
+  _polSel = [];
+  renderPolRows(list);
+}
+
+function renderPolRows(list) {
   var d = loadData();
   var tbody = document.querySelector('#polTable tbody');
   tbody.innerHTML = '';
-  d.policies.forEach(function(p) {
-    var veh = d.vehicles.find(function(v) { return v.id === p.vehicleId; }) || {};
+  document.getElementById('polChkAll').checked = false;
+  document.getElementById('btnPolDel').style.display = 'none';
+  document.getElementById('polSelCnt').textContent = '0';
+  if (!list.length) { document.getElementById('polEmpty').style.display = 'block'; return; }
+  document.getElementById('polEmpty').style.display = 'none';
+  list.forEach(function(p) {
+    var veh = d.vehicles.find(function(v){ return v.id === p.vehicleId; }) || {};
     var tr = document.createElement('tr');
-    tr.innerHTML = '<td>' + (veh.plate || '') + '</td><td>' + (p.company || '') + '</td><td>' + (p.biz || '0') + '</td><td>' + (p.force || '0') + '</td><td>' + (p.tax || '0') + '</td><td>' + (p.agent || '') + '</td><td>' + (p.start || '') + '</td><td>' + (p.end || '') + '</td>' +
+    var sel = _polSel.indexOf(p.id) >= 0 ? 'checked' : '';
+    tr.innerHTML = '<td><input type="checkbox" ' + sel + ' onchange="togglePol(\'' + p.id + '\',this.checked)"></td>' +
+      '<td>' + esc(veh.plate) + '</td><td>' + esc(p.company) + '</td><td>' + esc(p.biz) + '</td><td>' + esc(p.force) + '</td><td>' + esc(p.tax) + '</td><td>' + esc(p.agent) + '</td><td>' + esc(p.start) + '</td><td>' + esc(p.end) + '</td>' +
       '<td><button class="btn btn-sm btn-primary" onclick="openPolModal(\'' + p.id + '\')">编辑</button> <button class="btn btn-sm btn-danger" onclick="delPol(\'' + p.id + '\')">删除</button></td>';
     tbody.appendChild(tr);
   });
+}
+
+function renderPolicies() {
+  filterPolicies(document.getElementById('polSearch').value);
+}
+
+function togglePolAll(checked) {
+  var d = loadData();
+  var kw = document.getElementById('polSearch').value.trim().toLowerCase();
+  var list = kw ? d.policies.filter(function(p) {
+    var veh = d.vehicles.find(function(v){ return v.id === p.vehicleId; }) || {};
+    return (veh.plate||'').toLowerCase().includes(kw) ||
+           (p.company||'').toLowerCase().includes(kw) ||
+           (p.agent||'').toLowerCase().includes(kw);
+  }) : d.policies;
+  _polSel = checked ? list.map(function(p){ return p.id; }) : [];
+  renderPolRows(list);
+  if (checked && _polSel.length) document.getElementById('btnPolDel').style.display = '';
+  document.getElementById('polSelCnt').textContent = _polSel.length;
+}
+
+function togglePol(id, checked) {
+  var idx = _polSel.indexOf(id);
+  if (checked && idx < 0) _polSel.push(id);
+  else if (!checked && idx >= 0) _polSel.splice(idx, 1);
+  var btn = document.getElementById('btnPolDel');
+  btn.style.display = _polSel.length ? '' : 'none';
+  document.getElementById('polSelCnt').textContent = _polSel.length;
+  var d = loadData();
+  var kw = document.getElementById('polSearch').value.trim().toLowerCase();
+  var list = kw ? d.policies.filter(function(p) {
+    var veh = d.vehicles.find(function(v){ return v.id === p.vehicleId; }) || {};
+    return (veh.plate||'').toLowerCase().includes(kw) ||
+           (p.company||'').toLowerCase().includes(kw) ||
+           (p.agent||'').toLowerCase().includes(kw);
+  }) : d.policies;
+  document.getElementById('polChkAll').checked = _polSel.length === list.length && list.length > 0;
+}
+
+function batchDelPol() {
+  if (!_polSel.length) return;
+  if (!confirm('确定删除选中的 ' + _polSel.length + ' 个保单？')) return;
+  var d = loadData();
+  d.policies = d.policies.filter(function(p){ return _polSel.indexOf(p.id) < 0; });
+  saveData(d);
+  _polSel = [];
+  renderPolicies();
+  refreshStats();
+  showToast('删除成功');
 }
 function openPolModal(id) {
   var d = loadData();
@@ -530,17 +770,94 @@ function exportPolicies() {
 }
 
 // ========== 非车险保单 ==========
-function renderNoncar() {
+// ========== 非车险保单 ==========
+var _ncSel = [];
+
+function filterNoncar(kw) {
+  var d = loadData();
+  var k = kw.trim().toLowerCase();
+  var list = k ? d.noncar.filter(function(n) {
+    var cust = d.customers.find(function(c){ return c.id === n.custId; }) || {};
+    return (cust.name||'').toLowerCase().includes(k) ||
+           (n.type||'').toLowerCase().includes(k) ||
+           (n.company||'').toLowerCase().includes(k) ||
+           (n.agent||'').toLowerCase().includes(k) ||
+           (n.start||'').toLowerCase().includes(k) ||
+           (n.end||'').toLowerCase().includes(k);
+  }) : d.noncar;
+  _ncSel = [];
+  renderNcRows(list);
+}
+
+function renderNcRows(list) {
   var d = loadData();
   var tbody = document.querySelector('#noncarTable tbody');
   tbody.innerHTML = '';
-  d.noncar.forEach(function(n) {
-    var cust = d.customers.find(function(c) { return c.id === n.custId; }) || {};
+  document.getElementById('noncarChkAll').checked = false;
+  document.getElementById('btnNoncarDel').style.display = 'none';
+  document.getElementById('noncarSelCnt').textContent = '0';
+  if (!list.length) { document.getElementById('noncarEmpty').style.display = 'block'; return; }
+  document.getElementById('noncarEmpty').style.display = 'none';
+  list.forEach(function(n) {
+    var cust = d.customers.find(function(c){ return c.id === n.custId; }) || {};
     var tr = document.createElement('tr');
-    tr.innerHTML = '<td>' + (cust.name || '') + '</td><td>' + (n.type || '') + '</td><td>' + (n.company || '') + '</td><td>' + (n.premium || '0') + '</td><td>' + (n.agent || '') + '</td><td>' + (n.start || '') + '</td><td>' + (n.end || '') + '</td>' +
+    var sel = _ncSel.indexOf(n.id) >= 0 ? 'checked' : '';
+    tr.innerHTML = '<td><input type="checkbox" ' + sel + ' onchange="toggleNc(\'' + n.id + '\',this.checked)"></td>' +
+      '<td>' + esc(cust.name) + '</td><td>' + esc(n.type) + '</td><td>' + esc(n.company) + '</td><td>' + esc(n.premium) + '</td><td>' + esc(n.agent) + '</td><td>' + esc(n.start) + '</td><td>' + esc(n.end) + '</td>' +
       '<td><button class="btn btn-sm btn-primary" onclick="openNoncarModal(\'' + n.id + '\')">编辑</button> <button class="btn btn-sm btn-danger" onclick="delNoncar(\'' + n.id + '\')">删除</button></td>';
     tbody.appendChild(tr);
   });
+}
+
+function renderNoncar() {
+  filterNoncar(document.getElementById('noncarSearch').value);
+}
+
+function toggleNcAll(checked) {
+  var d = loadData();
+  var kw = document.getElementById('noncarSearch').value.trim().toLowerCase();
+  var list = kw ? d.noncar.filter(function(n) {
+    var cust = d.customers.find(function(c){ return c.id === n.custId; }) || {};
+    return (cust.name||'').toLowerCase().includes(kw) ||
+           (n.type||'').toLowerCase().includes(kw) ||
+           (n.company||'').toLowerCase().includes(kw) ||
+           (n.agent||'').toLowerCase().includes(kw);
+  }) : d.noncar;
+  _ncSel = checked ? list.map(function(n){ return n.id; }) : [];
+  renderNcRows(list);
+  if (checked && _ncSel.length) document.getElementById('btnNoncarDel').style.display = '';
+  document.getElementById('noncarSelCnt').textContent = _ncSel.length;
+}
+
+function toggleNc(id, checked) {
+  var idx = _ncSel.indexOf(id);
+  if (checked && idx < 0) _ncSel.push(id);
+  else if (!checked && idx >= 0) _ncSel.splice(idx, 1);
+  var btn = document.getElementById('btnNoncarDel');
+  btn.style.display = _ncSel.length ? '' : 'none';
+  document.getElementById('noncarSelCnt').textContent = _ncSel.length;
+  var d = loadData();
+  var kw = document.getElementById('noncarSearch').value.trim().toLowerCase();
+  var list = kw ? d.noncar.filter(function(n) {
+    var cust = d.customers.find(function(c){ return c.id === n.custId; }) || {};
+    return (cust.name||'').toLowerCase().includes(kw) ||
+           (n.type||'').toLowerCase().includes(kw) ||
+           (n.company||'').toLowerCase().includes(kw) ||
+           (n.agent||'').toLowerCase().includes(kw);
+  }) : d.noncar;
+  document.getElementById('noncarChkAll').checked = _ncSel.length === list.length && list.length > 0;
+}
+
+function batchDelNoncar() {
+  if (!_ncSel.length) return;
+  if (!confirm('确定删除选中的 ' + _ncSel.length + ' 个非车险保单？')) return;
+  var d = loadData();
+  d.noncar = d.noncar.filter(function(n){ return _ncSel.indexOf(n.id) < 0; });
+  saveData(d);
+  _ncSel = [];
+  renderNoncar();
+  refreshStats();
+  showToast('删除成功');
 }
 
 function openNoncarModal(id) {
@@ -625,52 +942,215 @@ function getRenewalStatus(days) {
   if (days <= 7) return { label: '即将到期', cls: 'renewal-urgent' };
   return { label: '待续保', cls: 'renewal-soon' };
 }
-function renderRenewal() {
+// ========== 续保提醒 ==========
+var _rpolSel = [];
+var _rncSel = [];
+
+function filterRenewal(kw) {
   var d = loadData();
-  // 车险续保
-  var polTbody = document.querySelector('#renewalPolTable tbody');
-  polTbody.innerHTML = '';
+  var k = kw.trim().toLowerCase();
   var polRenewals = [];
   d.policies.forEach(function(p) {
     var days = getDaysLeft(p.end);
-    if (days !== null && days <= 30) polRenewals.push({ p: p, days: days });
+    if (days !== null && days <= 30) {
+      var veh = d.vehicles.find(function(v){ return v.id === p.vehicleId; }) || {};
+      if (!k || (veh.plate||'').toLowerCase().includes(k) || (p.company||'').toLowerCase().includes(k) || (p.agent||'').toLowerCase().includes(k) || (p.end||'').toLowerCase().includes(k))
+        polRenewals.push({ p: p, veh: veh, days: days });
+    }
   });
   polRenewals.sort(function(a, b) { return a.days - b.days; });
-  if (polRenewals.length === 0) {
-    polTbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#9ca3af;">暂无即将到期的车险保单</td></tr>';
+  var ncRenewals = [];
+  d.noncar.forEach(function(n) {
+    var days = getDaysLeft(n.end);
+    if (days !== null && days <= 30) {
+      var cust = d.customers.find(function(c){ return c.id === n.custId; }) || {};
+      if (!k || (cust.name||'').toLowerCase().includes(k) || (n.type||'').toLowerCase().includes(k) || (n.company||'').toLowerCase().includes(k) || (n.agent||'').toLowerCase().includes(k) || (n.end||'').toLowerCase().includes(k))
+        ncRenewals.push({ n: n, cust: cust, days: days });
+    }
+  });
+  ncRenewals.sort(function(a, b) { return a.days - b.days; });
+  _rpolSel = [];
+  _rncSel = [];
+  renderRenewalRows(polRenewals, ncRenewals);
+}
+
+function renderRenewalRows(polRenewals, ncRenewals) {
+  var polTbody = document.querySelector('#renewalPolTable tbody');
+  var ncTbody = document.querySelector('#renewalNoncarTable tbody');
+  polTbody.innerHTML = '';
+  ncTbody.innerHTML = '';
+  document.getElementById('rpolChkAll').checked = false;
+  document.getElementById('rncChkAll').checked = false;
+  document.getElementById('btnRPolDel').style.display = 'none';
+  document.getElementById('btnRncDel').style.display = 'none';
+  document.getElementById('rpolSelCnt').textContent = '0';
+  document.getElementById('rncSelCnt').textContent = '0';
+  // 车险
+  if (!polRenewals.length) {
+    polTbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#9ca3af;">暂无即将到期的车险保单</td></tr>';
   } else {
     polRenewals.forEach(function(item) {
-      var veh = d.vehicles.find(function(v) { return v.id === item.p.vehicleId; }) || {};
       var st = getRenewalStatus(item.days);
       var tr = document.createElement('tr');
       tr.className = st.cls;
-      tr.innerHTML = '<td>' + (veh.plate || '') + '</td><td>' + (item.p.company || '') + '</td><td>' + (item.p.agent || '') + '</td><td>' + (item.p.end || '') + '</td><td><strong>' + item.days + '</strong> 天</td><td>' + st.label + '</td>' +
+      var sel = _rpolSel.indexOf(item.p.id) >= 0 ? 'checked' : '';
+      tr.innerHTML = '<td><input type="checkbox" ' + sel + ' onchange="toggleRPol(\'' + item.p.id + '\',this.checked)"></td>' +
+        '<td>' + esc(item.veh.plate) + '</td><td>' + esc(item.p.company) + '</td><td>' + esc(item.p.agent) + '</td><td>' + esc(item.p.end) + '</td><td><strong>' + item.days + '</strong> 天</td><td>' + st.label + '</td>' +
         '<td><button class="btn btn-sm btn-primary" onclick="openPolModal(\'' + item.p.id + '\')">编辑</button></td>';
       polTbody.appendChild(tr);
     });
   }
-  // 非车险续保
-  var ncTbody = document.querySelector('#renewalNoncarTable tbody');
-  ncTbody.innerHTML = '';
-  var ncRenewals = [];
-  d.noncar.forEach(function(n) {
-    var days = getDaysLeft(n.end);
-    if (days !== null && days <= 30) ncRenewals.push({ n: n, days: days });
-  });
-  ncRenewals.sort(function(a, b) { return a.days - b.days; });
-  if (ncRenewals.length === 0) {
+  // 非车险
+  if (!ncRenewals.length) {
     ncTbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#9ca3af;">暂无即将到期的非车险保单</td></tr>';
   } else {
     ncRenewals.forEach(function(item) {
-      var cust = d.customers.find(function(c) { return c.id === item.n.custId; }) || {};
       var st = getRenewalStatus(item.days);
       var tr = document.createElement('tr');
       tr.className = st.cls;
-      tr.innerHTML = '<td>' + (cust.name || '') + '</td><td>' + (item.n.type || '') + '</td><td>' + (item.n.company || '') + '</td><td>' + (item.n.agent || '') + '</td><td>' + (item.n.end || '') + '</td><td><strong>' + item.days + '</strong> 天</td><td>' + st.label + '</td>' +
+      var sel = _rncSel.indexOf(item.n.id) >= 0 ? 'checked' : '';
+      tr.innerHTML = '<td><input type="checkbox" ' + sel + ' onchange="toggleRnc(\'' + item.n.id + '\',this.checked)"></td>' +
+        '<td>' + esc(item.cust.name) + '</td><td>' + esc(item.n.type) + '</td><td>' + esc(item.n.company) + '</td><td>' + esc(item.n.agent) + '</td><td>' + esc(item.n.end) + '</td><td><strong>' + item.days + '</strong> 天</td><td>' + st.label + '</td>' +
         '<td><button class="btn btn-sm btn-primary" onclick="openNoncarModal(\'' + item.n.id + '\')">编辑</button></td>';
       ncTbody.appendChild(tr);
     });
   }
+  // 空提示
+  var bothEmpty = !polRenewals.length && !ncRenewals.length;
+  document.getElementById('renewalEmpty').style.display = bothEmpty ? 'block' : 'none';
+}
+
+function renderRenewal() {
+  filterRenewal(document.getElementById('renewalSearch').value);
+}
+
+function toggleRPolAll(checked) {
+  var d = loadData();
+  var kw = document.getElementById('renewalSearch').value.trim().toLowerCase();
+  var polRenewals = [];
+  d.policies.forEach(function(p) {
+    var days = getDaysLeft(p.end);
+    if (days !== null && days <= 30) {
+      var veh = d.vehicles.find(function(v){ return v.id === p.vehicleId; }) || {};
+      if (!kw || (veh.plate||'').toLowerCase().includes(kw) || (p.company||'').toLowerCase().includes(kw) || (p.agent||'').toLowerCase().includes(kw))
+        polRenewals.push({ p: p, veh: veh, days: days });
+    }
+  });
+  polRenewals.sort(function(a, b) { return a.days - b.days; });
+  _rpolSel = checked ? polRenewals.map(function(i){ return i.p.id; }) : [];
+  if (checked && _rpolSel.length) document.getElementById('btnRPolDel').style.display = '';
+  document.getElementById('rpolSelCnt').textContent = _rpolSel.length;
+  document.getElementById('rpolChkAll').checked = checked;
+  // re-render just the pol table rows
+  var polTbody = document.querySelector('#renewalPolTable tbody');
+  polTbody.innerHTML = '';
+  polRenewals.forEach(function(item) {
+    var st = getRenewalStatus(item.days);
+    var tr = document.createElement('tr');
+    tr.className = st.cls;
+    var sel = _rpolSel.indexOf(item.p.id) >= 0 ? 'checked' : '';
+    tr.innerHTML = '<td><input type="checkbox" ' + sel + ' onchange="toggleRPol(\'' + item.p.id + '\',this.checked)"></td>' +
+      '<td>' + esc(item.veh.plate) + '</td><td>' + esc(item.p.company) + '</td><td>' + esc(item.p.agent) + '</td><td>' + esc(item.p.end) + '</td><td><strong>' + item.days + '</strong> 天</td><td>' + st.label + '</td>' +
+      '<td><button class="btn btn-sm btn-primary" onclick="openPolModal(\'' + item.p.id + '\')">编辑</button></td>';
+    polTbody.appendChild(tr);
+  });
+}
+
+function toggleRPol(id, checked) {
+  var idx = _rpolSel.indexOf(id);
+  if (checked && idx < 0) _rpolSel.push(id);
+  else if (!checked && idx >= 0) _rpolSel.splice(idx, 1);
+  document.getElementById('btnRPolDel').style.display = _rpolSel.length ? '' : 'none';
+  document.getElementById('rpolSelCnt').textContent = _rpolSel.length;
+  var d = loadData();
+  var kw = document.getElementById('renewalSearch').value.trim().toLowerCase();
+  var polRenewals = [];
+  d.policies.forEach(function(p) {
+    var days = getDaysLeft(p.end);
+    if (days !== null && days <= 30) {
+      var veh = d.vehicles.find(function(v){ return v.id === p.vehicleId; }) || {};
+      if (!kw || (veh.plate||'').toLowerCase().includes(kw) || (p.company||'').toLowerCase().includes(kw) || (p.agent||'').toLowerCase().includes(kw))
+        polRenewals.push({ p: p, veh: veh, days: days });
+    }
+  });
+  polRenewals.sort(function(a, b) { return a.days - b.days; });
+  document.getElementById('rpolChkAll').checked = _rpolSel.length === polRenewals.length && polRenewals.length > 0;
+}
+
+function batchDelRenewalPol() {
+  if (!_rpolSel.length) return;
+  if (!confirm('确定删除选中的 ' + _rpolSel.length + ' 个车险保单？')) return;
+  var d = loadData();
+  d.policies = d.policies.filter(function(p){ return _rpolSel.indexOf(p.id) < 0; });
+  saveData(d);
+  _rpolSel = [];
+  renderRenewal();
+  refreshStats();
+  showToast('删除成功');
+}
+
+function toggleRncAll(checked) {
+  var d = loadData();
+  var kw = document.getElementById('renewalSearch').value.trim().toLowerCase();
+  var ncRenewals = [];
+  d.noncar.forEach(function(n) {
+    var days = getDaysLeft(n.end);
+    if (days !== null && days <= 30) {
+      var cust = d.customers.find(function(c){ return c.id === n.custId; }) || {};
+      if (!kw || (cust.name||'').toLowerCase().includes(kw) || (n.type||'').toLowerCase().includes(kw) || (n.company||'').toLowerCase().includes(kw) || (n.agent||'').toLowerCase().includes(kw))
+        ncRenewals.push({ n: n, cust: cust, days: days });
+    }
+  });
+  ncRenewals.sort(function(a, b) { return a.days - b.days; });
+  _rncSel = checked ? ncRenewals.map(function(i){ return i.n.id; }) : [];
+  if (checked && _rncSel.length) document.getElementById('btnRncDel').style.display = '';
+  document.getElementById('rncSelCnt').textContent = _rncSel.length;
+  document.getElementById('rncChkAll').checked = checked;
+  var ncTbody = document.querySelector('#renewalNoncarTable tbody');
+  ncTbody.innerHTML = '';
+  ncRenewals.forEach(function(item) {
+    var st = getRenewalStatus(item.days);
+    var tr = document.createElement('tr');
+    tr.className = st.cls;
+    var sel = _rncSel.indexOf(item.n.id) >= 0 ? 'checked' : '';
+    tr.innerHTML = '<td><input type="checkbox" ' + sel + ' onchange="toggleRnc(\'' + item.n.id + '\',this.checked)"></td>' +
+      '<td>' + esc(item.cust.name) + '</td><td>' + esc(item.n.type) + '</td><td>' + esc(item.n.company) + '</td><td>' + esc(item.n.agent) + '</td><td>' + esc(item.n.end) + '</td><td><strong>' + item.days + '</strong> 天</td><td>' + st.label + '</td>' +
+      '<td><button class="btn btn-sm btn-primary" onclick="openNoncarModal(\'' + item.n.id + '\')">编辑</button></td>';
+    ncTbody.appendChild(tr);
+  });
+}
+
+function toggleRnc(id, checked) {
+  var idx = _rncSel.indexOf(id);
+  if (checked && idx < 0) _rncSel.push(id);
+  else if (!checked && idx >= 0) _rncSel.splice(idx, 1);
+  document.getElementById('btnRncDel').style.display = _rncSel.length ? '' : 'none';
+  document.getElementById('rncSelCnt').textContent = _rncSel.length;
+  var d = loadData();
+  var kw = document.getElementById('renewalSearch').value.trim().toLowerCase();
+  var ncRenewals = [];
+  d.noncar.forEach(function(n) {
+    var days = getDaysLeft(n.end);
+    if (days !== null && days <= 30) {
+      var cust = d.customers.find(function(c){ return c.id === n.custId; }) || {};
+      if (!kw || (cust.name||'').toLowerCase().includes(kw) || (n.type||'').toLowerCase().includes(kw) || (n.company||'').toLowerCase().includes(kw) || (n.agent||'').toLowerCase().includes(kw))
+        ncRenewals.push({ n: n, cust: cust, days: days });
+    }
+  });
+  ncRenewals.sort(function(a, b) { return a.days - b.days; });
+  document.getElementById('rncChkAll').checked = _rncSel.length === ncRenewals.length && ncRenewals.length > 0;
+}
+
+function batchDelRenewalNoncar() {
+  if (!_rncSel.length) return;
+  if (!confirm('确定删除选中的 ' + _rncSel.length + ' 个非车险保单？')) return;
+  var d = loadData();
+  d.noncar = d.noncar.filter(function(n){ return _rncSel.indexOf(n.id) < 0; });
+  saveData(d);
+  _rncSel = [];
+  renderRenewal();
+  refreshStats();
+  showToast('删除成功');
 }
 function renderDashRenewal() {
   var d = loadData();
